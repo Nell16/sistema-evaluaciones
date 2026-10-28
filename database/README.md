@@ -1,11 +1,9 @@
-# Base de datos y migraciones
+# PostgreSQL y Flyway — estructura inicial
 
-La base de datos de desarrollo es PostgreSQL. Los scripts **reales** de Flyway viven únicamente en `database/migrations/`; Maven los incorpora al JAR en `db/migration` durante la compilación. No duplicar archivos SQL en `backend/src/main/resources`.
+PostgreSQL 17 está configurado en `compose.yaml`. Spring Boot incorpora el controlador JDBC y Flyway para futuras migraciones.
 
-- `V1__create_test_type.sql`: crea el catálogo transversal de cinco pruebas en estado deshabilitado; no implementa evaluaciones.
-- `V2__descripcion.sql`, `V3__descripcion.sql`: cambios futuros, sujetos a aprobación del modelo DOC-03.
-- No editar una migración que ya se ejecutó en un entorno compartido. Crear otra versión.
-- El equipo documentador registra el cambio de esquema y el integrador verifica que las pruebas anteriores sigan funcionando.
-- Nunca insertar datos reales de estudiantes o resultados psicológicos en migraciones de ejemplo.
+**Actualmente no hay tablas, datos ni migraciones del negocio.** La carpeta `migrations/` está reservada.
 
-**Pendiente de validación funcional:** definir entidades de sujetos, períodos, preguntas, intentos, resultados y reportes con sus cardinalidades. No están modeladas de forma arbitraria en esta plantilla.
+Cuando DOC-03 apruebe el modelo, el equipo agregará archivos `V1__descripcion.sql`, `V2__descripcion.sql`, etc. No editar migraciones ya aplicadas.
+
+**Flyway ≠ Flyweight:** Flyway gestiona migraciones de base de datos; Flyweight es un patrón de diseño. Se usa Flyway según el contexto de los documentos del curso.

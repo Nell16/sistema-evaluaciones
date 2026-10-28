@@ -1,9 +1,7 @@
 # DOC-03 Modelo de datos
 
-**Estado:** Solo tabla técnica `test_type` aprobable como base. Las entidades del dominio aún requieren análisis.
+**Estado: pendiente de definición y aprobación.** No existen tablas del dominio en este esqueleto.
 
-| Entidad | Propósito | Atributos | Relaciones | Fuente y estado |
-| --- | --- | --- | --- | --- |
-| `test_type` | Catálogo de tipos de evaluación | `id`, `code`, `name`, `display_order`, `enabled` | Por definir | Propuesta técnica inicial |
+Posibles conceptos por investigar en el análisis funcional: evaluados, períodos, preguntas, opciones, intentos, respuestas, resultados e informes.
 
-Por levantar: Sujetos, Periodos, Preguntas, Opciones, Respuestas, Intentos, Resultados e Informes. Definir cardinalidades, restricciones, acceso y retención con documentación funcional antes de implementar JPA/migraciones adicionales.
+El equipo documentador debe acordar entidades, atributos, relaciones, restricciones, trazabilidad y protección de datos **antes** de generar SQL o clases JPA.

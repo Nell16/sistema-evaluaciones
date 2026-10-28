@@ -1,69 +1,57 @@
-# Sistema Integrado de Evaluaciones
+# Sistema Integrado de Evaluaciones — esqueleto inicial
 
-Monorepositorio académico de **Ingeniería de Software II y Servicios Web**. Un solo producto integra cinco tipos de test con backend Spring Boot, frontend React, base de datos PostgreSQL y documentación compartida. Los grupos rotan entre desarrollo, integración, documentación, pruebas y Scrum Master.
+> **Alcance actual: solo configuración y estructura.** No incluye endpoints de negocio, cuestionarios, fórmulas, entidades, tablas de evaluación, autenticación ni reportes. La única clase Java es el punto de arranque de Spring Boot; el único componente React es una pantalla de bienvenida.
 
-> **Estado del proyecto:** plantilla técnica inicial, no aplicación completa. Ejecuta un catálogo de cinco tipos de prueba, todos deshabilitados. No incluye cuestionarios, fórmulas de calificación, autenticación operativa ni reportes. Esas funcionalidades dependen de requisitos y reglas aprobadas; no se deben inventar.
+## Tecnologías solicitadas
 
-## Estructura y propósito
+- **Backend:** Spring Boot 3.5.16 con Java **17** y Maven.
+- **Frontend:** React web (no React Native), TypeScript y Vite como herramientas de arranque.
+- **Base de datos:** PostgreSQL 17; **Flyway** preparado para migraciones futuras (todavía no hay tablas de negocio).
+- **Colaboración:** un solo repositorio privado de GitHub, ramas, pull requests y comprobaciones de compilación.
 
-| Carpeta | Qué contiene y por qué existe |
-| --- | --- |
-| `backend/` | Única aplicación Java 17 con Spring Boot, Maven y arquitectura por capas. Centraliza API, reglas y persistencia. |
-| `frontend/` | Única aplicación React + TypeScript + Vite. Reutiliza componentes y consume DTOs de la API. |
-| `database/migrations/` | Única fuente de migraciones SQL de Flyway. Se empaqueta dentro del JAR de backend. |
-| `docs/` | Requisitos, casos de uso, modelo, contratos API, decisiones, evidencias y coordinación. |
-| `tests/` | Casos de prueba end-to-end y evidencias transversales; unitarias junto a cada aplicación. |
-| `.github/` | Validaciones automáticas, plantillas de incidencias y pull requests. |
-| `compose.yaml` | PostgreSQL de desarrollo reproducible para todos los integrantes. |
-| `.env.example` | Variables locales sin secretos reales. |
+**Nota terminológica:** Flyweight es un patrón de diseño; Flyway es la herramienta de migraciones de PostgreSQL mencionada en los documentos. Aquí no se implementa el patrón Flyweight.
 
-## Requisitos locales
+## Estructura
 
-- JDK **17** y Maven **3.6.3 o superior**.
-- Node.js **22.12 o superior** y npm.
-- Docker Desktop con Docker Compose, o PostgreSQL 17 instalado localmente.
-- IntelliJ IDEA, otro IDE compatible y Git.
+| Ruta | Propósito | Estado |
+| --- | --- | --- |
+| `backend/` | Proyecto Maven, arranque de Spring Boot y paquetes separados por capas | Esqueleto |
+| `frontend/` | Proyecto React web con un componente de bienvenida y carpetas por módulos | Esqueleto |
+| `database/migrations/` | Lugar reservado para SQL versionado con Flyway | Vacío |
+| `docs/` | Requisitos, reglas, contratos, modelo, diagramas y traspaso entre equipos | Plantillas y referencias |
+| `tests/` | Espacio para futuros casos end-to-end | Vacío |
+| `.github/` | GitHub Actions, plantillas de issues y pull requests | Configurado |
+| `compose.yaml` | PostgreSQL local reproducible | Configurado |
+| `.env.example` | Ejemplo de variables locales, sin datos reales | Configurado |
 
-## Inicio rápido (IntelliJ IDEA, Windows, macOS o Linux)
+## Iniciar el esqueleto desde IntelliJ IDEA
 
-1. Clonar el repositorio y abrir la **carpeta raíz** `sistema-evaluaciones` en IntelliJ. No abrir `backend/` como un segundo repositorio Git.
-2. Copiar `.env.example` a `.env` y modificar la contraseña **solo para desarrollo**. El `.env` no se sube a GitHub.
-3. Desde la raíz, ejecutar `docker compose up -d db`.
-4. En otra terminal, ejecutar `mvn -f backend/pom.xml spring-boot:run`.
-5. En otra terminal, ejecutar `cd frontend`, `npm ci` y `npm run dev`.
-6. Abrir `http://localhost:5173`. API de catálogo: `http://localhost:8080/api/v1/tests`; salud: `http://localhost:8080/actuator/health`.
+1. Clonar el repositorio y abrir la **raíz completa** en IntelliJ IDEA.
+2. Tener instalados JDK 17, Node.js 22, npm y Docker (o PostgreSQL 17).
+3. Ejecutar `docker compose up -d db` desde la raíz.
+4. Ejecutar `mvn -f backend/pom.xml spring-boot:run` para iniciar Spring Boot en `localhost:8080`.
+5. Ejecutar `cd frontend`, después `npm ci` y `npm run dev` para abrir React en `localhost:5173`.
 
-El frontend utiliza el proxy de Vite para solicitar `/api/v1/tests` al backend durante el desarrollo. En producción debe existir un proxy HTTP equivalente, con HTTPS y autenticación aprobada.
+El backend **no expone endpoints de evaluación**; solo puede exponer el estado técnico de salud de Spring Boot Actuator. El frontend únicamente muestra que la estructura fue preparada.
 
-Si no tienes Docker, crea una base de datos PostgreSQL con los valores de `.env.example` y levanta directamente el backend. Flyway creará `test_type` al iniciar.
-
-## Verificaciones
+## Comprobaciones técnicas
 
 ```bash
-mvn -f backend/pom.xml test
+mvn -f backend/pom.xml verify
 cd frontend
 npm ci
 npm run typecheck
-npm test
 npm run build
 ```
 
-GitHub Actions repite las verificaciones al abrir un pull request. No se incorporan cambios a `main` si no se cumplen la revisión y los criterios del tester.
+GitHub Actions valida la compilación del esqueleto. Cuando se desarrollen funcionalidades, se agregarán pruebas y criterios de aceptación.
 
-## Cómo contribuir
+## Antes de comenzar funcionalidades
 
-Lee [CONTRIBUTING.md](CONTRIBUTING.md), [arquitectura](docs/arquitectura/README.md), [flujo del equipo](docs/equipos/FLUJO.md) y [contrato REST](docs/api/openapi.yaml).
+1. Revisar requisitos y aprobaciones en `docs/requisitos/` y `docs/casos-de-uso/`.
+2. Acordar el modelo de datos en `docs/modelo-datos/` antes de crear migraciones SQL.
+3. Acordar los contratos en `docs/api/` antes de programar controladores o consumo de API.
+4. Seguir `docs/equipos/FLUJO.md` y `CONTRIBUTING.md` para ramas, issues, revisión y traspasos.
+5. No subir datos personales ni pruebas psicológicas reales. Ver `SECURITY.md`.
 
-1. Crear una issue/tarea con ID, responsable y criterios de aceptación.
-2. Confirmar que el documento correspondiente esté aprobado antes de desarrollar esa parte.
-3. Crear rama `feature/semanaN-objetivo`, `fix/...` o `docs/...` desde `main`.
-4. Implementar backend, frontend, migración y pruebas en un mismo PR cuando formen una funcionalidad indivisible.
-5. Documentar evidencia y pedir revisión. El integrador fusiona después de CI y visto bueno.
-
-**Seguridad:** los endpoints no definidos están bloqueados por defecto. Esta plantilla no autoriza datos personales ni despliegue público; falta diseñar autenticación, roles, gestión de secretos y privacidad. Lee [SECURITY.md](SECURITY.md).
-
-## Aclaraciones de los materiales del curso
-
-- El plan principal y los diagramas establecen **un solo repositorio**; una nota de trabajo menciona dos. Adoptamos el monorepositorio solicitado.
-- La referencia a «Flyweight» para versiones de la base de datos parece corresponder a **Flyway**, una herramienta de migraciones. No es lo mismo que el patrón Flyweight. Se eligió Flyway para esta base técnica; el equipo debe confirmar la decisión en el ADR.
-- El cronograma principal contempla cinco grupos y cinco módulos. Otras notas mencionan cuatro Scrum Masters; la coordinación debe ajustarse a la distribución real del curso.
+Los cinco tipos de evaluación citados en el plan son **módulos futuros**, no funcionalidades implementadas. Los documentos y diagramas se preservan como material de referencia.

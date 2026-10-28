@@ -1,48 +1,24 @@
-# Arquitectura técnica común
+# Arquitectura prevista — sin implementación funcional
 
-El backend es un **monolito modular** con capas y puertos/adaptadores simples. El dominio no depende de frameworks. El objetivo es reutilizar sujetos, periodos, catálogo, evaluaciones, resultados e informes entre cinco pruebas, sin convertir cada test en un microservicio.
+Este repositorio prepara un **monorepositorio** con Spring Boot, React y PostgreSQL. Las capas son una organización **propuesta** para cuando existan requisitos aprobados.
 
-## Dirección de dependencias
+## Paquetes previstos en backend
 
-```text
-React → HTTP/JSON → Controller → DTO/Mapper → Application (use case)
-                                                   ↓
-                                               Domain (reglas)
-                                                   ↓
-                                       Repository (interfaz de dominio)
-                                                   ↑
-                                      Infrastructure (adapter JPA) → PostgreSQL
-```
+| Carpeta | Responsabilidad futura |
+| --- | --- |
+| `controller/` | Entradas HTTP REST; actualmente sin controladores |
+| `dto/` y `mapper/` | Contratos y transformación de datos |
+| `application/usecase/` y `application/service/` | Casos de uso y su coordinación |
+| `application/evaluator/` | Estrategias de evaluación, después de aprobar reglas |
+| `domain/model/`, `domain/repository/`, `domain/exception/` | Modelo, puertos y reglas de dominio |
+| `infrastructure/persistence/` | Acceso a PostgreSQL mediante JPA |
+| `infrastructure/security/` | Integración futura de autenticación y permisos |
+| `config/` y `exception/` | Configuración y manejo de errores |
 
-Las dependencias del código se dirigen hacia `domain`, aunque la ejecución llegue hasta infraestructura.
+## Flujo previsto
 
-| Paquete Java | Responsabilidad | No debe hacer |
-| --- | --- | --- |
-| `controller/` | Declarar rutas REST, validar entrada y emitir respuesta HTTP. | Calcular puntuaciones o escribir SQL. |
-| `dto/` | Definir entradas/salidas públicas, versionables. | Exponer entidades JPA. |
-| `mapper/` | Convertir dominio ↔ DTO. | Agregar reglas de negocio. |
-| `application/usecase/` | Contratos de operaciones, por ejemplo listar tests o registrar respuesta. | Conocer HTTP o PostgreSQL. |
-| `application/service/` | Orquestación de casos de uso. | Contener detalles del servidor web. |
-| `application/evaluator/` | Selección del evaluador y coordinación de estrategia por test. | Inventar fórmulas no aprobadas. |
-| `domain/model/` | Entidades de negocio y objetos de valor. | Depender de Spring/JPA. |
-| `domain/repository/` | Puertos de persistencia. | Importar Spring Data. |
-| `domain/exception/` | Errores de reglas de negocio. | Devolver códigos HTTP directamente. |
-| `infrastructure/persistence/` | Entidades JPA, repositorios Spring Data y adaptadores. | Decidir reglas de calificación. |
-| `infrastructure/security/` | Filtros, acceso y adaptadores de seguridad. | Suplantar una autorización aprobada. |
-| `exception/` | Transformar errores del dominio a respuestas HTTP uniformes. | Ocultar errores críticos del sistema. |
-| `config/` | Configuración técnica central y beans necesarios. | Aglutinar la lógica de negocio. |
+React → API HTTP → Controller → Application → Domain → Repository → PostgreSQL.
 
-## Extensión a los cinco módulos
+Esta es una **guía de arquitectura**, no un flujo ejecutable hoy. Los módulos BFA, Weill, Thurstone, Allport y orientación vocacional permanecen sin lógica hasta que se aprueben reglas, contratos y modelos.
 
-Cada test implementará el mismo contrato de evaluación cuando se aprueben datos de entrada, criterios de puntuación y resultados. El motor común seleccionará una estrategia por código (`BFA`, `WEILL`, etc.). Las características compartidas permanecen en componentes comunes, sin cinco copias del registro de usuarios ni cinco esquemas aislados.
-
-## Regla para iniciar una función
-
-- Arquitectura aprobada → configuración de paquete y estructura.
-- RF/RNF aprobados → reglas generales.
-- Modelo y casos de uso aprobados → entidad y servicio.
-- API aprobada → controller, DTO y pantalla.
-- Fórmula aprobada con ejemplos → evaluador y pruebas unitarias.
-- Validación del tester → integración estable.
-
-Ver diagramas proporcionados en `docs/diagramas/` y decisión [ADR-0001](decisiones/0001-monorepositorio.md).
+Los diagramas originales están en `docs/diagramas/`. Ver la decisión [ADR-0001](decisiones/0001-monorepositorio.md) y el [flujo de los equipos](../equipos/FLUJO.md).

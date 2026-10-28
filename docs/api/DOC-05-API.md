@@ -1,11 +1,7 @@
 # DOC-05 Contratos REST
 
-La fuente de verdad para contratos ejecutables es [openapi.yaml](openapi.yaml). No cambiar un endpoint de forma incompatible sin discusión con frontend, integración, documentación y testing.
+**Estado: sin endpoints de negocio implementados.**
 
-| Método | Ruta | Propósito | Estado |
-| --- | --- | --- | --- |
-| GET | `/api/v1/tests` | Listar el catálogo compartido | Implementado como scaffold |
-| POST | Por definir | Registrar respuestas y evaluar | Requiere CU, reglas y autenticación aprobadas |
-| GET | Por definir | Consultar resultados | Requiere permisos y modelo aprobados |
+[openapi.yaml](openapi.yaml) es solo la plantilla vacía para contratos futuros. Antes de crear rutas, los equipos acordarán método, URL, parámetros, JSON, códigos HTTP, validaciones, errores, autorización, RF/CU y criterios de prueba.
 
-Para endpoints nuevos definir: método, ruta, parámetros, JSON de entrada/salida, validaciones, códigos HTTP, errores, autorización, RF/CU relacionados, ejemplo y pruebas.
+El endpoint técnico de salud de Actuator no constituye una funcionalidad de evaluación.

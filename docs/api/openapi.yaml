@@ -1,55 +1,6 @@
 openapi: 3.0.3
 info:
   title: Sistema Integrado de Evaluaciones
-  version: 0.1.0
-  description: Contrato inicial aprobado técnicamente para el catálogo. Otros endpoints requieren DOC-05.
-servers:
-  - url: http://localhost:8080
-paths:
-  /api/v1/tests:
-    get:
-      operationId: listTestTypes
-      summary: Obtener los cinco tipos de evaluación
-      tags: [Catálogo]
-      responses:
-        '200':
-          description: Catálogo ordenado por secuencia del plan académico
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TestTypeResponse'
-              example:
-                - code: BFA
-                  name: Batería Factorial de Aptitudes
-                  enabled: false
-                - code: WEILL
-                  name: Inteligencia de Weill
-                  enabled: false
-                - code: THURSTONE
-                  name: Intereses de Thurstone
-                  enabled: false
-                - code: ALLPORT
-                  name: Valores de Allport
-                  enabled: false
-                - code: VOCACIONAL
-                  name: Orientación Vocacional
-                  enabled: false
-components:
-  schemas:
-    TestTypeResponse:
-      type: object
-      additionalProperties: false
-      required: [code, name, enabled]
-      properties:
-        code:
-          type: string
-          example: BFA
-        name:
-          type: string
-          example: Batería Factorial de Aptitudes
-        enabled:
-          type: boolean
-          description: Disponible cuando reglas, aplicación y pruebas estén aprobadas
-          example: false
+  version: 0.0.0
+  description: Esqueleto documental; todavía no hay endpoints REST de negocio aprobados.
+paths: {}

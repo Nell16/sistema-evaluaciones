@@ -7,7 +7,7 @@
 - **Backend:** Spring Boot 3.5.16 con Java **17** y Maven.
 - **Frontend:** React web (no React Native), TypeScript y Vite como herramientas de arranque.
 - **Base de datos:** PostgreSQL 17; **Flyway** preparado para migraciones futuras (todavía no hay tablas de negocio).
-- **Colaboración:** un solo repositorio privado de GitHub, ramas, pull requests y comprobaciones de compilación.
+- **Colaboración:** un solo repositorio público de GitHub, ramas, pull requests y comprobaciones de compilación.
 
 **Nota terminológica:** Flyweight es un patrón de diseño; Flyway es la herramienta de migraciones de PostgreSQL mencionada en los documentos. Aquí no se implementa el patrón Flyweight.
 
@@ -45,6 +45,21 @@ npm run build
 ```
 
 GitHub Actions valida la compilación del esqueleto. Cuando se desarrollen funcionalidades, se agregarán pruebas y criterios de aceptación.
+
+## Trabajo por ramas y revisión de Pull Requests
+
+**Regla de colaboración:** cada integrante trabaja en **su propia rama de desarrollo**, creada a partir de `main`. **Nadie debe realizar commits ni hacer push directamente a `main`**, incluida la coordinación del proyecto. La rama `main` se reserva para versiones revisadas e integradas.
+
+1. **Crear una rama personal por tarea o issue.** Partir de la versión actual de `main` y usar un nombre descriptivo, por ejemplo `feature/nelson-issue-12`, `fix/ana-validacion` o `docs/luis-requisitos`. Si un integrante trabaja en otra tarea, abre otra rama.
+2. **Trabajar y publicar solo en esa rama.** Realizar allí los commits y subirlos a GitHub. No trabajar directamente sobre `main`.
+3. **Solicitar integración mediante un Pull Request (PR).** Crear un PR desde la rama de trabajo hacia `main`, vinculando el issue y explicando qué cambió y cómo se verificó.
+4. **Revisión exclusiva del proceso de integración.** El **equipo de integración** es responsable de revisar los PRs dirigidos a `main`, pedir correcciones y comprobar la coherencia entre backend, frontend, base de datos y documentación.
+5. **Verificar antes de fusionar.** El PR debe obtener la aprobación requerida, resolver los comentarios pendientes y pasar las comprobaciones automáticas disponibles (`backend-build` y `frontend-build`). El equipo de integración realiza la fusión cuando todo esté conforme.
+6. **Sin acceso directo ni excepciones informales.** No se aceptan pushes directos, force-push ni eliminación de `main`; todo cambio debe ser trazable a un PR revisado.
+
+**Protección técnica:** esta es la política de trabajo del equipo. Para hacerla **obligatoria en GitHub**, se debe activar una regla de protección sobre `main` que exija PR, al menos una aprobación, resolución de conversaciones y verificaciones de compilación exitosas, sin permitir omitir la regla. Cuando se confirmen los usuarios de GitHub del equipo de integración, podrán registrarse en `.github/CODEOWNERS` y exigirse sus revisiones. La mera documentación de estas reglas no bloquea técnicamente los pushes.
+
+Más detalles en [CONTRIBUTING.md](CONTRIBUTING.md) y [flujo de equipos](docs/equipos/FLUJO.md).
 
 ## Antes de comenzar funcionalidades
 

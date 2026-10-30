@@ -1,0 +1,115 @@
+name: Despliegue
+
+# Desactivado hasta que el propietario configure secretos y DEPLOY_ENABLED=true.
+# Usa comandos remotos provistos por el administrador del VPS.
+on:
+  push:
+    branches: [main]
+    tags: ['v0.*.0']
+  workflow_dispatch:
+    inputs:
+      entorno:
+        description: Entorno
+        type: choice
+        options: [main, release]
+        default: main
+        required: true
+      accion:
+        description: Acción
+        type: choice
+        options: [estado, logs, desplegar, reiniciar-bd]
+        default: estado
+        required: true
+      etiqueta:
+        description: Etiqueta v0.<semana>.0 (solo release)
+        type: string
+        required: false
+      confirmacion:
+        description: Solo para reiniciar-bd (escriba BORRAR BD MAIN)
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: despliegue-${{ github.event_name == 'workflow_dispatch' && inputs.entorno || github.ref_type == 'tag' && 'release' || 'main' }}
+  cancel-in-progress: false
+
+jobs:
+  servidor:
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: ${{ github.event_name == 'workflow_dispatch' && inputs.entorno || github.ref_type == 'tag' && 'release' || 'main' }}
+    steps:
+      - name: Validar entorno y comando
+        id: plan
+        env:
+          ENTORNO: ${{ inputs.entorno }}
+          ACCION: ${{ inputs.accion }}
+          ETIQUETA: ${{ inputs.etiqueta }}
+          CONFIRMACION: ${{ inputs.confirmacion }}
+          ACTOR: ${{ github.actor }}
+          PERMITIR_REINICIO: ${{ vars.ALLOW_DB_RESET }}
+        run: |
+          set -euo pipefail
+          entorno=main
+          comando=""
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+              entorno=release
+              [[ "$GITHUB_REF_NAME" =~ ^v0[.][0-9]+[.]0$ ]] || { echo "::error::Etiqueta invalida"; exit 1; }
+              comando="desplegar $GITHUB_REF_NAME"
+            else
+              [[ "$GITHUB_SHA" =~ ^[a-f0-9]{40}$ ]] || exit 1
+              comando="desplegar $GITHUB_SHA"
+            fi
+          else
+            entorno="$ENTORNO"
+            [ "$entorno" = "main" ] || [ "$entorno" = "release" ] || exit 1
+            case "$ACCION" in
+              estado|logs)
+                comando="$ACCION"
+                ;;
+              desplegar)
+                if [ "$entorno" = "release" ]; then
+                  [[ "$ETIQUETA" =~ ^v0[.][0-9]+[.]0$ ]] || { echo "::error::Etiqueta invalida"; exit 1; }
+                  comando="desplegar $ETIQUETA"
+                else
+                  [[ "$GITHUB_SHA" =~ ^[a-f0-9]{40}$ ]] || exit 1
+                  comando="desplegar $GITHUB_SHA"
+                fi
+                ;;
+              reiniciar-bd)
+                [ "$entorno" = "main" ] || { echo "::error::Solo se permite en main"; exit 1; }
+                [ "$ACTOR" = "Nell16" ] || { echo "::error::Solo el propietario puede solicitar el reinicio"; exit 1; }
+                [ "$PERMITIR_REINICIO" = "true" ] || { echo "::error::ALLOW_DB_RESET debe ser true"; exit 1; }
+                [ "$CONFIRMACION" = "BORRAR BD MAIN" ] || { echo "::error::Confirmacion incorrecta"; exit 1; }
+                comando="reiniciar-bd"
+                ;;
+              *)
+                echo "::error::Accion no permitida"
+                exit 1
+                ;;
+            esac
+          fi
+          echo "entorno=$entorno" >> "$GITHUB_OUTPUT"
+          echo "comando=$comando" >> "$GITHUB_OUTPUT"
+
+      - name: Ejecutar comando autorizado en VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          COMANDO: ${{ steps.plan.outputs.comando }}
+          ENTORNO: ${{ steps.plan.outputs.entorno }}
+        run: |
+          set -euo pipefail
+          [ -n "$VPS_HOST" ] && [ -n "$VPS_KNOWN_HOSTS" ] && [ -n "$VPS_SSH_KEY" ] || { echo "::error::Faltan secretos VPS"; exit 1; }
+          install -d -m 700 "$RUNNER_TEMP/vps_ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$RUNNER_TEMP/vps_ssh/id_ed25519"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$RUNNER_TEMP/vps_ssh/known_hosts"
+          chmod 600 "$RUNNER_TEMP/vps_ssh/id_ed25519" "$RUNNER_TEMP/vps_ssh/known_hosts"
+          ssh -i "$RUNNER_TEMP/vps_ssh/id_ed25519" -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$RUNNER_TEMP/vps_ssh/known_hosts" -o ConnectTimeout=15 "evaluaciones-$ENTORNO@$VPS_HOST" "$COMANDO"

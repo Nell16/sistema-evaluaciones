@@ -1,44 +1,57 @@
-# Configuración de GitHub y trabajo colaborativo
+# Configuración de GitHub e integración de los cuatro equipos
 
-> Guía operativa para los cuatro equipos. Actualizada el 30 de octubre de 2026. No contiene credenciales ni autoriza operaciones sobre servidores.
+> Guía operativa sin credenciales. Ajustada a la propuesta de Davide. La implementación está distribuida entre archivos del PR de configuración y ajustes administrativos de GitHub.
 
-## Modelo de permisos
+## 1. Colaboradores y contribución
 
-- **Integración:** colaboradores con acceso de escritura al repositorio central. Revisan y fusionan PRs.
-- **Desarrollo, Documentación y Testing:** hacen un **fork** del repositorio público, crean una rama por tarea en su fork y abren un PR hacia `Nell16/sistema-evaluaciones:main`.
-- Ninguna persona trabaja directamente en `main`. La ruleset `Protección de main` está activa.
-- Una persona no puede aprobar su propio PR; se necesita otro revisor autorizado.
+La propuesta de Davide permite añadir como colaboradores a integrantes de **Integración, Desarrollo, Documentación y Testing**. Cada integrante usa una **rama propia por tarea** dentro del repositorio central y abre un PR hacia `main`. Aunque tengan permiso de escritura, nadie debe hacer push directo a `main`; la ruleset lo impide.
 
-## Flujo por tarea
+También se admiten **forks** para quienes no hayan sido invitados, pues el repositorio es público: fork → rama personal → PR al repositorio oficial.
 
-1. Revisar la tarea de ClickUp y obtener su código (ej. `GEN-01-BE`).
-2. Actualizar el fork con los cambios de `main` y crear una rama `tipo/nombre-CODIGO`. Ejemplo: `feature/ana-GEN-01-BE`.
-3. Hacer los cambios en esa rama, manteniendo pruebas y documentación relevantes.
-4. Abrir un PR a `main`, con título `[GEN-01-BE] Descripción`. La primera línea de la descripción debe ser `Tarea ClickUp: GEN-01-BE · CU-ID[in review]` (reemplazando el ID por el real).
-5. Revisar que pasen `reglas`, `backend-build`, `frontend-build` y `ci-ok`; responder observaciones y solicitar aprobación de Integración.
-6. Solo los integradores autorizados fusionan un PR aprobado. La rama del PR se puede eliminar después de integrar.
+**Responsables de aprobación:** Integración. El propietario debe incorporar los usuarios GitHub reales del equipo a `.github/CODEOWNERS` y activar **Require review from Code Owners**. El archivo se entrega inicialmente con `@Nell16` como marcador válido; debe sustituirse o ampliarse **antes** de obligar la revisión de CODEOWNERS para no bloquear PRs del propietario. Una aprobación de otra persona con escritura no equivale a una aprobación de Integración hasta activar esa regla.
 
-## Configuración pendiente del propietario (cuenta Nell16)
+## 2. Flujo de tarea y CI
 
-1. **Colaboradores:** en Settings → Collaborators, invitar únicamente a los usuarios reales de Integración. Pedir que acepten.
-2. **Revisión específica de Integración:** crear `.github/CODEOWNERS` con los nombres de usuario reales de los integradores (ejemplo: `* @usuario1 @usuario2`). En Settings → Rules → Rulesets → Protección de main, activar **Require review from Code Owners**. Esto sustituye al marcador de ejemplo; no usar cuentas ficticias. Si se rota el equipo, actualizar CODEOWNERS por PR y revisar el impacto sobre aprobaciones.
-3. **Checks requeridos:** después de fusionar el PR de CI y confirmar que `ci-ok` aparece en verde, cambiar los checks requeridos en la ruleset a `ci-ok`; mantener PR obligatorio, una aprobación, conversaciones resueltas, prohibición de eliminación/force-push y ninguna excepción de bypass.
-4. **Método de fusión:** en Settings → General → Pull Requests, permitir solo **Squash merging** (mensaje por defecto: título del PR), habilitar actualización sugerida de ramas y eliminación automática de ramas después de fusionar.
-5. **ClickUp:** Alexander conecta la integración oficial de GitHub a su espacio de ClickUp; Nell16 autoriza el acceso de esa aplicación al repositorio concreto. No asumir que la conexión está completada sin comprobarla.
+1. Obtener el código de tarea y el ID de ClickUp.
+2. Crear rama desde `main`: `tipo/nombre-CODIGO`, por ejemplo `feature/ana-GEN-01-BE` (`feature`, `fix`, `docs`, `test` o `chore`).
+3. Hacer commits en la rama; nunca en `main`.
+4. Abrir PR con título `[GEN-01-BE] Descripción` y primera línea `Tarea ClickUp: GEN-01-BE · CU-ID[in review]` (reemplazar con ID real).
+5. Esperar los checks `reglas`, `backend-build`, `frontend-build` y `ci-ok`, resolver los comentarios y solicitar revisión de Integración.
+6. Integración aprueba y fusiona mediante **Squash and merge** cuando todo esté conforme.
 
-## Despliegue al VPS: bloqueado hasta revisión de seguridad
+El CI valida nombres, archivos, migraciones, compilación y pruebas de arquitectura. No demuestra que existan módulos de evaluación funcionales.
 
-- **No publicar, copiar ni reutilizar llaves SSH privadas incluidas en documentos o mensajes.** Antes de despliegues hay que **revocar esa llave y crear otra** de alcance mínimo. Verificar la huella pública del servidor por un canal independiente.
-- Configurar los secretos desde Settings → Secrets and variables → Actions, preferiblemente en **environments** separados para `main` y `release` con aprobaciones; jamás en código, documentación ni PRs.
-- El dueño del servidor debe confirmar infraestructura, usuarios de despliegue, dominios/puertos, scripts remotos y método de reversión antes de habilitar GitHub Actions de despliegue.
-- **No habilitar un botón de reinicio que borre la base de datos** sin una decisión explícita de responsables, copias de seguridad verificadas y controles adicionales.
-- No añadir un workflow de despliegue automático a `main` mientras sigan pendientes esos pasos.
+## 3. Ajustes del repositorio (cuenta Nell16)
 
-## Estado del repositorio
+- **Settings → General → Pull Requests:** permitir solo **Allow squash merging**, con título del PR como mensaje del commit; activar **Always suggest updating pull request branches** y **Automatically delete head branches**.
+- **Settings → Collaborators:** invitar a los usuarios reales de los cuatro equipos conforme a la propuesta; alternativamente, conservar colaboradores solo para Integración y permitir forks. En ambos casos la revisión por CODEOWNERS debe estar activa antes de permitir que cualquier colaborador apruebe PRs.
+- **Settings → Rules → Rulesets → Protección de main:** después de integrar el nuevo CI y comprobar `ci-ok` en verde, exigir `ci-ok`, rama actualizada, 1 aprobación de CODEOWNERS, conversaciones resueltas y solo squash. Mantener sin bypass, sin eliminación ni force-push.
+- La conexión actual de ChatGPT a GitHub puede editar código, pero **no** los ajustes administrativos ni los secretos; esos cambios se efectúan en Settings.
 
-- Repositorio público único, Spring Boot + Java 17, React web y PostgreSQL.
-- `main` protegida por ruleset activa (PR, 1 aprobación, checks, sin eliminación/force-push).
-- PR `[INT-01]` de configuración avanzada de CI propuesto para revisión, sin cambios de negocio.
-- `CODEOWNERS`, ajustes administrativos finales, conexión ClickUp y despliegue siguen pendientes de autorización/configuración del propietario.
+## 4. Conectar ClickUp
+
+Alexander conecta GitHub en ClickUp y enlaza `Nell16/sistema-evaluaciones` al espacio **Sistema_tests**; Nell16 autoriza la aplicación oficial de ClickUp exclusivamente sobre este repositorio. Comprobar con un PR de prueba y el ID real de una tarea antes de considerar integrada la automatización.
+
+## 5. Despliegue a VPS (preparado, desactivado por defecto)
+
+El PR incorpora `deploy/` (Dockerfiles, Compose y Nginx) y `.github/workflows/deploy.yml`. Este workflow **no se ejecuta hasta activar la variable** `DEPLOY_ENABLED=true`. No contiene claves ni contraseñas.
+
+Antes de activarlo, hacer lo siguiente desde la cuenta Nell16:
+
+1. Confirmar con Davide que el VPS tiene configurados los usuarios restringidos `evaluaciones-main` y `evaluaciones-release` y los comandos `estado`, `logs`, `desplegar <ref>` y `reiniciar-bd`. Verificar las claves públicas del host por un canal independiente.
+2. En **Settings → Secrets and variables → Actions**, crear los secretos `VPS_HOST`, `VPS_KNOWN_HOSTS`, `VPS_SSH_KEY`. Pegar cada valor directamente en la interfaz privada de GitHub; **nunca** en README, PR, código, logs o mensajes públicos. Davide debe confirmar que la llave proporcionada sigue autorizada; es recomendable rotarla si el documento se compartió fuera del equipo responsable.
+3. En **Settings → Environments**, configurar `main` y `release`, y usar reglas de aprobación/revisores para despliegues si están disponibles. El entorno release debe ser distinto de main.
+4. Definir la variable de repositorio `DEPLOY_ENABLED` con valor `true` **solo después** de instalar los secretos, validar el servidor y fusionar el PR de configuración.
+5. Probar desde **Actions → Despliegue → Run workflow** una acción no destructiva (`estado` o `logs`). Confirmar el estado real del backend y frontend. Posteriormente, los pushes a `main` despliegan main y las etiquetas `v0.<semana>.0` despliegan release.
+
+### Operación peligrosa: reiniciar-bd
+
+El workflow incluye una opción manual `reiniciar-bd` para main, **deshabilitada** mientras `ALLOW_DB_RESET` no sea `true`. Incluso activada, solo `Nell16` puede solicitarla escribiendo la confirmación `BORRAR BD MAIN`. Esta operación puede borrar datos; habilitarla únicamente con copia de seguridad verificada y acuerdo explícito con el propietario del VPS. Nunca se permite en release.
+
+## 6. Rotación y entrega
+
+- **Lunes:** Integración entrante actualiza `CODEOWNERS` por PR; el equipo saliente revisa ese cambio.
+- **Viernes:** Testing confirma versión estable antes de crear un release con etiqueta `v0.<semana>.0`. No crear etiquetas a modo de prueba en el entorno real.
+- No almacenar secretos ni datos personales reales en GitHub. Revisar `SECURITY.md`.
 
 Referencias: [README](../../README.md) · [CONTRIBUTING](../../CONTRIBUTING.md) · [Flujo de equipos](FLUJO.md).

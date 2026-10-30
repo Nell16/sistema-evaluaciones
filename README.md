@@ -57,7 +57,7 @@ GitHub Actions valida la compilación del esqueleto. Cuando se desarrollen funci
 5. **Verificar antes de fusionar.** El PR debe obtener la aprobación requerida, resolver los comentarios pendientes y pasar las comprobaciones automáticas disponibles (el check `ci-ok`, que agrupa reglas, backend y frontend). El equipo de integración realiza la fusión cuando todo esté conforme.
 6. **Sin acceso directo ni excepciones informales.** No se aceptan pushes directos, force-push ni eliminación de `main`; todo cambio debe ser trazable a un PR revisado.
 
-**Protección técnica:** esta es la política de trabajo del equipo. Para hacerla **obligatoria en GitHub**, se debe activar una regla de protección sobre `main` que exija PR, al menos una aprobación, resolución de conversaciones y verificaciones de compilación exitosas, sin permitir omitir la regla. Cuando se confirmen los usuarios de GitHub del equipo de integración, podrán registrarse en `.github/CODEOWNERS` y exigirse sus revisiones. La mera documentación de estas reglas no bloquea técnicamente los pushes.
+**Protección técnica:** la rama `main` ya cuenta con una **ruleset activa** que exige PR, al menos una aprobación, conversaciones resueltas y verificaciones de backend/frontend exitosas; también bloquea eliminaciones y force-pushes. Para exigir específicamente la aprobación del **equipo de integración**, aún hay que confirmar sus usuarios de GitHub, activarlos en `.github/CODEOWNERS` y habilitar *Require review from Code Owners*. Cuando se integre el nuevo CI, se podrá reemplazar la exigencia de checks individuales por `ci-ok`.
 
 Más detalles en [CONTRIBUTING.md](CONTRIBUTING.md) y [flujo de equipos](docs/equipos/FLUJO.md).
 

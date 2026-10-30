@@ -23,3 +23,8 @@ frontend/coverage/
 # Recursos locales y temporales
 tmp/
 *.bak
+
+# Archivos locales de los agentes de IA (cada persona tiene los suyos)
+AGENTS.md
+CLAUDE.md
+GEMINI.md

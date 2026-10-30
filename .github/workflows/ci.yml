@@ -1,28 +1,77 @@
-name: Validación del esqueleto
-
+name: CI
 on:
   pull_request:
   push:
     branches: [main]
-
 permissions:
   contents: read
-
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
-  backend-build:
+  reglas:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Configurar Java 17
-        uses: actions/setup-java@v4
+        with:
+          fetch-depth: 0
+      - name: Nombre de la rama y título del PR
+        env:
+          RAMA: ${{ github.head_ref }}
+          TITULO: ${{ github.event.pull_request.title }}
+        run: |
+          # Código de tarea de ClickUp: DOC-06, INT-01, BUG-07, GEN-01-BE, BFA-BE-02, TEST-01-CASOS…
+          CODIGO='[A-Z]{2,5}(-[A-Z]{2,6})?-[0-9]{2}(-[A-Z]{2,6})?'
+          echo "$RAMA" | grep -Eq "^(feature|fix|docs|test|chore)/[a-z0-9-]+-$CODIGO\$" \
+            || { echo "::error::La rama '$RAMA' no cumple tipo/nombre-<código de tarea> (ej. feature/ana-GEN-01-BE)"; exit 1; }
+          echo "$TITULO" | grep -Eq "^\[$CODIGO\] .+" \
+            || { echo "::error::El título '$TITULO' no cumple [<código de tarea>] descripción"; exit 1; }
+      - name: Archivos permitidos
+        env:
+          BASE: origin/${{ github.base_ref }}
+        run: |
+          NUEVOS_MD=$(git diff --name-only --diff-filter=A "$BASE"...HEAD | grep -E '\.md$' | grep -vE '(^|/)README\.md$|^docs/' || true)
+          [ -z "$NUEVOS_MD" ] || { echo "::error::Archivos .md nuevos solo en docs/: $NUEVOS_MD"; exit 1; }
+          ENV=$(git diff --name-only "$BASE"...HEAD | grep -E '(^|/)\.env$' || true)
+          [ -z "$ENV" ] || { echo "::error::No se sube el archivo .env"; exit 1; }
+      - name: Migraciones
+        env:
+          BASE: origin/${{ github.base_ref }}
+        run: |
+          cd database/migrations
+          MALAS=$(ls *.sql 2>/dev/null | grep -vE '^V[0-9]{12}__[a-z0-9]+_[a-z0-9_]+\.sql$' || true)
+          [ -z "$MALAS" ] || { echo "::error::Nombre de migración inválido: $MALAS"; exit 1; }
+          DUPLICADAS=$(ls *.sql 2>/dev/null | sed -E 's/^V([0-9]+)__.*/\1/' | sort | uniq -d)
+          [ -z "$DUPLICADAS" ] || { echo "::error::Versiones de migración duplicadas: $DUPLICADAS"; exit 1; }
+          TOCADAS=$(git diff --name-only --diff-filter=MDR "$BASE"...HEAD -- . || true)
+          [ -z "$TOCADAS" ] || { echo "::error::No se modifican ni borran migraciones fusionadas: $TOCADAS"; exit 1; }
+  backend-build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: evaluaciones
+          POSTGRES_USER: evaluaciones
+          POSTGRES_PASSWORD: solo_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U evaluaciones -d evaluaciones"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DB_HOST: localhost
+      POSTGRES_PASSWORD: solo_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
           cache: maven
           cache-dependency-path: backend/pom.xml
-      - name: Compilar Spring Boot (sin funcionalidades)
+      - name: Compilar y probar (incluye capas y migraciones)
         run: mvn --batch-mode --file backend/pom.xml verify
-
   frontend-build:
     runs-on: ubuntu-latest
     defaults:
@@ -30,11 +79,22 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Instalar dependencias
-        run: npm ci
-      - name: Validar tipos y compilar React
-        run: npm run build
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+  ci-ok:
+    if: always()
+    needs: [reglas, backend-build, frontend-build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Todos los checks pasaron
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "::error::Algún check falló: no se puede fusionar."; exit 1
+          fi

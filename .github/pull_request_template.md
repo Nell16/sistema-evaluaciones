@@ -1,8 +1,8 @@
-## Objetivo e issue
+## Tarea y alcance
 
-- Issue / historia: 
-- Semana y módulo: 
-- Resumen del cambio: 
+- Tarea ClickUp: <código> · CU-<id interno>[in review]   (ID interno: aparece en la tarea como #xxxxxxx)
+- Módulo:
+- Resumen del cambio:
 
 ## Trazabilidad
 
@@ -12,7 +12,7 @@
 
 ## Validaciones
 
-- [ ] `mvn -f backend/pom.xml test`
+- [ ] `docker compose up -d db` y `mvn -f backend/pom.xml verify`
 - [ ] `npm run typecheck`, `npm test` y `npm run build` desde `frontend`
 - [ ] Evidencia o captura sin información sensible
 - [ ] Contratos y documentación actualizados

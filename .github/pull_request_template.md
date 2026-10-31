@@ -1,8 +1,9 @@
 ## Tarea y alcance
 
-- Tarea ClickUp: <código> · CU-<id interno>[in review]   (ID interno: aparece en la tarea como #xxxxxxx)
+- Tarea ClickUp: <código> · CU-<id interno>   (copiar ID real; añadir `[estado]` solo para un cambio de estado autorizado)
 - Módulo:
 - Resumen del cambio:
+- Nota: `CU-ID[estado]` puede cambiar el estado de ClickUp; no usar el sufijo en PRs de prueba.
 
 ## Trazabilidad
 

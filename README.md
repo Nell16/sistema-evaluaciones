@@ -52,14 +52,28 @@ GitHub Actions valida la compilación del esqueleto. Cuando se desarrollen funci
 
 1. **Crear una rama personal por tarea o issue.** Partir de la versión actual de `main` y usar un nombre descriptivo, por ejemplo `feature/nelson-GEN-01-BE`, `fix/ana-BUG-03` o `docs/luis-DOC-03` (formato `tipo/nombre-<código de tarea>`; el CI lo exige). Si un integrante trabaja en otra tarea, abre otra rama.
 2. **Trabajar y publicar solo en esa rama.** Realizar allí los commits y subirlos a GitHub. No trabajar directamente sobre `main`.
-3. **Solicitar integración mediante un Pull Request (PR).** Crear un PR desde la rama de trabajo hacia `main`, con el código de la tarea de ClickUp en el título (`[GEN-01-BE] …`), la línea `Tarea ClickUp: <código> · CU-<id>[in review]` en la descripción y explicando qué cambió y cómo se verificó.
+3. **Solicitar integración mediante un Pull Request (PR).** Crear un PR desde la rama de trabajo hacia `main`, con el código de la tarea de ClickUp en el título (`[GEN-01-BE] …`), la línea `Tarea ClickUp: <código> · CU-<id>` en la descripción (sin `[estado]` por defecto; ese sufijo modifica el estado de ClickUp) y explicando qué cambió y cómo se verificó.
 4. **Revisión exclusiva del proceso de integración.** El **equipo de integración** es responsable de revisar los PRs dirigidos a `main`, pedir correcciones y comprobar la coherencia entre backend, frontend, base de datos y documentación.
 5. **Verificar antes de fusionar.** El PR debe obtener la aprobación requerida, resolver los comentarios pendientes y pasar las comprobaciones automáticas disponibles (el check `ci-ok`, que agrupa reglas, backend y frontend). El equipo de integración realiza la fusión cuando todo esté conforme.
 6. **Sin acceso directo ni excepciones informales.** No se aceptan pushes directos, force-push ni eliminación de `main`; todo cambio debe ser trazable a un PR revisado.
 
-**Protección técnica:** la rama `main` ya cuenta con una **ruleset activa** que exige PR, al menos una aprobación, conversaciones resueltas y verificaciones de backend/frontend exitosas; también bloquea eliminaciones y force-pushes. Para exigir específicamente la aprobación del **equipo de integración**, aún hay que confirmar sus usuarios de GitHub, activarlos en `.github/CODEOWNERS` y habilitar *Require review from Code Owners*. Cuando se integre el nuevo CI, se podrá reemplazar la exigencia de checks individuales por `ci-ok`.
+**Protección técnica (vigente):** la ruleset de `main` exige abrir PR, actualizar la rama frente a `main`, obtener al menos una aprobación válida de CODEOWNERS, resolver las conversaciones y superar el check obligatorio `ci-ok`. Solo está permitida la fusión **Squash and merge**; se prohíben force-pushes y eliminación de `main`. La lista de CODEOWNERS es rotativa: los usuarios pendientes de aceptar su invitación no cuentan como revisores hasta tener permiso de escritura.
 
 Más detalles en [CONTRIBUTING.md](CONTRIBUTING.md) y [flujo de equipos](docs/equipos/FLUJO.md).
+
+## Vinculación GitHub–ClickUp
+
+El repositorio `Nell16/sistema-evaluaciones` se conecta con el espacio `Sistema_tests` de ClickUp. **Cada PR debe incluir el código de tarea y su identificador real de ClickUp**, que puede copiarse desde la tarea. El formato sin cambio de estado es:
+
+```text
+Tarea ClickUp: INT-01-CU · CU-86bcvajad
+```
+
+Este formato permite enlazar la actividad a la tarea. **No añadir** `[in review]`, `[done]` ni otro sufijo entre corchetes a menos que la coordinación haya autorizado explícitamente cambiar el estado de ClickUp. La integración puede interpretar `CU-ID[estado]` como una instrucción de cambio de estado.
+
+No usar directamente el nombre de rama automático de ClickUp sin comprobarlo: la validación de CI exige `tipo/nombre-CODIGO`, con título de PR `[CODIGO] Descripción`. La vinculación se hace mediante el ID en la descripción; no es necesario incluirlo en la rama.
+
+Consultar la [guía operativa de GitHub y ClickUp](docs/equipos/CONFIGURACION-GITHUB.md). La fusión de un PR a `main` puede desencadenar un **despliegue automático** al VPS: no fusionar PRs de prueba sin acuerdo con Integración y el administrador del servidor.
 
 ## Antes de comenzar funcionalidades
 

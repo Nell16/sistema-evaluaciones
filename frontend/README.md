@@ -6,6 +6,9 @@ La preview local de `UI-01` permite revisar la interfaz común sin API, scoring 
 panel de controles “Variaciones del test” para cambiar los estados mediante botones; la URL solo conserva una forma
 opcional de iniciar una combinación concreta.
 
+Después de cada cambio, el bloque “Feedback de la preview” explica qué se está mostrando en la hoja y qué respuesta o
+estado quedó seleccionado.
+
 Inicia el frontend desde este directorio:
 
 ```bash

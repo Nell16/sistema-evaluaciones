@@ -92,6 +92,50 @@ function getPreviewActionLabel(phase: TestPhase) {
   return 'Siguiente';
 }
 
+function getPreviewFeedback(
+  phase: TestPhase,
+  responseType: TestResponseType,
+  saveState: PreviewSaveState,
+  noticeKind: PreviewNoticeKind,
+  showResource: boolean,
+  selectedOption: string | null,
+  textResponse: string,
+) {
+  const phaseMessage = {
+    instructions: 'La hoja muestra la pantalla previa de instrucciones.',
+    practice: 'La hoja muestra una práctica sin tiempo oficial.',
+    active: 'La hoja muestra una pregunta activa con tiempo visible.',
+    closed: 'La hoja muestra una subprueba cerrada sin captura de respuesta.',
+  }[phase];
+
+  const responseMessage =
+    responseType === 'selection'
+      ? selectedOption
+        ? `La opción ${selectedOption.toUpperCase()} está seleccionada.`
+        : 'La pregunta usa opciones, pero todavía no hay una selección.'
+      : textResponse
+        ? 'La pregunta usa un campo de texto con contenido de ejemplo.'
+        : 'La pregunta usa un campo de texto vacío.';
+
+  const saveMessage = {
+    saved: 'El pie de la hoja indica que la respuesta está guardada.',
+    saving: 'El pie de la hoja indica que el guardado está en progreso.',
+    error: 'El pie de la hoja muestra un error de guardado.',
+  }[saveState];
+
+  const noticeMessage = {
+    none: 'No se muestra ningún aviso adicional.',
+    warning: 'La hoja muestra un aviso textual de tiempo.',
+    error: 'La hoja muestra un error textual.',
+  }[noticeKind];
+
+  const resourceMessage = showResource
+    ? 'La pregunta incluye un recurso visual de ejemplo.'
+    : 'La pregunta no incluye un recurso visual.';
+
+  return `${phaseMessage} ${responseMessage} ${saveMessage} ${noticeMessage} ${resourceMessage}`;
+}
+
 export function Ui01Preview() {
   const [selectedOption, setSelectedOption] = useState<string | null>('b');
   const [textResponse, setTextResponse] = useState('');
@@ -215,6 +259,10 @@ export function Ui01Preview() {
         <p className="preview-current-state" aria-live="polite">
           <span>Vista actual</span>
           {phaseLabels[phase]} · {responseLabels[responseType]} · {saveLabels[saveState]}
+        </p>
+        <p className="preview-feedback" role="status" aria-live="polite">
+          <strong>Feedback de la preview</strong>
+          {getPreviewFeedback(phase, responseType, saveState, noticeKind, showResource, selectedOption, textResponse)}
         </p>
       </section>
 

@@ -120,32 +120,6 @@ button {
   outline-offset: 2px;
 }
 
-.preview-current-state {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.7rem;
-  margin: 1rem 0 0;
-  font-size: 0.86rem;
-}
-
-.preview-current-state span {
-  font-weight: 700;
-}
-
-.preview-feedback {
-  margin: 0.75rem 0 0;
-  padding: 0.75rem 0.8rem;
-  color: var(--test-ink);
-  line-height: 1.45;
-  background: var(--test-paper);
-  border: 2px solid var(--test-ink);
-}
-
-.preview-feedback strong {
-  display: block;
-  margin-bottom: 0.2rem;
-}
-
 .test-stage {
   display: grid;
   min-height: calc(100vh - 230px);

@@ -12,7 +12,7 @@ const saveStateLabels: Record<SaveState, string> = {
 
 const saveStateIcons: Record<SaveState, string> = {
   saved: '✓',
-  saving: '…',
+  saving: '···',
   error: '!',
 };
 

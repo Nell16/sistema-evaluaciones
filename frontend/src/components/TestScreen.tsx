@@ -39,16 +39,19 @@ function formatRemainingTime(seconds: number | null) {
   return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 }
 
-const phaseDefaults: Record<Exclude<TestPhase, 'active'>, { title: string; description: string }> = {
+const phaseDefaults: Record<Exclude<TestPhase, 'active'>, { label: string; title: string; description: string }> = {
   instructions: {
+    label: 'Instrucciones',
     title: 'Instrucciones de ejemplo',
     description: 'Esta pantalla representa las instrucciones previas a la subprueba.',
   },
   practice: {
+    label: 'Práctica',
     title: 'Práctica de ejemplo',
     description: 'Esta pantalla representa una práctica que no consume tiempo oficial.',
   },
   closed: {
+    label: 'Cerrada',
     title: 'Subprueba cerrada',
     description: 'Esta pantalla representa una subprueba que ya no recibe respuestas.',
   },
@@ -80,9 +83,10 @@ export function TestScreen({
   const phaseCopy = phase === 'active' ? null : phaseDefaults[phase];
   const timerValue = formatRemainingTime(timeRemainingSeconds);
   const timerSeconds = timeRemainingSeconds === null ? undefined : Math.max(0, timeRemainingSeconds);
+  const sectionHeadingId = isActiveQuestion ? headingId : `${headingId}-phase`;
 
   return (
-    <section className="test-paper" aria-labelledby={headingId}>
+    <section className="test-paper" aria-labelledby={sectionHeadingId}>
       <header className="test-header">
         <span className="test-name">{testName}</span>
         <time className="test-timer" dateTime={timerSeconds === undefined ? undefined : `PT${timerSeconds}S`}>
@@ -121,7 +125,7 @@ export function TestScreen({
           </>
         ) : (
           <section className="phase-panel" aria-labelledby={`${headingId}-phase`}>
-            <p className="phase-label">{phase}</p>
+            <p className="phase-label">{phaseCopy?.label}</p>
             <h1 className="question-prompt" id={`${headingId}-phase`}>
               {phaseTitle ?? phaseCopy?.title}
             </h1>

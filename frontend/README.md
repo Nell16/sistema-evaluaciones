@@ -2,7 +2,9 @@
 
 ## Preview del sistema visual UI-01
 
-La preview local de `UI-01` permite revisar la interfaz común sin API, scoring ni datos reales.
+La preview local de `UI-01` permite revisar la interfaz común sin API, scoring ni datos reales. Al abrirla, usa el
+panel de controles “Variaciones del test” para cambiar los estados mediante botones; la URL solo conserva una forma
+opcional de iniciar una combinación concreta.
 
 Inicia el frontend desde este directorio:
 

@@ -12,6 +12,26 @@ const demoOptions = [
 const previewSaveStates = ['saved', 'saving', 'error'] as const;
 type PreviewSaveState = (typeof previewSaveStates)[number];
 const previewPhases = ['instructions', 'practice', 'active', 'closed'] as const;
+const previewNoticeKinds = ['none', 'warning', 'error'] as const;
+type PreviewNoticeKind = (typeof previewNoticeKinds)[number];
+
+const phaseLabels: Record<TestPhase, string> = {
+  instructions: 'Instrucciones',
+  practice: 'Práctica',
+  active: 'Pregunta',
+  closed: 'Cerrada',
+};
+
+const responseLabels: Record<TestResponseType, string> = {
+  selection: 'Selección',
+  text: 'Texto libre',
+};
+
+const saveLabels: Record<PreviewSaveState, string> = {
+  saved: 'Guardado',
+  saving: 'Guardando',
+  error: 'Error de guardado',
+};
 
 function getSearchParams() {
   return new URLSearchParams(window.location.search);
@@ -25,14 +45,20 @@ function getPreviewSaveState(): PreviewSaveState {
     : 'saved';
 }
 
-function getPreviewNotice() {
+function getPreviewNoticeKind(): PreviewNoticeKind {
   const notice = getSearchParams().get('notice');
 
-  if (notice === 'warning') {
+  return previewNoticeKinds.includes(notice as PreviewNoticeKind)
+    ? (notice as PreviewNoticeKind)
+    : 'none';
+}
+
+function getPreviewNotice(kind: PreviewNoticeKind) {
+  if (kind === 'warning') {
     return { kind: 'warning' as const, message: 'Aviso de tiempo de ejemplo' };
   }
 
-  if (notice === 'error') {
+  if (kind === 'error') {
     return { kind: 'error' as const, message: 'Error de ejemplo' };
   }
 
@@ -49,8 +75,8 @@ function getPreviewResponseType(): TestResponseType {
   return getSearchParams().get('response') === 'text' ? 'text' : 'selection';
 }
 
-function getPreviewResource() {
-  if (getSearchParams().get('resource') !== 'visual') return undefined;
+function getPreviewResource(showResource: boolean) {
+  if (!showResource) return undefined;
 
   return (
     <div className="question-resource-placeholder" role="img" aria-label="Recurso visual de ejemplo">
@@ -70,8 +96,11 @@ export function Ui01Preview() {
   const [selectedOption, setSelectedOption] = useState<string | null>('b');
   const [textResponse, setTextResponse] = useState('');
   const [questionNumber, setQuestionNumber] = useState(1);
-  const phase = getPreviewPhase();
-  const responseType = getPreviewResponseType();
+  const [phase, setPhase] = useState<TestPhase>(getPreviewPhase);
+  const [responseType, setResponseType] = useState<TestResponseType>(getPreviewResponseType);
+  const [saveState, setSaveState] = useState<PreviewSaveState>(getPreviewSaveState);
+  const [noticeKind, setNoticeKind] = useState<PreviewNoticeKind>(getPreviewNoticeKind);
+  const [showResource, setShowResource] = useState(() => getSearchParams().get('resource') === 'visual');
 
   const handleNext = () => {
     setQuestionNumber((current) => (current === 3 ? 1 : current + 1));
@@ -81,6 +110,114 @@ export function Ui01Preview() {
 
   return (
     <main className="app-shell">
+      <section className="preview-toolbar" aria-labelledby="preview-title">
+        <div className="preview-toolbar-heading">
+          <p className="preview-eyebrow">UI-01 · herramienta de preview</p>
+          <h1 id="preview-title">Variaciones del test</h1>
+          <p>
+            Estos controles son temporales y solo sirven para revisar la biblioteca visual antes de conectarla al
+            flujo real de evaluación.
+          </p>
+        </div>
+
+        <div className="preview-control-grid">
+          <fieldset className="preview-control-group">
+            <legend>Fase</legend>
+            <div className="preview-choice-list">
+              {previewPhases.map((option) => (
+                <button
+                  key={option}
+                  className="preview-choice"
+                  type="button"
+                  aria-pressed={phase === option}
+                  onClick={() => setPhase(option)}
+                >
+                  {phaseLabels[option]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="preview-control-group">
+            <legend>Respuesta</legend>
+            <div className="preview-choice-list">
+              {(Object.keys(responseLabels) as TestResponseType[]).map((option) => (
+                <button
+                  key={option}
+                  className="preview-choice"
+                  type="button"
+                  aria-pressed={responseType === option}
+                  onClick={() => setResponseType(option)}
+                >
+                  {responseLabels[option]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="preview-control-group">
+            <legend>Guardado</legend>
+            <div className="preview-choice-list">
+              {previewSaveStates.map((option) => (
+                <button
+                  key={option}
+                  className="preview-choice"
+                  type="button"
+                  aria-pressed={saveState === option}
+                  onClick={() => setSaveState(option)}
+                >
+                  {saveLabels[option]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="preview-control-group">
+            <legend>Aviso</legend>
+            <div className="preview-choice-list">
+              {previewNoticeKinds.map((option) => (
+                <button
+                  key={option}
+                  className="preview-choice"
+                  type="button"
+                  aria-pressed={noticeKind === option}
+                  onClick={() => setNoticeKind(option)}
+                >
+                  {option === 'none' ? 'Sin aviso' : option === 'warning' ? 'Aviso' : 'Error'}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="preview-control-group">
+            <legend>Recurso</legend>
+            <div className="preview-choice-list">
+              <button
+                className="preview-choice"
+                type="button"
+                aria-pressed={!showResource}
+                onClick={() => setShowResource(false)}
+              >
+                Sin recurso
+              </button>
+              <button
+                className="preview-choice"
+                type="button"
+                aria-pressed={showResource}
+                onClick={() => setShowResource(true)}
+              >
+                Visual
+              </button>
+            </div>
+          </fieldset>
+        </div>
+
+        <p className="preview-current-state" aria-live="polite">
+          <span>Vista actual</span>
+          {phaseLabels[phase]} · {responseLabels[responseType]} · {saveLabels[saveState]}
+        </p>
+      </section>
+
       <div className="test-stage">
         <TestScreen
           testName="Subprueba de muestra"
@@ -92,10 +229,10 @@ export function Ui01Preview() {
           responseType={responseType}
           selectedOption={selectedOption}
           textResponse={textResponse}
-          saveState={getPreviewSaveState()}
-          notice={getPreviewNotice()}
+          saveState={saveState}
+          notice={getPreviewNotice(noticeKind)}
           phase={phase}
-          questionResource={getPreviewResource()}
+          questionResource={getPreviewResource(showResource)}
           primaryActionLabel={getPreviewActionLabel(phase)}
           onSelect={setSelectedOption}
           onTextResponse={setTextResponse}

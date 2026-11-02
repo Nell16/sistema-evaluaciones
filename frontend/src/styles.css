@@ -44,9 +44,97 @@ button {
   background: var(--test-background);
 }
 
+.preview-toolbar {
+  width: min(100% - 2rem, 1100px);
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  color: var(--test-ink);
+  background: var(--uam-primary);
+  border: 1px solid var(--uam-action);
+}
+
+.preview-toolbar-heading h1 {
+  margin: 0;
+  color: var(--test-paper);
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.preview-toolbar-heading p {
+  max-width: 68rem;
+  margin: 0.55rem 0 0;
+  line-height: 1.45;
+}
+
+.preview-eyebrow {
+  margin: 0 0 0.35rem !important;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.preview-control-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.preview-control-group {
+  min-width: 0;
+  margin: 0;
+  padding: 0.65rem;
+  border: 1px solid var(--uam-action);
+}
+
+.preview-control-group legend {
+  padding: 0 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.preview-choice-list {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.preview-choice {
+  min-height: 2.15rem;
+  padding: 0.45rem 0.55rem;
+  color: var(--test-ink);
+  text-align: left;
+  background: var(--test-paper);
+  border: 1px solid var(--uam-action);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.preview-choice[aria-pressed="true"] {
+  color: var(--test-paper);
+  background: var(--uam-action);
+  border-color: var(--test-ink);
+}
+
+.preview-choice:focus-visible {
+  outline: 3px solid var(--test-ink);
+  outline-offset: 2px;
+}
+
+.preview-current-state {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.7rem;
+  margin: 1rem 0 0;
+  font-size: 0.86rem;
+}
+
+.preview-current-state span {
+  font-weight: 700;
+}
+
 .test-stage {
   display: grid;
-  min-height: 100vh;
+  min-height: calc(100vh - 230px);
   place-items: center;
   padding: clamp(1rem, 5vw, 4rem);
 }
@@ -290,8 +378,17 @@ button {
 }
 
 @media (max-width: 600px) {
+  .preview-toolbar {
+    width: min(100% - 1rem, 1100px);
+    padding: 1rem;
+  }
+
+  .preview-control-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .test-stage {
-    min-height: 100vh;
+    min-height: auto;
     padding: 1rem;
   }
 
@@ -302,6 +399,12 @@ button {
 
   .primary-action {
     width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .preview-control-grid {
+    grid-template-columns: 1fr;
   }
 }
 

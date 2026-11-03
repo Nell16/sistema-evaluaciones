@@ -1,6 +1,7 @@
 name: CI
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
 permissions:
@@ -88,9 +89,25 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+  testing-ok:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exigir testing-ok en PR de GEN o BFA
+        env:
+          TITULO: ${{ github.event.pull_request.title }}
+          ETIQUETAS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          # docs/, test/ y chore/ (y tareas que no son GEN ni BFA) no necesitan testing-ok.
+          if echo "$TITULO" | grep -Eq '^\[(GEN|BFA)(-[A-Z]{2,6})?-[0-9]{2}'; then
+            echo ",$ETIQUETAS," | grep -q ',testing-ok,' \
+              || { echo "::error::Los PR de tareas GEN o BFA necesitan la etiqueta testing-ok (la pone Testing al aprobar) antes de fusionar."; exit 1; }
+          else
+            echo "No es una tarea GEN ni BFA: no se exige testing-ok."
+          fi
   ci-ok:
     if: always()
-    needs: [reglas, backend-build, frontend-build]
+    needs: [reglas, backend-build, frontend-build, testing-ok]
     runs-on: ubuntu-latest
     steps:
       - name: Todos los checks pasaron

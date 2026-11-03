@@ -19,6 +19,7 @@
 - [ ] Contratos y documentación actualizados
 - [ ] Sin regresiones en módulos anteriores
 - [ ] No hay secretos ni datos personales reales
+- [ ] Si es tarea GEN o BFA: Testing corrió la colección de `tests/api/` y puso la etiqueta `testing-ok` (si no aplica, por qué)
 
 ## Revisión del equipo
 

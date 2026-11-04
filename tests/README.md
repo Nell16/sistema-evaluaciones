@@ -61,6 +61,8 @@ Sustituye `NUMERO_PR` por el número real. Esta referencia puede no existir cuan
 
 No apruebes por intuición ni solo porque `ci-ok` esté verde. Nunca alteres datos de usuarios reales para probar.
 
+Consulta el **[reparto nominal y los casos por tarea](../docs/pruebas/PLAN-OPERATIVO-TESTING.md)** para las 18 tareas existentes, sus enlaces y precondiciones de ejecución.
+
 ## 6. Coordinación de tareas
 
 - `GEN-01..08-TEST`: validan las tareas `GEN-01..08` y sus PR backend/frontend. Se reportan antes de `GEN-xx-INT`.

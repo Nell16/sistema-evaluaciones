@@ -32,6 +32,8 @@
 
 Los resultados esperados que provienen de documentos aprobados no llevan marca. Los que dependen de DOC-04 se marcan como **provisional (DOC-04)** y se confirman cuando DOC-04 se cierre.
 
+**Numeración de casos de uso:** el Documento BFA §3 todavía conserva la propuesta anterior de CU-BFA-P01 a P12, con otra numeración (por ejemplo, allí P05 es «Registrar palabras de Fluidez Verbal»). Estos casos usan la numeración de DOC-04 rev. 2 del Documento general §3, que es la que cita el contrato aprobado (E5 → CU-BFA-P05 «Iniciar y presentar una subprueba»; E7 → CU-BFA-P06 «Registrar y cambiar respuestas»).
+
 Los criterios de las tareas se citan con su texto de ClickUp, porque todavía no tienen ID. Cuando Documentación asigne los IDs `CA-`, se usarán aquí.
 
 ### Cambios en revisión que pueden afectar estos casos

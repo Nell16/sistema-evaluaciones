@@ -53,22 +53,25 @@ Los casos de `docs/pruebas/` sobre esta interfaz: TC-GEN-03-003 a 008 (instrucci
 
 ### Supuestos y consultas abiertas
 
-DOC-05 y DOC-06 están aprobados, pero este módulo se basó en el §5.3 del Documento BFA y en los casos de Testing. Está marcado como `SUPUESTO` en `api/tipos.ts` lo que ninguno fija:
+DOC-05 y DOC-06 están aprobados, pero este módulo se basó en el §5.3 del Documento BFA y en los casos de Testing (`docs/pruebas/GEN-03-casos-prueba-v3.md`). Lo que ninguno fija está marcado como `SUPUESTO` en `api/tipos.ts`:
 
-1. **E6 en FV** devuelve `palabras` y `letraInicial`; E4 no trae la letra y hace falta para retomar FV.
-2. `recursoUrl` puede venir en la pregunta y en cada opción.
-3. E7 usa `opcion` (la letra); el §5.4.1 propone `opcionId`.
-4. Los recursos gráficos «se precargan antes de E5», pero E6 exige subprueba activa: hoy no se precarga nada.
-5. **Volver atrás** (GEN-03 C-1): se permite en todas las subpruebas de selección salvo Sumas y Multiplicaciones (`volverAtras` en `familias.ts`). Falta saber qué subpruebas lo restringen y dónde se configura.
-6. **Repetir E5** sobre la subprueba activa devuelve el mismo inicio y fin (CU-BFA-P05); el código HTTP está pendiente (GEN-03 C-4).
-7. **Sin cierre anticipado:** el contrato aprobado no lo incluye aunque DOC-04 rev. 2 lo menciona. Tras la última pregunta se espera el cierre oficial.
-8. Estados `PENDIENTE / ACTIVA / CERRADA` según el contrato aprobado; DOC-04 rev. 2 usa `HABILITADA / EN_CURSO / CERRADA` y se pidió unificarlos.
-9. El acceso real (sesión, sujeto, periodo y edición) depende de GEN-06; `/bfa` los toma de la URL o usa valores de ejemplo con la API simulada. Un `401` o `403` se informa y no se reintenta.
+1. **Fluidez Verbal (contrato del 2026-11-08):** cada palabra lleva `ordenEntrada` en E6 y E7. El nombre del campo con las palabras en E6 y el código de rechazo de E7 (texto vacío, orden repetido, entrada 76) siguen pendientes (C-7); se asume `palabras` y `400`.
+2. **Letra de FV al recargar:** E4 no la trae y E6 no la nombra. Mientras tanto se recuerda en `sessionStorage` desde E5 (respaldo temporal; en otro navegador se informa el error). Conviene que el contrato la devuelva.
+3. `recursoUrl` puede venir en la pregunta y en cada opción.
+4. E7 usa `opcion` (la letra); el §5.4.1 propone `opcionId`.
+5. Los recursos gráficos «se precargan antes de E5», pero E6 exige subprueba activa: hoy no se precarga nada.
+6. **Volver atrás** (C-1): se permite en todas las subpruebas de selección salvo Sumas y Multiplicaciones (`volverAtras` en `familias.ts`).
+7. **Repetir E5** sobre la subprueba activa devuelve el mismo inicio y fin (CU-BFA-P05); el código HTTP está pendiente (C-4).
+8. **Sin cierre anticipado:** el contrato aprobado no lo incluye aunque DOC-04 rev. 2 lo menciona.
+9. **Instrucciones y práctica (C-6):** el Documento general §5.2.4 define E24 para servirlas, pero ninguna tarea de GEN-03 lo implementa; hoy son marcadores en `familias.ts`.
+10. El acceso real (sesión, sujeto, periodo y edición) depende de GEN-06; `/bfa` los toma de la URL o usa valores de ejemplo con la API simulada. Un `401` o `403` se informa y no se reintenta.
+
+Resuelto el 2026-11-08: los estados de subprueba son `PENDIENTE / ACTIVA / CERRADA` en el contrato y en DOC-04, y E4 devuelve `versionFormularioId`.
 
 ### Dependencias externas
 
+- **Dos pantallas de subprueba:** existen la del PR #22 (GEN-03-FE) y la del PR #34 (GEN-03-BE). Integración decide cuál se fusiona; este flujo debe apoyarse en esa, sin duplicar lo que ya traiga.
 - **BUG-01 (backend):** si el cierre por tiempo no se registra en E4, la pantalla espera unos 20 s y muestra un error reintentable.
-- **GEN-03-FE (PR #22):** cuando se fusione, reemplazar las pantallas de instrucciones, práctica y progreso por sus componentes y revisar que no se dupliquen sus tipos de contrato.
 - **S2:** DOC-04 pidió permitir selección múltiple en Desplazamiento; hoy todo es selección única.
 
 ### Pendiente

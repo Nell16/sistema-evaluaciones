@@ -99,7 +99,7 @@ const esCierre = (e: unknown) =>
   ['TIEMPO_AGOTADO', 'SUBPRUEBA_NO_ACTIVA'].includes(e.error?.codigo ?? '');
 
 const aRegistro = (palabras: string[]): PalabraRegistrada[] =>
-  palabras.flatMap((texto, i) => (texto.trim() === '' ? [] : [{ orden: i + 1, texto }]));
+  palabras.flatMap((texto, i) => (texto.trim() === '' ? [] : [{ ordenEntrada: i + 1, texto }]));
 
 const MAX_SONDEOS = 10;
 
@@ -110,6 +110,11 @@ export interface OpcionesControlador {
   esperaGuardadoMs?: number;
   /** Intervalo entre consultas mientras se confirma el cierre. */
   intervaloSondeoMs?: number;
+  /**
+   * Dónde recordar la letra de FV de este navegador. Es un respaldo temporal: la letra debería
+   * volver en E4 o E6 (consulta C-7). Por defecto, `sessionStorage` si existe.
+   */
+  almacenLetra?: Pick<Storage, 'getItem' | 'setItem'> | null;
 }
 
 /**
@@ -137,6 +142,7 @@ export class ControladorBfa {
   private readonly ahora: () => number;
   private readonly esperaGuardadoMs: number;
   private readonly intervaloSondeoMs: number;
+  private readonly almacenLetra: Pick<Storage, 'getItem' | 'setItem'> | null;
 
   constructor(
     private readonly api: BfaApi,
@@ -146,6 +152,12 @@ export class ControladorBfa {
     this.ahora = opciones.ahora ?? Date.now;
     this.esperaGuardadoMs = opciones.esperaGuardadoMs ?? 300;
     this.intervaloSondeoMs = opciones.intervaloSondeoMs ?? 2000;
+    this.almacenLetra =
+      opciones.almacenLetra !== undefined
+        ? opciones.almacenLetra
+        : typeof sessionStorage === 'undefined'
+          ? null
+          : sessionStorage;
   }
 
   // --- Suscripción (useSyncExternalStore) ------------------------------------------------
@@ -291,9 +303,11 @@ export class ControladorBfa {
     this.pendientes = new Map();
     this.palabrasPendientes = false;
     this.palabras = [];
-    for (const { orden, texto } of r.palabras ?? []) this.palabras[orden - 1] = texto;
+    for (const { ordenEntrada, texto } of r.palabras ?? []) this.palabras[ordenEntrada - 1] = texto;
     this.palabras = Array.from(this.palabras, (p) => p ?? '');
-    const letra = r.letraInicial ?? letraE5 ?? null;
+    const clave = `bfa-letra-${this.evaluacionId}`;
+    const letra = r.letraInicial ?? letraE5 ?? this.almacenLetra?.getItem(clave) ?? null;
+    if (letra) this.almacenLetra?.setItem(clave, letra);
     if (config.tipoRespuesta === 'TEXTO_LIBRE' && !letra) throw new Error('LETRA_NO_DISPONIBLE');
 
     const sinResponder = r.preguntas.findIndex((p) => !this.respuestas.has(p.id));

@@ -54,21 +54,16 @@ export function VistaFlujo({ estado, controlador, alSalir }: VistaFlujoProps) {
 
     case 'error':
       return (
-        <TestScreen
-          testName={NOMBRE_TEST}
-          questionNumber={0}
-          totalQuestions={0}
-          timeRemainingSeconds={null}
-          prompt=""
-          selectedOption={null}
-          saveState="error"
-          phase="closed"
-          phaseLabel="Error"
-          phaseTitle="No se pudo continuar"
-          phaseDescription={estado.error.mensaje}
-          notice={{ kind: 'error', message: `Código: ${estado.error.codigo}` }}
-          primaryActionLabel={estado.error.reintentable ? 'Reintentar' : 'Salir'}
-          onNext={estado.error.reintentable ? controlador.reintentar : alSalir}
+        <HojaSimple
+          nombre={NOMBRE_TEST}
+          etiqueta="Error"
+          titulo="No se pudo continuar"
+          descripcion={estado.error.mensaje}
+          aviso={{ kind: 'error', message: `Código: ${estado.error.codigo}` }}
+          accion={{
+            texto: estado.error.reintentable ? 'Reintentar' : 'Salir',
+            alPulsar: estado.error.reintentable ? controlador.reintentar : alSalir,
+          }}
         />
       );
 
@@ -123,24 +118,20 @@ export function VistaFlujo({ estado, controlador, alSalir }: VistaFlujoProps) {
           ? ' Antes de esta subprueba se permite una pausa de 5 a 10 minutos; el tiempo no corre hasta iniciarla.'
           : '';
       return (
-        <TestScreen
-          testName={cerrada.nombre}
-          questionNumber={0}
-          totalQuestions={0}
-          timeRemainingSeconds={null}
-          prompt=""
-          selectedOption={null}
-          saveState="saved"
-          phase="closed"
-          phaseLabel="Subprueba cerrada"
-          phaseTitle="El tiempo terminó"
-          phaseDescription={
+        <HojaSimple
+          nombre={cerrada.nombre}
+          etiqueta="Subprueba cerrada"
+          titulo="El tiempo terminó"
+          descripcion={
             siguiente
               ? `${cerrada.nombre} se cerró y no se aceptan más respuestas. Sigue: ${siguiente.nombre}. No se puede volver a la subprueba anterior.${pausa}`
               : `${cerrada.nombre} se cerró y no se aceptan más respuestas. No quedan más subpruebas por aplicar.`
           }
-          primaryActionLabel={siguiente ? 'Continuar' : 'Ir al cierre'}
-          onNext={controlador.continuar}
+          guardado="saved"
+          accion={{
+            texto: siguiente ? 'Continuar' : 'Ir al cierre',
+            alPulsar: controlador.continuar,
+          }}
         />
       );
     }
@@ -157,39 +148,25 @@ export function VistaFlujo({ estado, controlador, alSalir }: VistaFlujoProps) {
         );
       }
       return (
-        <TestScreen
-          testName={NOMBRE_TEST}
-          questionNumber={0}
-          totalQuestions={0}
-          timeRemainingSeconds={null}
-          prompt=""
-          selectedOption={null}
-          saveState="saved"
-          phase="closed"
-          phaseLabel="Evaluación"
-          phaseTitle="Todas las subpruebas están cerradas"
-          phaseDescription="Finaliza la evaluación para registrar el cierre."
-          primaryActionLabel="Finalizar evaluación"
-          onNext={controlador.continuar}
+        <HojaSimple
+          nombre={NOMBRE_TEST}
+          etiqueta="Evaluación"
+          titulo="Todas las subpruebas están cerradas"
+          descripcion="Finaliza la evaluación para registrar el cierre."
+          guardado="saved"
+          accion={{ texto: 'Finalizar evaluación', alPulsar: controlador.continuar }}
         />
       );
 
     case 'finalizada':
       return (
-        <TestScreen
-          testName={NOMBRE_TEST}
-          questionNumber={0}
-          totalQuestions={0}
-          timeRemainingSeconds={null}
-          prompt=""
-          selectedOption={null}
-          saveState="saved"
-          phase="closed"
-          phaseLabel="Evaluación"
-          phaseTitle="Evaluación finalizada"
-          phaseDescription={`La evaluación quedó finalizada. ${textoResultado(estado.estadoResultado)}`}
-          primaryActionLabel="Salir"
-          onNext={alSalir}
+        <HojaSimple
+          nombre={NOMBRE_TEST}
+          etiqueta="Evaluación"
+          titulo="Evaluación finalizada"
+          descripcion={`La evaluación quedó finalizada. ${textoResultado(estado.estadoResultado)}`}
+          guardado="saved"
+          accion={{ texto: 'Salir', alPulsar: alSalir }}
         />
       );
   }
@@ -211,20 +188,14 @@ function VistaEjecucion({
 
   if (estado.alFinal) {
     return (
-      <TestScreen
-        testName={subprueba.nombre}
-        questionNumber={0}
-        totalQuestions={0}
-        timeRemainingSeconds={segundos}
-        prompt=""
-        selectedOption={null}
-        saveState={estado.guardado}
-        phase="closed"
-        phaseLabel="En curso"
-        phaseTitle="Respondiste todo lo disponible"
-        phaseDescription="La subprueba se cierra cuando termina el tiempo. Mientras tanto puedes revisar tus respuestas."
-        primaryActionLabel="Revisar respuestas"
-        onNext={controlador.revisar}
+      <HojaSimple
+        nombre={subprueba.nombre}
+        etiqueta="En curso"
+        titulo="Respondiste todo lo disponible"
+        descripcion="La subprueba se cierra cuando termina el tiempo. Mientras tanto puedes revisar tus respuestas."
+        segundos={segundos}
+        guardado={estado.guardado}
+        accion={{ texto: 'Revisar respuestas', alPulsar: controlador.revisar }}
       />
     );
   }

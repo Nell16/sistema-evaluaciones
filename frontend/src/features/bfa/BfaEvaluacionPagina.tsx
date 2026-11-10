@@ -1,3 +1,4 @@
+import './bfa.css';
 import { useEffect, useMemo, useReducer, useSyncExternalStore } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useBfaApi } from './api/contexto';

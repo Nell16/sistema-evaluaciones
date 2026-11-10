@@ -24,8 +24,6 @@ export type TestScreenProps = {
   saveState: SaveState;
   notice?: TestNoticeData;
   phase?: TestPhase;
-  /** Rótulo de la pantalla intermedia; por defecto el de la fase. */
-  phaseLabel?: string;
   phaseTitle?: string;
   phaseDescription?: string;
   questionResource?: ReactNode;
@@ -91,7 +89,6 @@ export function TestScreen({
   saveState,
   notice,
   phase = 'active',
-  phaseLabel,
   phaseTitle,
   phaseDescription,
   questionResource,
@@ -174,7 +171,7 @@ export function TestScreen({
           </>
         ) : (
           <section className="phase-panel" aria-labelledby={`${headingId}-phase`}>
-            <p className="phase-label">{phaseLabel ?? phaseCopy?.label}</p>
+            <p className="phase-label">{phaseCopy?.label}</p>
             <h1 className="question-prompt" id={`${headingId}-phase`}>
               {phaseTitle ?? phaseCopy?.title}
             </h1>

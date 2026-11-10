@@ -388,8 +388,17 @@ export class BfaApiSimulada implements BfaApi {
       for (const { preguntaId, opcion } of cuerpo.respuestas)
         ejecucion.respuestas.set(preguntaId, opcion);
     } else {
-      if (cuerpo.palabras.length > (config.maximoEntradas ?? 0)) {
-        throw fallo(400, 'SOLICITUD_INVALIDA', 'Supera el máximo de entradas.', ruta);
+      // El código de cada rechazo está pendiente (consulta C-7 de GEN-03); se usa 400.
+      const maximo = config.maximoEntradas ?? 0;
+      const ordenes = new Set(cuerpo.palabras.map((p) => p.ordenEntrada));
+      if (
+        cuerpo.palabras.length > maximo ||
+        ordenes.size !== cuerpo.palabras.length ||
+        cuerpo.palabras.some(
+          (p) => p.texto.trim() === '' || p.ordenEntrada < 1 || p.ordenEntrada > maximo,
+        )
+      ) {
+        throw fallo(400, 'SOLICITUD_INVALIDA', 'Palabras fuera del contrato de E7.', ruta);
       }
       ejecucion.palabras = cuerpo.palabras;
     }

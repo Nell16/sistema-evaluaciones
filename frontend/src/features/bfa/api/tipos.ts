@@ -57,6 +57,8 @@ export interface EvaluacionResponse {
   periodoId: number;
   // SUPUESTO: el documento solo muestra EN_CURSO y FINALIZADA.
   estado: 'EN_CURSO' | 'FINALIZADA';
+  /** Agregado a E4 el 2026-11-08. */
+  versionFormularioId?: number;
   fechaInicio: string;
   fechaFin: string | null;
   subpruebaActiva: { codigo: string; finLimite: string; segundosRestantes: number } | null;
@@ -96,7 +98,8 @@ export interface Pregunta {
 }
 
 export interface PalabraRegistrada {
-  orden: number;
+  /** Posición de la palabra (E6 y E7 de FV; antes `orden`, renombrado el 2026-11-08). */
+  ordenEntrada: number;
   texto: string;
 }
 
@@ -105,8 +108,8 @@ export interface PreguntasSubpruebaResponse {
   codigo: string;
   segundosRestantes: number;
   preguntas: Pregunta[];
-  // SUPUESTO: el documento dice que FV devuelve «las palabras ya registradas con su orden»
-  // y que la letra se fija en E5, pero E4 no la trae: se necesita al retomar FV tras una caída.
+  // SUPUESTO (consulta C-7 de GEN-03): el nombre del campo con las palabras de FV no está nombrado
+  // en el contrato. La letra se fija en E5 y E4 no la trae: se necesita al retomar FV tras una caída.
   palabras?: PalabraRegistrada[];
   letraInicial?: string | null;
 }

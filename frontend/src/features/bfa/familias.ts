@@ -20,6 +20,8 @@ export interface PresentacionSubprueba {
 }
 
 // El texto real lo define el material oficial de la UAM; no se inventan consignas.
+// Podría venir de E24 (instrucciones y ejemplos de práctica, Documento general §5.2.4), pero ninguna
+// tarea de GEN-03 lo implementa todavía (consulta C-6).
 const INSTRUCCIONES_PENDIENTES =
   'Lee con atención. Las instrucciones oficiales de esta subprueba se cargarán desde el material aprobado.';
 const PRACTICA_PENDIENTE = 'Aquí se resolverá el ejemplo de práctica. No consume tiempo oficial.';

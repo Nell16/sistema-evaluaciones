@@ -237,8 +237,8 @@ describe('respuestas y guardado', () => {
     expect(ejecucion(c).guardado).toBe('saved');
     const r = await api.obtenerPreguntas(id, 'FV');
     expect(r.palabras).toEqual([
-      { orden: 1, texto: 'mesa' },
-      { orden: 3, texto: 'montaña' },
+      { ordenEntrada: 1, texto: 'mesa' },
+      { ordenEntrada: 3, texto: 'montaña' },
     ]);
   });
 });
@@ -453,6 +453,90 @@ describe('casos de GEN-03 y GEN-04 sobre la interfaz', () => {
     expect(c.obtenerEstado()).toMatchObject({
       fase: 'error',
       error: { codigo: 'SIN_PERMISO', reintentable: false },
+    });
+  });
+});
+
+describe('Fluidez Verbal según el contrato del 2026-11-08', () => {
+  it('BUG-03: lo que se escribe viaja en E7 como palabras con ordenEntrada', async () => {
+    const { api, id } = await evaluacionNueva({}, ['FV']);
+    const enviados: unknown[] = [];
+    const real = api.registrarRespuestas.bind(api);
+    api.registrarRespuestas = async (...args) => {
+      enviados.push(args[2]);
+      return real(...args);
+    };
+    const c = await cargado(api, id);
+    await entrar(c);
+    c.escribirPalabras(['mesa', 'montaña']);
+    await vi.advanceTimersByTimeAsync(150);
+    expect(enviados.at(-1)).toEqual({
+      palabras: [
+        { ordenEntrada: 1, texto: 'mesa' },
+        { ordenEntrada: 2, texto: 'montaña' },
+      ],
+    });
+  });
+
+  const memoria = () => {
+    const datos = new Map<string, string>();
+    return {
+      getItem: (k: string) => datos.get(k) ?? null,
+      setItem: (k: string, v: string) => void datos.set(k, v),
+    };
+  };
+  const sinLetraEnE6 = (api: BfaApiSimulada) => {
+    const real = api.obtenerPreguntas.bind(api);
+    api.obtenerPreguntas = async (...args) => ({
+      ...(await real(...args)),
+      letraInicial: undefined,
+    });
+  };
+
+  it('TC-GEN-03-028: el servidor rechaza texto vacío, orden repetido y la entrada 76', async () => {
+    const { api, id } = await evaluacionNueva({}, ['FV']);
+    await api.iniciarSubprueba(id, 'FV');
+    const invalidas = [
+      [{ ordenEntrada: 1, texto: ' ' }],
+      [
+        { ordenEntrada: 1, texto: 'mesa' },
+        { ordenEntrada: 1, texto: 'mano' },
+      ],
+      [{ ordenEntrada: 76, texto: 'mesa' }],
+    ];
+    for (const palabras of invalidas) {
+      await expect(api.registrarRespuestas(id, 'FV', { palabras })).rejects.toMatchObject({
+        status: 400,
+      });
+    }
+    expect((await api.obtenerPreguntas(id, 'FV')).palabras).toEqual([]);
+  });
+
+  it('TC-GEN-03-002: al recargar, la letra sigue visible aunque E6 no la devuelva', async () => {
+    const { api, id } = await evaluacionNueva({}, ['FV']);
+    const almacenLetra = memoria();
+    const primero = new ControladorBfa(api, id, { ahora, esperaGuardadoMs: 100, almacenLetra });
+    await primero.cargar();
+    await entrar(primero);
+    primero.escribirPalabras(['mesa', 'montaña']);
+    await vi.advanceTimersByTimeAsync(150);
+    sinLetraEnE6(api);
+    const segundo = new ControladorBfa(api, id, { ahora, almacenLetra });
+    await segundo.cargar();
+    expect(ejecucion(segundo)).toMatchObject({ letraInicial: 'M', palabras: ['mesa', 'montaña'] });
+  });
+
+  it('sin la letra en E6 ni en este navegador, informa en vez de mostrar una pantalla vacía', async () => {
+    const { api, id } = await evaluacionNueva({}, ['FV']);
+    const primero = new ControladorBfa(api, id, { ahora, almacenLetra: memoria() });
+    await primero.cargar();
+    await entrar(primero);
+    sinLetraEnE6(api);
+    const otroNavegador = new ControladorBfa(api, id, { ahora, almacenLetra: memoria() });
+    await otroNavegador.cargar();
+    expect(otroNavegador.obtenerEstado()).toMatchObject({
+      fase: 'error',
+      error: { codigo: 'LETRA_NO_DISPONIBLE' },
     });
   });
 });

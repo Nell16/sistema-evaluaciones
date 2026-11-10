@@ -1091,7 +1091,7 @@ components:
       type: object
       required: [versionFormularioId, sujetoId, periodoId]
       properties:
-        testId: { type: integer, format: int64, description: Si se recibe, debe coincidir con la versión., example: 1 }
+        testId: { type: integer, format: int64, description: 'Si se recibe, debe coincidir con la versión.', example: 1 }
         versionFormularioId: { type: integer, format: int64, example: 10 }
         sujetoId: { type: integer, format: int64, example: 25 }
         periodoId: { type: integer, format: int64, example: 3 }
@@ -1476,7 +1476,7 @@ components:
             type: object
             required: [idFactor, percentil, estadoCelda]
             properties:
-              idFactor: { type: string, description: Código del factor, como en E9., example: VOC1 }
+              idFactor: { type: string, description: 'Código del factor, como en E9.', example: VOC1 }
               percentil: { type: integer, minimum: 1, maximum: 99 }
               limiteInferior: { type: integer, nullable: true, description: Obligatorio si estadoCelda es RANGO. }
               limiteSuperior: { type: integer, nullable: true }

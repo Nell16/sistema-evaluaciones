@@ -121,6 +121,7 @@ describe('sin saltos ni regresos', () => {
       error: { codigo: 'SUBPRUEBA_NO_ACTIVA' },
     });
     c.continuar();
+    await dejarResolver();
     expect(c.obtenerEstado()).toMatchObject({
       fase: 'preparacion',
       paso: 'instrucciones',
@@ -150,6 +151,7 @@ describe('progreso y estados oficiales', () => {
     await entrar(c);
     await vencer(c, 300);
     c.continuar();
+    await dejarResolver();
     await entrar(c);
     expect(ejecucion(c).posicion).toBe(2);
     await vencer(c, 360);
@@ -537,6 +539,86 @@ describe('Fluidez Verbal según el contrato del 2026-11-08', () => {
     expect(otroNavegador.obtenerEstado()).toMatchObject({
       fase: 'error',
       error: { codigo: 'LETRA_NO_DISPONIBLE' },
+    });
+  });
+});
+
+describe('E24: instrucciones y ejemplos de práctica', () => {
+  const preparacion = (c: ControladorBfa) => {
+    const e = c.obtenerEstado();
+    if (e.fase !== 'preparacion') throw new Error(`fase ${e.fase}`);
+    return e;
+  };
+
+  it('TC-GEN-03-003: muestra instrucciones y ejemplos del servidor antes de iniciar el tiempo', async () => {
+    const { api, id } = await evaluacionNueva({ ejemplosPractica: 2 });
+    const c = await cargado(api, id);
+    expect(preparacion(c).contenido?.instrucciones).toContain('Vocabulario - Forma A');
+    c.continuar();
+    expect(preparacion(c)).toMatchObject({ paso: 'practica', ejemplo: 0 });
+    c.seleccionarPractica('B');
+    expect(preparacion(c).seleccion).toBe('B');
+    c.continuar();
+    expect(preparacion(c)).toMatchObject({ paso: 'practica', ejemplo: 1, seleccion: null });
+    expect((await api.obtenerEvaluacion(id)).subpruebaActiva).toBeNull();
+    c.continuar();
+    await dejarResolver();
+    expect(fase(c)).toBe('ejecucion');
+  });
+
+  it('la práctica no guarda nada ni consume tiempo oficial', async () => {
+    const { api, id } = await evaluacionNueva();
+    const registrar = vi.spyOn(api, 'registrarRespuestas');
+    const c = await cargado(api, id);
+    c.continuar();
+    c.seleccionarPractica('A');
+    expect(registrar).not.toHaveBeenCalled();
+    expect((await api.obtenerEvaluacion(id)).subpruebaActiva).toBeNull();
+  });
+
+  it('si E24 devuelve una subprueba sin ejemplos, pasa directo a iniciar', async () => {
+    const { api, id } = await evaluacionNueva({ ejemplosPractica: 0 });
+    const c = await cargado(api, id);
+    c.continuar();
+    await dejarResolver();
+    expect(fase(c)).toBe('ejecucion');
+  });
+
+  it('mientras E24 no exista en el backend, usa los textos provisionales y sigue', async () => {
+    const { api, id } = await evaluacionNueva();
+    api.consultarInstrucciones = async () => {
+      throw new ApiError(404, {
+        timestamp: '',
+        status: 404,
+        codigo: 'RUTA_NO_ENCONTRADA',
+        mensaje: 'x',
+        ruta: '',
+      });
+    };
+    const c = await cargado(api, id);
+    expect(preparacion(c).contenido).toBeNull();
+    c.continuar();
+    expect(preparacion(c)).toMatchObject({ paso: 'practica', contenido: null });
+    c.continuar();
+    await dejarResolver();
+    expect(fase(c)).toBe('ejecucion');
+  });
+
+  it('un error real de E24 se informa: no se inventan instrucciones', async () => {
+    const { api, id } = await evaluacionNueva();
+    api.consultarInstrucciones = async () => {
+      throw new ApiError(500, {
+        timestamp: '',
+        status: 500,
+        codigo: 'ERROR_INTERNO',
+        mensaje: 'x',
+        ruta: '',
+      });
+    };
+    const c = await cargado(api, id);
+    expect(c.obtenerEstado()).toMatchObject({
+      fase: 'error',
+      error: { codigo: 'ERROR_INTERNO', reintentable: true },
     });
   });
 });

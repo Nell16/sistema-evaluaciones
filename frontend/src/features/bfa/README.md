@@ -51,22 +51,22 @@ El flujo solo conoce `E6` (enunciado y alternativas). Para una familia, ajusta s
 
 Los casos de `docs/pruebas/` sobre esta interfaz: TC-GEN-03-003 a 008 (instrucciones y práctica antes del tiempo, reloj del servidor al recargar, pendiente frente a confirmado, volver atrás, fallo de guardado, fin del tiempo) y TC-GEN-04-001 a 010 (finalizar, pendientes, E8, resultado pendiente de validación, errores, doble clic, sin cálculos en el navegador). Las pruebas automáticas del controlador (`flujo/controlador.test.ts`) llevan el ID del caso cuando aplica.
 
-### Supuestos y consultas abiertas
+### Contrato (DOC-05)
 
-DOC-05 y DOC-06 están aprobados, pero este módulo se basó en el §5.3 del Documento BFA y en los casos de Testing (`docs/pruebas/GEN-03-casos-prueba-v3.md`). Lo que ninguno fija está marcado como `SUPUESTO` en `api/tipos.ts`:
+Verificado contra `docs/api/openapi.yaml` del PR #37 (aún sin fusionar; su encabezado lo presenta como contrato aprobado). Confirmado: rutas y métodos de E1–E8 y E24; `opcion` es la letra de E6; `recursoUrl` viene en la pregunta y en cada opción; FV usa `palabras` con `ordenEntrada` en E6 y E7; estados `PENDIENTE / ACTIVA / CERRADA`; `versionFormularioId` en E2 y E4 (E3 la exige, se toma de E2); formato de error común. Las instrucciones y los ejemplos de práctica se leen de E24; mientras el backend no la implemente (`RUTA_NO_ENCONTRADA`) se usan textos provisionales, y cualquier otro error se informa.
 
-1. **Fluidez Verbal (contrato del 2026-11-08):** cada palabra lleva `ordenEntrada` en E6 y E7. El nombre del campo con las palabras en E6 y el código de rechazo de E7 (texto vacío, orden repetido, entrada 76) siguen pendientes (C-7); se asume `palabras` y `400`.
-2. **Letra de FV al recargar:** E4 no la trae y E6 no la nombra. Mientras tanto se recuerda en `sessionStorage` desde E5 (respaldo temporal; en otro navegador se informa el error). Conviene que el contrato la devuelva.
-3. `recursoUrl` puede venir en la pregunta y en cada opción.
-4. E7 usa `opcion` (la letra); el §5.4.1 propone `opcionId`.
-5. Los recursos gráficos «se precargan antes de E5», pero E6 exige subprueba activa: hoy no se precarga nada.
-6. **Volver atrás** (C-1): se permite en todas las subpruebas de selección salvo Sumas y Multiplicaciones (`volverAtras` en `familias.ts`).
-7. **Repetir E5** sobre la subprueba activa devuelve el mismo inicio y fin (CU-BFA-P05); el código HTTP está pendiente (C-4).
-8. **Sin cierre anticipado:** el contrato aprobado no lo incluye aunque DOC-04 rev. 2 lo menciona.
-9. **Instrucciones y práctica (C-6):** el Documento general §5.2.4 define E24 para servirlas, pero ninguna tarea de GEN-03 lo implementa; hoy son marcadores en `familias.ts`.
-10. El acceso real (sesión, sujeto, periodo y edición) depende de GEN-06; `/bfa` los toma de la URL o usa valores de ejemplo con la API simulada. Un `401` o `403` se informa y no se reintenta.
+### Pendiente de confirmar
 
-Resuelto el 2026-11-08: los estados de subprueba son `PENDIENTE / ACTIVA / CERRADA` en el contrato y en DOC-04, y E4 devuelve `versionFormularioId`.
+1. **Letra de FV al recargar:** ni E4 ni E6 la devuelven. Se recuerda en `sessionStorage` desde E5 (respaldo temporal; en otro navegador se informa el error). Conviene que E6 la incluya.
+2. **Rechazos de E7 en FV** (texto vacío, orden repetido, entrada 76): el contrato solo dice `400 SOLICITUD_INVALIDA` en general (consulta C-7).
+3. **Borrar una palabra ya guardada:** E7 exige texto no vacío y «registra o reemplaza»; no queda claro si lo que no se envía se elimina.
+4. **Sesión:** toda operación exige Bearer (E14). `services/http.ts` es compartido y hoy no envía token, así que con el backend real habría `401` hasta que GEN-06 lo resuelva; se informa y no se reintenta.
+5. **Volver atrás** (C-1): se permite en todas las subpruebas de selección salvo Sumas y Multiplicaciones (`volverAtras` en `familias.ts`).
+6. **Repetir E5** sobre la subprueba activa devuelve el mismo inicio y fin (CU-BFA-P05); el código HTTP está pendiente (C-4).
+7. **Sin cierre anticipado:** el contrato aprobado no lo incluye aunque DOC-04 rev. 2 lo menciona.
+8. Los recursos gráficos «se precargan antes de E5», pero E6 exige subprueba activa: hoy no se precarga nada.
+9. **E3 `EVALUACION_EN_CURSO`:** la respuesta no trae el id de la evaluación abierta; para retomarla habría que consultar la lista de evaluaciones.
+10. El acceso real (sujeto y periodo) depende de GEN-06; `/bfa` los toma de la URL o usa valores de ejemplo con la API simulada.
 
 ### Dependencias externas
 
@@ -76,4 +76,4 @@ Resuelto el 2026-11-08: los estados de subprueba son `PENDIENTE / ACTIVA / CERRA
 
 ### Pendiente
 
-Texto oficial de instrucciones y práctica, pausa de Comprensión Verbal más allá del aviso, y sustituir la API simulada por los mocks de INT-02.
+Implementación de E24 en el backend (C-6) y textos oficiales de instrucciones y práctica, pausa de Comprensión Verbal más allá del aviso, y sustituir la API simulada por los mocks de INT-02.

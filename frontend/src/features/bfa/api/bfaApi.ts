@@ -3,6 +3,7 @@ import type {
   AvanceSubpruebaResponse,
   EvaluacionResponse,
   IniciarEvaluacionRequest,
+  InstruccionesResponse,
   PreguntasSubpruebaResponse,
   RegistrarRespuestasRequest,
   SubpruebaActivaResponse,
@@ -18,6 +19,8 @@ export interface BfaApi {
   obtenerTest(testId: number): Promise<TestDetalle>;
   iniciarEvaluacion(solicitud: IniciarEvaluacionRequest): Promise<EvaluacionResponse>;
   obtenerEvaluacion(evaluacionId: number): Promise<EvaluacionResponse>;
+  /** E24: instrucciones y ejemplos de práctica; no consume tiempo. */
+  consultarInstrucciones(evaluacionId: number, codigo: string): Promise<InstruccionesResponse>;
   iniciarSubprueba(evaluacionId: number, codigo: string): Promise<SubpruebaActivaResponse>;
   obtenerPreguntas(evaluacionId: number, codigo: string): Promise<PreguntasSubpruebaResponse>;
   registrarRespuestas(
@@ -38,6 +41,7 @@ export const bfaApiHttp: BfaApi = {
   iniciarEvaluacion: (solicitud) =>
     http('/evaluaciones', { method: 'POST', body: JSON.stringify(solicitud) }),
   obtenerEvaluacion: (id) => http(`/evaluaciones/${id}`),
+  consultarInstrucciones: (id, codigo) => http(`${sub(id, codigo)}/instrucciones`),
   iniciarSubprueba: (id, codigo) => http(`${sub(id, codigo)}/iniciar`, { method: 'POST' }),
   obtenerPreguntas: (id, codigo) => http(`${sub(id, codigo)}/preguntas`),
   registrarRespuestas: (id, codigo, cuerpo) =>

@@ -1,5 +1,5 @@
-// Contratos REST usados por el flujo BFA (DOC-05 · Documento BFA §5.3, E1–E8).
-// Los comentarios «SUPUESTO» marcan lo que el documento no fija y hay que confirmar.
+// Contratos REST usados por el flujo BFA (DOC-05: E1–E8 y E24). Verificados contra
+// docs/api/openapi.yaml del PR #37 (aún sin fusionar). «SUPUESTO» marca lo que el contrato no fija.
 
 export type EstadoSubprueba = 'PENDIENTE' | 'ACTIVA' | 'CERRADA';
 export type TipoRespuesta = 'SELECCION' | 'TEXTO_LIBRE';
@@ -31,6 +31,8 @@ export interface TestDetalle {
   id: number;
   codigo: string;
   nombre: string;
+  /** Edición publicada que se aplicará; E3 la exige. */
+  versionFormularioId: number;
   subpruebas: SubpruebaConfig[];
 }
 
@@ -55,7 +57,6 @@ export interface EvaluacionResponse {
   testId: number;
   sujetoId: number;
   periodoId: number;
-  // SUPUESTO: el documento solo muestra EN_CURSO y FINALIZADA.
   estado: 'EN_CURSO' | 'FINALIZADA';
   /** Agregado a E4 el 2026-11-08. */
   versionFormularioId?: number;
@@ -91,7 +92,7 @@ export interface Pregunta {
   id: number;
   numero: number;
   enunciado: string;
-  /** SUPUESTO: el documento dice que «el enunciado o la opción» incluyen recursoUrl. */
+  /** Solo si la subprueba usa imágenes. */
   recursoUrl?: string | null;
   opciones: OpcionPregunta[];
   respuestaActual: string | null;
@@ -108,9 +109,10 @@ export interface PreguntasSubpruebaResponse {
   codigo: string;
   segundosRestantes: number;
   preguntas: Pregunta[];
-  // SUPUESTO (consulta C-7 de GEN-03): el nombre del campo con las palabras de FV no está nombrado
-  // en el contrato. La letra se fija en E5 y E4 no la trae: se necesita al retomar FV tras una caída.
+  /** Solo FV: palabras ya registradas con su orden. */
   palabras?: PalabraRegistrada[];
+  // SUPUESTO: el contrato no devuelve la letra en E4 ni en E6, pero hace falta para retomar FV tras
+  // una caída. Mientras tanto se usa un respaldo local; conviene pedir que E6 la incluya.
   letraInicial?: string | null;
 }
 
@@ -123,4 +125,23 @@ export interface AvanceSubpruebaResponse {
   registradas: number;
   totalRespondidas: number;
   segundosRestantes: number;
+}
+
+export interface OpcionRespuesta {
+  letra: string;
+  texto: string;
+}
+
+export interface EjemploPractica {
+  numero: number;
+  enunciado: string;
+  opciones: OpcionRespuesta[];
+  retroalimentacion: string;
+}
+
+/** E24: instrucciones y ejemplos de práctica, antes de E5 y sin consumir tiempo. */
+export interface InstruccionesResponse {
+  codigo: string;
+  instrucciones: string;
+  ejemplos: EjemploPractica[];
 }

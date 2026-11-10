@@ -14,7 +14,7 @@ type Carga =
 
 // Mientras no exista el acceso real (sujeto, periodo y edición llegan de otro módulo),
 // la API simulada usa estos valores de ejemplo.
-const EJEMPLO = { sujetoId: 25, periodoId: 3, versionFormularioId: 10, letraInicial: 'M' };
+const EJEMPLO = { sujetoId: 25, periodoId: 3, letraInicial: 'M' };
 
 /** Entrada de la batería: muestra el orden y los tiempos que manda el backend y crea la evaluación (E3). */
 export function BfaAccesoPagina() {
@@ -57,7 +57,7 @@ export function BfaAccesoPagina() {
       const incluyeFv = test.subpruebas.some((s) => s.codigo === 'FV');
       const evaluacion = await api.iniciarEvaluacion({
         testId: test.id,
-        versionFormularioId: numero('versionFormularioId'),
+        versionFormularioId: test.versionFormularioId,
         sujetoId: numero('sujetoId'),
         periodoId: numero('periodoId'),
         ...(incluyeFv

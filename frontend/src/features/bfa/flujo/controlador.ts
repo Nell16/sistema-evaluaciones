@@ -3,6 +3,7 @@ import type { SaveState } from '../../../components/SaveStatus';
 import type { BfaApi } from '../api/bfaApi';
 import type {
   EvaluacionResponse,
+  InstruccionesResponse,
   PalabraRegistrada,
   Pregunta,
   SubpruebaConfig,
@@ -43,6 +44,11 @@ export type EstadoFlujo =
       subprueba: SubpruebaConfig;
       posicion: number;
       total: number;
+      /** E24; `null` mientras el backend no lo implemente (se usan textos provisionales). */
+      contenido: InstruccionesResponse | null;
+      /** Ejemplo de práctica que se está viendo y la alternativa que eligió. */
+      ejemplo: number;
+      seleccion: string | null;
     }
   | { fase: 'iniciando'; subprueba: SubpruebaConfig }
   | EstadoEjecucion
@@ -62,6 +68,17 @@ const MENSAJES: Record<string, string> = {
   EVALUACION_NO_ENCONTRADA: 'No se encontró la evaluación.',
   TEST_NO_ENCONTRADO: 'No se encontró el test.',
   SIN_PERMISO: 'No tienes permiso para realizar esta acción.',
+  SOLICITUD_INVALIDA: 'La solicitud no es válida.',
+  RESPUESTA_INVALIDA: 'La respuesta no corresponde a la pregunta.',
+  ERROR_INTERNO: 'El servidor tuvo un problema. Intenta de nuevo.',
+  RUTA_NO_ENCONTRADA: 'El servicio solicitado no está disponible.',
+  SUJETO_NO_ENCONTRADO: 'No se encontró a la persona evaluada.',
+  PERIODO_NO_ENCONTRADO: 'No se encontró el periodo.',
+  VERSION_NO_PUBLICADA: 'La edición del test aún no está publicada.',
+  VERSION_INCOMPATIBLE: 'La edición no corresponde a este test.',
+  SUBPRUEBA_NO_INCLUIDA: 'La subprueba no forma parte de la evaluación.',
+  EVALUACION_EN_CURSO: 'Esta persona ya tiene una evaluación abierta en este periodo.',
+  LETRA_NO_ASIGNADA: 'Fluidez Verbal necesita una letra asignada antes de comenzar.',
   NO_AUTENTICADO: 'Tu sesión terminó. Vuelve a ingresar para continuar.',
   SUBPRUEBA_FUERA_DE_ORDEN: 'Esa subprueba no es la siguiente. Se recargará el estado oficial.',
   HAY_SUBPRUEBA_ACTIVA: 'Ya hay una subprueba en curso. Se recargará el estado oficial.',
@@ -221,13 +238,33 @@ export class ControladorBfa {
     return { posicion: lista.findIndex((s) => s.codigo === codigo) + 1, total: lista.length };
   }
 
-  private preparar(codigo: string): EstadoFlujo {
+  /** Instrucciones y práctica (E24). Si la ruta aún no existe se siguen usando los textos provisionales. */
+  private async preparar(codigo: string): Promise<EstadoFlujo> {
+    const subprueba = this.config(codigo);
+    let contenido: InstruccionesResponse | null = null;
+    try {
+      contenido = await this.api.consultarInstrucciones(this.evaluacionId, codigo);
+    } catch (e) {
+      if (!(e instanceof ApiError && e.error?.codigo === 'RUTA_NO_ENCONTRADA')) throw e;
+    }
     return {
       fase: 'preparacion',
       paso: 'instrucciones',
-      subprueba: this.config(codigo),
+      subprueba,
       ...this.posicionDe(codigo),
+      contenido,
+      ejemplo: 0,
+      seleccion: null,
     };
+  }
+
+  private async irAPreparacion(codigo: string) {
+    this.fijar({ fase: 'cargando' });
+    try {
+      this.fijar(await this.preparar(codigo));
+    } catch (e) {
+      this.fallar(e);
+    }
   }
 
   private async resolver(evaluacion: EvaluacionResponse) {
@@ -241,7 +278,7 @@ export class ControladorBfa {
     const pendiente = evaluacion.subpruebas.find((s) => s.estado === 'PENDIENTE');
     this.fijar(
       pendiente
-        ? this.preparar(pendiente.codigo)
+        ? await this.preparar(pendiente.codigo)
         : { fase: 'listaParaFinalizar', finalizando: false },
     );
   }
@@ -262,18 +299,29 @@ export class ControladorBfa {
   continuar = () => {
     const e = this.estado;
     if (e.fase === 'preparacion') {
-      if (e.paso === 'instrucciones' && e.subprueba.tienePractica)
-        this.fijar({ ...e, paso: 'practica' });
-      else void this.iniciar(e.subprueba);
+      const ejemplos = e.contenido?.ejemplos.length ?? 0;
+      if (e.paso === 'instrucciones') {
+        // Con E24 solo hay práctica si trae ejemplos; sin E24 se mantiene la pantalla provisional.
+        const hayPractica = e.subprueba.tienePractica && (e.contenido === null || ejemplos > 0);
+        if (hayPractica) this.fijar({ ...e, paso: 'practica', ejemplo: 0, seleccion: null });
+        else void this.iniciar(e.subprueba);
+      } else if (e.ejemplo < ejemplos - 1) {
+        this.fijar({ ...e, ejemplo: e.ejemplo + 1, seleccion: null });
+      } else {
+        void this.iniciar(e.subprueba);
+      }
     } else if (e.fase === 'transicion' && !e.cerrando) {
-      this.fijar(
-        e.siguiente
-          ? this.preparar(e.siguiente.codigo)
-          : { fase: 'listaParaFinalizar', finalizando: false },
-      );
+      if (e.siguiente) void this.irAPreparacion(e.siguiente.codigo);
+      else this.fijar({ fase: 'listaParaFinalizar', finalizando: false });
     } else if (e.fase === 'listaParaFinalizar' && !e.finalizando) {
       void this.finalizar();
     }
+  };
+
+  /** Elegir una alternativa en un ejemplo de práctica: se muestra la retroalimentación y nada se guarda. */
+  seleccionarPractica = (letra: string) => {
+    const e = this.estado;
+    if (e.fase === 'preparacion' && e.paso === 'practica') this.fijar({ ...e, seleccion: letra });
   };
 
   private async iniciar(config: SubpruebaConfig) {

@@ -1,7 +1,9 @@
+import { AnswerOption } from '../../../components/AnswerOption';
 import { Figura } from '../components/Figura';
 import { FluidezVerbal } from '../components/FluidezVerbal';
 import { TestScreen } from '../../../components/TestScreen';
 import type { TestOption } from '../../../components/AnswerOption';
+import type { EjemploPractica } from '../api/tipos';
 import type { ControladorBfa, EstadoEjecucion, EstadoFlujo } from '../flujo/controlador';
 import { PAUSA_ANTES_DE, presentacionDe } from '../familias';
 import { formatoTiempo } from './formato';
@@ -68,10 +70,26 @@ export function VistaFlujo({ estado, controlador, alSalir }: VistaFlujoProps) {
       );
 
     case 'preparacion': {
-      const { subprueba, paso, posicion, total } = estado;
+      const { subprueba, paso, posicion, total, contenido } = estado;
+      const ejemplo = paso === 'practica' ? contenido?.ejemplos[estado.ejemplo] : undefined;
+      if (ejemplo && contenido) {
+        return (
+          <VistaPractica
+            estado={estado}
+            ejemplo={ejemplo}
+            total={contenido.ejemplos.length}
+            controlador={controlador}
+          />
+        );
+      }
       const pres = presentacionDe(subprueba.codigo);
       const progreso = `Subprueba ${posicion} de ${total}. Tiempo oficial: ${formatoTiempo(subprueba.tiempoLimiteSegundos)}, que empieza solo al iniciar.`;
-      const texto = paso === 'instrucciones' ? pres.instrucciones : (pres.practica ?? '');
+      const texto =
+        paso === 'instrucciones'
+          ? (contenido?.instrucciones ?? pres.instrucciones)
+          : (pres.practica ?? '');
+      const hayPractica =
+        subprueba.tienePractica && (contenido === null || contenido.ejemplos.length > 0);
       return (
         <TestScreen
           testName={subprueba.nombre}
@@ -89,7 +107,7 @@ export function VistaFlujo({ estado, controlador, alSalir }: VistaFlujoProps) {
           }
           phaseDescription={`${texto} ${progreso}`}
           primaryActionLabel={
-            paso === 'instrucciones' && subprueba.tienePractica
+            paso === 'instrucciones' && hayPractica
               ? 'Continuar a la práctica'
               : 'Iniciar subprueba'
           }
@@ -262,5 +280,49 @@ function VistaEjecucion({
       onSelect={(letra) => controlador.seleccionar(pregunta.id, letra)}
       onNext={controlador.siguiente}
     />
+  );
+}
+
+type EstadoPreparacion = Extract<EstadoFlujo, { fase: 'preparacion' }>;
+
+/** Ejemplo de práctica de E24: no consume tiempo, no se guarda y no cuenta para el puntaje. */
+function VistaPractica({
+  estado,
+  ejemplo,
+  total,
+  controlador,
+}: {
+  estado: EstadoPreparacion;
+  ejemplo: EjemploPractica;
+  total: number;
+  controlador: ControladorBfa;
+}) {
+  const ultimo = estado.ejemplo >= total - 1;
+  return (
+    <HojaSimple
+      nombre={estado.subprueba.nombre}
+      etiqueta={`Práctica ${estado.ejemplo + 1} de ${total}`}
+      titulo={ejemplo.enunciado}
+      descripcion="Este ejemplo no consume tiempo oficial ni cuenta para el puntaje."
+      aviso={estado.seleccion ? { kind: 'warning', message: ejemplo.retroalimentacion } : undefined}
+      accion={{
+        texto: ultimo ? 'Iniciar subprueba' : 'Siguiente ejemplo',
+        alPulsar: controlador.continuar,
+      }}
+    >
+      {ejemplo.opciones.length > 0 && (
+        <div className="options" role="radiogroup" aria-label="Alternativas del ejemplo">
+          {ejemplo.opciones.map((o) => (
+            <AnswerOption
+              key={o.letra}
+              groupName={`practica-${estado.subprueba.codigo}-${ejemplo.numero}`}
+              option={{ id: o.letra, label: o.texto }}
+              checked={estado.seleccion === o.letra}
+              onChange={controlador.seleccionarPractica}
+            />
+          ))}
+        </div>
+      )}
+    </HojaSimple>
   );
 }

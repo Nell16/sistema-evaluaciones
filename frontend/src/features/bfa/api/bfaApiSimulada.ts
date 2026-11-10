@@ -5,6 +5,7 @@ import type {
   EstadoSubprueba,
   EvaluacionResponse,
   IniciarEvaluacionRequest,
+  InstruccionesResponse,
   PalabraRegistrada,
   Pregunta,
   PreguntasSubpruebaResponse,
@@ -151,6 +152,8 @@ export interface OpcionesApiSimulada {
   duracionSegundos?: number;
   /** Subpruebas sin práctica. */
   sinPractica?: string[];
+  /** Ejemplos de práctica por subprueba que la tiene. */
+  ejemplosPractica?: number;
   /** Si se da, el estado sobrevive a recargar la página (así se puede probar la recuperación). */
   almacen?: Pick<Storage, 'getItem' | 'setItem'>;
 }
@@ -188,6 +191,7 @@ export class BfaApiSimulada implements BfaApi {
   readonly simulada = true;
   private readonly ahora: () => number;
   private readonly preguntasPorSubprueba: number;
+  private readonly ejemplosPractica: number;
   private readonly configuraciones: SubpruebaConfig[];
   private readonly evaluaciones = new Map<number, EvaluacionSimulada>();
   private siguienteId = 15;
@@ -197,6 +201,7 @@ export class BfaApiSimulada implements BfaApi {
     this.ahora = opciones.ahora ?? Date.now;
     this.almacen = opciones.almacen;
     this.preguntasPorSubprueba = opciones.preguntasPorSubprueba ?? 3;
+    this.ejemplosPractica = opciones.ejemplosPractica ?? 1;
     this.configuraciones = CATALOGO.map((base) => {
       const esTexto = base.tipoRespuesta === 'TEXTO_LIBRE';
       return {
@@ -256,6 +261,7 @@ export class BfaApiSimulada implements BfaApi {
       id: 1,
       codigo: 'BFA',
       nombre: 'Batería Factorial de Aptitudes',
+      versionFormularioId: 10,
       subpruebas: this.configuraciones,
     };
   }
@@ -265,6 +271,9 @@ export class BfaApiSimulada implements BfaApi {
     const { versionFormularioId, sujetoId, periodoId } = solicitud;
     if (![versionFormularioId, sujetoId, periodoId].every((v) => Number.isInteger(v))) {
       throw fallo(400, 'SOLICITUD_INVALIDA', 'Faltan campos obligatorios.', ruta);
+    }
+    if (versionFormularioId !== 10) {
+      throw fallo(422, 'VERSION_INCOMPATIBLE', 'La edición no corresponde al test.', ruta);
     }
     const codigos = this.configuraciones.map((c) => c.codigo);
     const incluidas = solicitud.subpruebas
@@ -299,6 +308,31 @@ export class BfaApiSimulada implements BfaApi {
     const evaluacion = this.buscar(evaluacionId);
     this.reconciliar(evaluacion);
     return this.vista(evaluacion);
+  }
+
+  async consultarInstrucciones(
+    evaluacionId: number,
+    codigo: string,
+  ): Promise<InstruccionesResponse> {
+    const evaluacion = this.buscar(evaluacionId);
+    const ruta = `/api/v1/evaluaciones/${evaluacionId}/subpruebas/${codigo}/instrucciones`;
+    if (!evaluacion.ejecuciones.some((e) => e.codigo === codigo)) {
+      throw fallo(404, 'SUBPRUEBA_NO_ENCONTRADA', 'La subprueba no existe.', ruta);
+    }
+    const config = this.config(codigo);
+    const letras = 'ABCDE'.slice(0, config.opciones ?? 0).split('');
+    return {
+      codigo,
+      instrucciones: `Instrucciones de ejemplo de ${config.nombre}. Contenido ilustrativo, no es el texto oficial.`,
+      ejemplos: config.tienePractica
+        ? Array.from({ length: this.ejemplosPractica }, (_, i) => ({
+            numero: i + 1,
+            enunciado: `Ejemplo de práctica ${i + 1} (${codigo})`,
+            opciones: letras.map((letra) => ({ letra, texto: `Alternativa ${letra}` })),
+            retroalimentacion: `Retroalimentación de ejemplo ${i + 1}.`,
+          }))
+        : [],
+    };
   }
 
   async iniciarSubprueba(evaluacionId: number, codigo: string): Promise<SubpruebaActivaResponse> {

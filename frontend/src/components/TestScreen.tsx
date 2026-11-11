@@ -6,8 +6,12 @@ import { TextResponseField } from './TextResponseField';
 
 export type TestPhase = 'instructions' | 'practice' | 'active' | 'closed';
 export type TestResponseType = 'selection' | 'text';
+/** Distribución de las alternativas: lista, rejilla de dos columnas, par binario o figuras. */
+export type OptionsLayout = 'list' | 'compact' | 'binary' | 'figures';
+/** Enunciado: título breve, texto largo, pieza centrada (palabra, operación) u oculto a la vista. */
+export type PromptVariant = 'title' | 'statement' | 'display' | 'hidden';
 
-type TestScreenProps = {
+export type TestScreenProps = {
   testName: string;
   questionNumber: number;
   totalQuestions: number;
@@ -28,13 +32,25 @@ type TestScreenProps = {
   showSaveStatus?: boolean;
   primaryActionLabel?: string;
   primaryActionDisabled?: boolean;
+  /** Sustituye el texto "Pregunta X de Y" (numeración de la hoja, total desconocido...). */
+  questionLabel?: string;
+  promptVariant?: PromptVariant;
+  optionsLayout?: OptionsLayout;
+  /** Cifras de altura uniforme y alineadas, para operaciones y resultados. */
+  numeric?: boolean;
+  /** Reemplaza el área de respuesta (por ejemplo, la grilla de Fluidez Verbal). */
+  responseArea?: ReactNode;
   /** Botón secundario (por ejemplo "Anterior"); solo se muestra si hay etiqueta y manejador. */
   secondaryActionLabel?: string;
-  onSelect: (optionId: string) => void;
-  onTextResponse?: (value: string) => void;
+  previousActionLabel?: string;
   onBack?: () => void;
+  onPrevious?: () => void;
+  onSelect?: (optionId: string) => void;
+  onTextResponse?: (value: string) => void;
   onNext: () => void;
 };
+
+const noop = () => undefined;
 
 function formatRemainingTime(seconds: number | null) {
   if (seconds === null) return '—';
@@ -87,10 +103,17 @@ export function TestScreen({
   showSaveStatus = true,
   primaryActionLabel,
   primaryActionDisabled = false,
+  questionLabel,
+  promptVariant = 'title',
+  optionsLayout = 'list',
+  numeric = false,
+  responseArea,
   secondaryActionLabel,
-  onSelect,
-  onTextResponse,
+  previousActionLabel,
   onBack,
+  onPrevious,
+  onSelect = noop,
+  onTextResponse,
   onNext,
 }: TestScreenProps) {
   const headingId = useId();
@@ -101,8 +124,16 @@ export function TestScreen({
     timeRemainingSeconds === null ? undefined : Math.max(0, timeRemainingSeconds);
   const sectionHeadingId = isActiveQuestion ? headingId : `${headingId}-phase`;
 
+  // dos formas de pedir el botón "Anterior": secondaryActionLabel/onBack (GEN-03-FE)
+  // u onPrevious/previousActionLabel (UI-04). se admiten ambas sin pisarse.
+  const backHandler = onBack ?? onPrevious;
+  const backLabel = secondaryActionLabel ?? (onPrevious ? (previousActionLabel ?? 'Anterior') : undefined);
+
   return (
-    <section className="test-paper" aria-labelledby={sectionHeadingId}>
+    <section
+      className={`test-paper${numeric ? ' test-paper--numeric' : ''}`}
+      aria-labelledby={sectionHeadingId}
+    >
       <header className="test-header">
         <span className="test-name">{testName}</span>
         <time
@@ -117,23 +148,33 @@ export function TestScreen({
         {isActiveQuestion ? (
           <>
             <p className="question-counter">
-              Pregunta {questionNumber} de {totalQuestions}
+              {questionLabel ?? `Pregunta ${questionNumber} de ${totalQuestions}`}
             </p>
-            <h1 className="question-prompt" id={headingId}>
+            <h1
+              className={`question-prompt${promptVariant === 'title' ? '' : ` question-prompt--${promptVariant}`}`}
+              id={headingId}
+            >
               {prompt}
             </h1>
 
             {questionResource && <div className="question-resource">{questionResource}</div>}
             {notice && <TestNotice {...notice} />}
 
-            {responseType === 'selection' ? (
-              <div className="options" role="radiogroup" aria-label="Alternativas de respuesta">
+            {responseArea ? (
+              responseArea
+            ) : responseType === 'selection' ? (
+              <div
+                className={`options options--${optionsLayout}`}
+                role="radiogroup"
+                aria-label="Alternativas de respuesta"
+              >
                 {options.map((option) => (
                   <AnswerOption
                     key={option.id}
                     groupName={`test-question-${headingId}`}
                     option={option}
                     checked={selectedOption === option.id}
+                    variant={optionsLayout === 'binary' ? 'binary' : 'row'}
                     onChange={onSelect}
                   />
                 ))}
@@ -161,9 +202,9 @@ export function TestScreen({
       <footer className="test-footer">
         {showSaveStatus && <SaveStatus state={saveState} />}
         <div className="test-actions">
-          {secondaryActionLabel && onBack && (
-            <button className="secondary-action" type="button" onClick={onBack}>
-              {secondaryActionLabel}
+          {backHandler && backLabel && (
+            <button className="secondary-action" type="button" onClick={backHandler}>
+              {backLabel}
             </button>
           )}
           <button

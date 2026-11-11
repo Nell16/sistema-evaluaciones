@@ -701,4 +701,35 @@ class PersistenciaCatalogoIntegrationTest {
                         })
                 .hasStackTraceContaining("Las opciones solo pertenecen a preguntas de seleccion");
     }
+
+    @Test
+    void debeRechazarVersionCreadaDirectamenteComoPublicada() {
+
+        // Crear un test válido para utilizarlo en la prueba.
+        TestJpaEntity test =
+                testRepository.saveAndFlush(
+                        new TestJpaEntity(
+                                "BUG04_" + UUID.randomUUID(),
+                                "Test de integridad BUG-04",
+                                "Prueba de publicación directa",
+                                true));
+
+        // Intentar insertar directamente una versión PUBLICADA.
+        assertThatThrownBy(
+                        () ->
+                                entityManager
+                                        .createNativeQuery(
+                                                """
+                        INSERT INTO version_formulario
+                            (id_test, codigo_version, fuente_ref,
+                             estado, publicada_en, evidencia_validacion)
+                        VALUES
+                            (:idTest, :codigo, 'Material ficticio',
+                             'PUBLICADA', CURRENT_TIMESTAMP, 'ev-ficticia')
+                        """)
+                                        .setParameter("idTest", test.getIdTest())
+                                        .setParameter("codigo", "V-DIRECTA")
+                                        .executeUpdate())
+                .hasStackTraceContaining("Una version debe crearse en estado BORRADOR");
+    }
 }

@@ -127,7 +127,8 @@ export function TestScreen({
   // dos formas de pedir el botón "Anterior": secondaryActionLabel/onBack (GEN-03-FE)
   // u onPrevious/previousActionLabel (UI-04). se admiten ambas sin pisarse.
   const backHandler = onBack ?? onPrevious;
-  const backLabel = secondaryActionLabel ?? (onPrevious ? (previousActionLabel ?? 'Anterior') : undefined);
+  const backLabel =
+    secondaryActionLabel ?? (onPrevious ? (previousActionLabel ?? 'Anterior') : undefined);
 
   return (
     <section

@@ -61,7 +61,7 @@ Verificado contra `docs/api/openapi.yaml` del PR #37 (aún sin fusionar; su enca
 2. **Rechazos de E7 en FV** (texto vacío, orden repetido, entrada 76): el contrato solo dice `400 SOLICITUD_INVALIDA` en general (consulta C-7).
 3. **Borrar una palabra ya guardada:** E7 exige texto no vacío y «registra o reemplaza»; no queda claro si lo que no se envía se elimina.
 4. **Sesión:** toda operación exige Bearer (E14). `services/http.ts` es compartido y hoy no envía token, así que con el backend real habría `401` hasta que GEN-06 lo resuelva; se informa y no se reintenta.
-5. **Volver atrás** (C-1): se permite en todas las subpruebas de selección salvo Sumas y Multiplicaciones (`volverAtras` en `familias.ts`).
+5. **Volver atrás** (C-1): el botón «Anterior» aparece desde la segunda pregunta en todas las subpruebas de selección, incluidas Sumas y Multiplicaciones. El Documento BFA §5.2 dice que la navegación interna «puede» permitir volver a reactivos anteriores y no restringe ninguna subprueba; en Sumas y Multiplicaciones solo pide rapidez y cambio de ítem en menos de 100 ms. Si C-1 decide restringirlo, se cambia `volverAtras` en `familias.ts`.
 6. **Repetir E5** sobre la subprueba activa devuelve el mismo inicio y fin (CU-BFA-P05); el código HTTP está pendiente (C-4).
 7. **Sin cierre anticipado:** el contrato aprobado no lo incluye aunque DOC-04 rev. 2 lo menciona.
 8. Los recursos gráficos «se precargan antes de E5», pero E6 exige subprueba activa: hoy no se precarga nada.

@@ -54,10 +54,18 @@ export function BfaAccesoPagina() {
     setCreando(true);
     setFallo(null);
     try {
-      const incluyeFv = test.subpruebas.some((s) => s.codigo === 'FV');
+      // `?subpruebas=R1,R2` aplica solo esas subpruebas (aplicación parcial, E3).
+      const pedidas = params
+        .get('subpruebas')
+        ?.split(',')
+        .map((c) => c.trim())
+        .filter(Boolean);
+      const aplicadas = pedidas?.length ? pedidas : test.subpruebas.map((s) => s.codigo);
+      const incluyeFv = aplicadas.includes('FV');
       const evaluacion = await api.iniciarEvaluacion({
         testId: test.id,
         versionFormularioId: test.versionFormularioId,
+        ...(pedidas?.length ? { subpruebas: pedidas } : {}),
         sujetoId: numero('sujetoId'),
         periodoId: numero('periodoId'),
         ...(incluyeFv

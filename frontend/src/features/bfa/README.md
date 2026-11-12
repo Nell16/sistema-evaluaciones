@@ -51,6 +51,25 @@ El flujo solo conoce `E6` (enunciado y alternativas). Para una familia, ajusta s
 
 Los casos de `docs/pruebas/` sobre esta interfaz: TC-GEN-03-003 a 008 (instrucciones y práctica antes del tiempo, reloj del servidor al recargar, pendiente frente a confirmado, volver atrás, fallo de guardado, fin del tiempo) y TC-GEN-04-001 a 010 (finalizar, pendientes, E8, resultado pendiente de validación, errores, doble clic, sin cálculos en el navegador). Las pruebas automáticas del controlador (`flujo/controlador.test.ts`) llevan el ID del caso cuando aplica.
 
+### Razonamiento A y B (BFA-FE-04)
+
+`razonamiento/` dibuja el enunciado y las alternativas de R1 (series numéricas) y R2 (series de letras, analogías y relaciones conceptuales). Se enchufa en `familias.ts` con `renderEnunciado` y `renderOpcion`; la navegación, el reloj y el guardado siguen siendo los del flujo general.
+
+- **Fidelidad:** el analizador (`analizar.ts`) solo decide cómo se dibuja; nunca modifica el texto. Números, letras, palabras y símbolos se muestran tal como llegan, en serif con cifras de altura uniforme, sin ligaduras y con `translate="no"` para que el navegador no los traduzca.
+- **Tiempos:** 10:00 y 12:00 llegan del servidor (E2/E5); la interfaz no los fija.
+- **Verlo sin backend:** `/bfa?subpruebas=R1,R2&tiempo=60` aplica solo Razonamiento con 60 s por subprueba.
+
+**Formato de los enunciados (supuesto).** E6 solo entrega `enunciado` como texto y no hay un campo de tipo de ítem; DOC-08 y BFA-BE-04 deben confirmar el formato. Se reconoce:
+
+| Tipo              | Ejemplo                                    | Cómo se dibuja                            |
+| ----------------- | ------------------------------------------ | ----------------------------------------- |
+| Serie             | `2, 4, 8, 16, ___` (también `;`, `-`, `→`) | Términos separados con el hueco en cuadro |
+| Analogía          | `frío : calor :: noche : ___`              | Dos pares unidos por `::`                 |
+| Analogía en frase | `Pie es a zapato como mano es a ___`       | Dos líneas unidas por «como»              |
+| Cualquier otro    | relaciones conceptuales, texto libre       | Texto tal cual, con el hueco si lo trae   |
+
+El hueco puede ser `___`, `[ ]`, `( )`, `□` o un `?` suelto. Si el formato real es otro, solo hay que ajustar `analizar.ts`; lo que no se reconoce se muestra como texto sin alterarlo.
+
 ### Contrato (DOC-05)
 
 Verificado contra `docs/api/openapi.yaml` del PR #37 (aún sin fusionar; su encabezado lo presenta como contrato aprobado). Confirmado: rutas y métodos de E1–E8 y E24; `opcion` es la letra de E6; `recursoUrl` viene en la pregunta y en cada opción; FV usa `palabras` con `ordenEntrada` en E6 y E7; estados `PENDIENTE / ACTIVA / CERRADA`; `versionFormularioId` en E2 y E4 (E3 la exige, se toma de E2); formato de error común. Las instrucciones y los ejemplos de práctica se leen de E24; mientras el backend no la implemente (`RUTA_NO_ENCONTRADA`) se usan textos provisionales, y cualquier otro error se informa.
@@ -76,4 +95,4 @@ Verificado contra `docs/api/openapi.yaml` del PR #37 (aún sin fusionar; su enca
 
 ### Pendiente
 
-Implementación de E24 en el backend (C-6) y textos oficiales de instrucciones y práctica, pausa de Comprensión Verbal más allá del aviso, y sustituir la API simulada por los mocks de INT-02.
+Formato real de los enunciados de R1 y R2 (DOC-08, BFA-BE-04), implementación de E24 en el backend (C-6) y textos oficiales de instrucciones y práctica, pausa de Comprensión Verbal más allá del aviso, y sustituir la API simulada por los mocks de INT-02.

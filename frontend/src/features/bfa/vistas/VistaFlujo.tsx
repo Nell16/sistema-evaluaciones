@@ -247,7 +247,7 @@ function VistaEjecucion({
   const pregunta = estado.preguntas[estado.indice];
   const opciones: TestOption[] = pregunta.opciones.map((o) => ({
     id: o.letra,
-    label: o.texto,
+    label: pres.renderOpcion ? pres.renderOpcion(o.texto) : o.texto,
     figure: o.recursoUrl ? <Figura rol="opcion" src={o.recursoUrl} alt="" /> : undefined,
   }));
   const total = subprueba.numeroPreguntas;
@@ -262,7 +262,7 @@ function VistaEjecucion({
       totalQuestions={total}
       questionLabel={consecutiva ? undefined : `Pregunta ${pregunta.numero}`}
       timeRemainingSeconds={segundos}
-      prompt={pregunta.enunciado}
+      prompt={pres.renderEnunciado ? pres.renderEnunciado(pregunta.enunciado) : pregunta.enunciado}
       promptVariant={pres.promptVariant}
       optionsLayout={pres.optionsLayout}
       numeric={pres.numeric}

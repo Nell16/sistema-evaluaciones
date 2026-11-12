@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react';
 import type { OptionsLayout, PromptVariant } from '../../components/TestScreen';
+import { renderEnunciadoRazonamiento, renderOpcionRazonamiento } from './razonamiento/render';
 
 /**
  * Cómo se presenta cada subprueba dentro del flujo general. Las familias del BFA se enchufan aquí
@@ -17,6 +19,10 @@ export interface PresentacionSubprueba {
    * Pendiente de confirmar qué subpruebas lo restringen y dónde se configura (consulta C-1 de GEN-03).
    */
   volverAtras: boolean;
+  /** Dibuja el enunciado de la familia (series, analogías, operaciones...). Sin él, se muestra el texto. */
+  renderEnunciado?: (enunciado: string) => ReactNode;
+  /** Dibuja el texto de cada alternativa. Sin él, se muestra el texto. */
+  renderOpcion?: (texto: string) => ReactNode;
 }
 
 // El texto real lo define el material oficial de la UAM; no se inventan consignas.
@@ -48,8 +54,18 @@ export const presentacionPorSubprueba: Record<string, PresentacionSubprueba> = {
   S1: base(figuras),
   S2: base(figuras),
   S1b: base(figuras),
-  R1: base({ promptVariant: 'display', optionsLayout: 'compact', numeric: true }),
-  R2: base({ promptVariant: 'display', optionsLayout: 'compact' }),
+  R1: base({
+    promptVariant: 'display',
+    optionsLayout: 'compact',
+    renderEnunciado: renderEnunciadoRazonamiento,
+    renderOpcion: renderOpcionRazonamiento,
+  }),
+  R2: base({
+    promptVariant: 'statement',
+    optionsLayout: 'compact',
+    renderEnunciado: renderEnunciadoRazonamiento,
+    renderOpcion: renderOpcionRazonamiento,
+  }),
   CV: base({ promptVariant: 'statement' }),
   'N1-A': base(operacionBinaria),
   'N1-B': base(operacionBinaria),

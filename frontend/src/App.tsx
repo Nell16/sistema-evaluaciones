@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { Plantilla } from './components/Plantilla';
+import { Gen03Preview } from './dev/Gen03Preview';
 import { Ui01Preview } from './dev/Ui01Preview';
 import { Ui04Preview } from './dev/Ui04Preview';
 import { Ui05Preview } from './dev/Ui05Preview';
@@ -24,6 +25,8 @@ const router = createBrowserRouter([
   },
   // Vista previa de UI-01 (contenido demostrativo).
   { path: 'dev/ui-01', element: <Ui01Preview /> },
+  // Vista previa de GEN-03-FE con backend simulado (contenido demostrativo).
+  { path: 'dev/gen-03', element: <Gen03Preview /> },
   // Vista previa de UI-04: variantes visuales de las subpruebas BFA (contenido de ejemplo).
   { path: 'dev/ui-04', element: <Ui04Preview /> },
   // Vista previa de UI-05: diseño del perfil de resultados BFA (datos simulados).

@@ -1,0 +1,577 @@
+{
+  "info": {
+    "name": "GEN — Flujo común",
+    "description": "Pruebas de API del flujo común. GEN-01: E1 y E2 (CU-BFA-P01, CU-BFA-P02). Ejecutar por carpeta, no completa; pasos en docs/pruebas/GEN-01-casos-prueba-v1.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GEN-01",
+      "item": [
+        {
+          "name": "1 Catálogo vacío (antes de cargar datos)",
+          "item": [
+            {
+              "name": "TC-GEN-01-001 E1 catálogo vacío",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('200 y lista vacía', () => {",
+                      "  pm.response.to.have.status(200);",
+                      "  pm.expect(pm.response.json()).to.eql([]);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "2 Catálogo y detalle (con GEN-01-datos-prueba.sql)",
+          "item": [
+            {
+              "name": "TC-GEN-01-002 E1 lista solo los tests activos",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('200 y arreglo', () => {",
+                      "  pm.response.to.have.status(200);",
+                      "  pm.expect(pm.response.json()).to.be.an('array');",
+                      "});",
+                      "const lista = pm.response.json();",
+                      "const t1 = lista.find((t) => t.codigo === 'TC01-T1');",
+                      "const t2 = lista.find((t) => t.codigo === 'TC01-T2');",
+                      "const t4 = lista.find((t) => t.codigo === 'TC01-T4');",
+                      "pm.test('incluye T1, T2 y T4 con su número de subpruebas y solo los campos del contrato', () => {",
+                      "  pm.expect(t1).to.include({ nombre: 'Test ficticio uno', numeroSubpruebas: 3 });",
+                      "  pm.expect(t2).to.include({ numeroSubpruebas: 1 });",
+                      "  pm.expect(t4).to.include({ numeroSubpruebas: 1 });",
+                      "  lista.forEach((t) => pm.expect(Object.keys(t)).to.have.members(['id', 'codigo', 'nombre', 'numeroSubpruebas']));",
+                      "});",
+                      "pm.test('no incluye el test inactivo T3', () => {",
+                      "  pm.expect(lista.map((t) => t.codigo)).to.not.include('TC01-T3');",
+                      "});",
+                      "if (t1 && t2 && t4) {",
+                      "  pm.collectionVariables.set('t1Id', t1.id);",
+                      "  pm.collectionVariables.set('t2Id', t2.id);",
+                      "  pm.collectionVariables.set('t4Id', t4.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "TC-GEN-01-003 E2 usa la edición publicada más reciente, sin preguntas ni claves",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests/{{t1Id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests",
+                    "{{t1Id}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get('t1Id')) {",
+                      "  throw new Error('Falta t1Id: ejecuta la carpeta completa en orden (ver docs/pruebas/GEN-01-casos-prueba-v1.md).');",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('200 solo con los campos del contrato', () => {",
+                      "  pm.response.to.have.status(200);",
+                      "  const d = pm.response.json();",
+                      "  pm.expect(Object.keys(d)).to.have.members(['id', 'codigo', 'nombre', 'versionFormularioId', 'subpruebas']);",
+                      "  pm.expect(d.codigo).to.eql('TC01-T1');",
+                      "  pm.expect(d.versionFormularioId).to.be.a('number');",
+                      "  d.subpruebas.forEach((s) => pm.expect(Object.keys(s)).to.have.members(['codigo', 'nombre', 'orden', 'factor',",
+                      "    'tiempoLimiteSegundos', 'tipoRespuesta', 'opciones', 'numeroPreguntas', 'maximoEntradas', 'tienePractica']));",
+                      "});",
+                      "pm.test('trae las 3 configuraciones de v2 y no la única de v1', () => {",
+                      "  pm.expect(pm.response.json().subpruebas).to.have.lengthOf(3);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "TC-GEN-01-004 E2 respeta el orden de aplicación",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests/{{t1Id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests",
+                    "{{t1Id}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get('t1Id')) {",
+                      "  throw new Error('Falta t1Id: ejecuta la carpeta completa en orden (ver docs/pruebas/GEN-01-casos-prueba-v1.md).');",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('orden 1, 2, 3 aunque se insertaron fuera de orden', () => {",
+                      "  const s = pm.response.json().subpruebas;",
+                      "  pm.expect(s.map((x) => x.orden)).to.eql([1, 2, 3]);",
+                      "  pm.expect(s.map((x) => x.codigo)).to.eql(['SA', 'SB', 'SC']);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "TC-GEN-01-005 E2 selección con opciones uniformes",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests/{{t1Id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests",
+                    "{{t1Id}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get('t1Id')) {",
+                      "  throw new Error('Falta t1Id: ejecuta la carpeta completa en orden (ver docs/pruebas/GEN-01-casos-prueba-v1.md).');",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('SA: factor, tiempo, opciones, preguntas y práctica', () => {",
+                      "  pm.expect(pm.response.json().subpruebas[0]).to.eql({ codigo: 'SA', nombre: 'Subprueba A', orden: 1, factor: 'FA',",
+                      "    tiempoLimiteSegundos: 180, tipoRespuesta: 'SELECCION', opciones: 4, numeroPreguntas: 3, maximoEntradas: null,",
+                      "    tienePractica: true });",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "TC-GEN-01-006 E2 opciones no uniformes y factor compartido",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests/{{t1Id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests",
+                    "{{t1Id}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get('t1Id')) {",
+                      "  throw new Error('Falta t1Id: ejecuta la carpeta completa en orden (ver docs/pruebas/GEN-01-casos-prueba-v1.md).');",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('SB: opciones nulo, mismo factor que SA, sin tiempo ni práctica', () => {",
+                      "  pm.expect(pm.response.json().subpruebas[1]).to.eql({ codigo: 'SB', nombre: 'Subprueba B', orden: 2, factor: 'FA',",
+                      "    tiempoLimiteSegundos: null, tipoRespuesta: 'SELECCION', opciones: null, numeroPreguntas: 2, maximoEntradas: null,",
+                      "    tienePractica: false });",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "TC-GEN-01-007 E2 texto libre",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests/{{t1Id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests",
+                    "{{t1Id}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get('t1Id')) {",
+                      "  throw new Error('Falta t1Id: ejecuta la carpeta completa en orden (ver docs/pruebas/GEN-01-casos-prueba-v1.md).');",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('SC: opciones nulo, 0 preguntas y máximo de entradas', () => {",
+                      "  pm.expect(pm.response.json().subpruebas[2]).to.eql({ codigo: 'SC', nombre: 'Subprueba C', orden: 3, factor: 'FC',",
+                      "    tiempoLimiteSegundos: 120, tipoRespuesta: 'TEXTO_LIBRE', opciones: null, numeroPreguntas: 0, maximoEntradas: 20,",
+                      "    tienePractica: true });",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "TC-GEN-01-008 E2 subprueba sin factor cargado",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests/{{t4Id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests",
+                    "{{t4Id}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get('t4Id')) {",
+                      "  throw new Error('Falta t4Id: ejecuta la carpeta completa en orden (ver docs/pruebas/GEN-01-casos-prueba-v1.md).');",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('200 y factor nulo', () => {",
+                      "  pm.response.to.have.status(200);",
+                      "  const s = pm.response.json().subpruebas;",
+                      "  pm.expect(s).to.have.lengthOf(1);",
+                      "  pm.expect(s[0].codigo).to.eql('SY');",
+                      "  pm.expect(s[0].factor).to.eql(null);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "TC-GEN-01-009 E2 test sin edición publicada",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests/{{t2Id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests",
+                    "{{t2Id}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get('t2Id')) {",
+                      "  throw new Error('Falta t2Id: ejecuta la carpeta completa en orden (ver docs/pruebas/GEN-01-casos-prueba-v1.md).');",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('404 TEST_NO_ENCONTRADO con formato común de error', () => {",
+                      "  pm.response.to.have.status(404);",
+                      "  const e = pm.response.json();",
+                      "  pm.expect(Object.keys(e)).to.have.members(['timestamp', 'status', 'codigo', 'mensaje', 'ruta']);",
+                      "  pm.expect(e.status).to.eql(404);",
+                      "  pm.expect(e.codigo).to.eql('TEST_NO_ENCONTRADO');",
+                      "  pm.expect(e.ruta).to.eql(pm.request.url.getPath());",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "TC-GEN-01-010 E2 test inactivo",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests/{{t3Id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests",
+                    "{{t3Id}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get('t3Id')) {",
+                      "  throw new Error('Falta t3Id: ejecuta la carpeta completa en orden (ver docs/pruebas/GEN-01-casos-prueba-v1.md).');",
+                      "}"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('404 TEST_NO_ENCONTRADO con formato común de error', () => {",
+                      "  pm.response.to.have.status(404);",
+                      "  const e = pm.response.json();",
+                      "  pm.expect(Object.keys(e)).to.have.members(['timestamp', 'status', 'codigo', 'mensaje', 'ruta']);",
+                      "  pm.expect(e.status).to.eql(404);",
+                      "  pm.expect(e.codigo).to.eql('TEST_NO_ENCONTRADO');",
+                      "  pm.expect(e.ruta).to.eql(pm.request.url.getPath());",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "TC-GEN-01-011 E2 test inexistente",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests/999999999",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests",
+                    "999999999"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('404 TEST_NO_ENCONTRADO con formato común de error', () => {",
+                      "  pm.response.to.have.status(404);",
+                      "  const e = pm.response.json();",
+                      "  pm.expect(Object.keys(e)).to.have.members(['timestamp', 'status', 'codigo', 'mensaje', 'ruta']);",
+                      "  pm.expect(e.status).to.eql(404);",
+                      "  pm.expect(e.codigo).to.eql('TEST_NO_ENCONTRADO');",
+                      "  pm.expect(e.ruta).to.eql(pm.request.url.getPath());",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3 Observaciones",
+          "item": [
+            {
+              "name": "O-2 E2 con testId no numérico",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/tests/abc",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "tests",
+                    "abc"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('observado: 400 (el contrato de E2 no define este caso)', () => {",
+                      "  pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "t1Id",
+      "value": ""
+    },
+    {
+      "key": "t2Id",
+      "value": ""
+    },
+    {
+      "key": "t3Id",
+      "value": ""
+    },
+    {
+      "key": "t4Id",
+      "value": ""
+    }
+  ]
+}

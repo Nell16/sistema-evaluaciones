@@ -1,0 +1,27 @@
+PR #51 · pull/51/merge 84520d4 · PostgreSQL 17 (postgres:17-alpine) · psql · 2026-11-17
+Base: las 3 migraciones del PR aplicadas con psql + GEN-01-datos-prueba.sql. Script: GEN-01-casos-bd.sql
+
+== TC-GEN-01-012
+UPDATE subprueba SET factor = 'FZ'
+WHERE codigo = 'SA' AND id_test = (SELECT id_test FROM test WHERE codigo = 'TC01-T1');
+ERROR:  No se puede redefinir una subprueba utilizada en versiones publicadas
+CONTEXT:  PL/pgSQL function proteger_subprueba() line 20 at RAISE
+== TC-GEN-01-013
+BEGIN;
+BEGIN
+UPDATE subprueba SET factor = 'FX'
+WHERE codigo = 'SX' AND id_test = (SELECT id_test FROM test WHERE codigo = 'TC01-T2');
+UPDATE 1
+SELECT codigo, factor FROM subprueba WHERE id_test = (SELECT id_test FROM test WHERE codigo = 'TC01-T2');
+ codigo | factor 
+--------+--------
+ SX     | FX
+(1 row)
+
+ROLLBACK;
+ROLLBACK
+== TC-GEN-01-014
+UPDATE subprueba SET factor = '  '
+WHERE codigo = 'SX' AND id_test = (SELECT id_test FROM test WHERE codigo = 'TC01-T2');
+ERROR:  new row for relation "subprueba" violates check constraint "chk_subprueba_factor"
+DETAIL:  Failing row contains (4, 2, SX, Subprueba X, null,   ).

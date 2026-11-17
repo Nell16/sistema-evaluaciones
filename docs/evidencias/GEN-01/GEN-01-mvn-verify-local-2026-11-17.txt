@@ -1,0 +1,12 @@
+PR #51 · pull/51/merge 84520d4 · PostgreSQL 17 (postgres:17-alpine) · Java 17 · 2026-11-17
+Comando: mvn -f backend/pom.xml verify
+
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.754 s -- in com.universidad.tests.service.PublicacionVersionFormularioServiceTest
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.100 s -- in com.universidad.tests.service.CatalogoTestsServiceTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.187 s -- in com.universidad.tests.controller.CatalogoTestsControllerTest
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.197 s -- in com.universidad.tests.PersistenciaCatalogoIntegrationTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s -- in com.universidad.tests.MigracionesTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.037 s -- in com.universidad.tests.CatalogoPersistenciaIntegrationTest
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.828 s -- in com.universidad.tests.ArquitecturaTest
+Tests run: 33, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS

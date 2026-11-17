@@ -49,6 +49,15 @@ public class PreguntaPersistenceAdapter implements PreguntaRepository {
 
     @Override
     @Transactional(readOnly = true)
+    public int contarPorConfiguracion(Long idConfiguracionSubprueba) {
+
+        return (int)
+                preguntaJpaRepository.countByConfiguracionSubprueba_IdConfiguracionSubprueba(
+                        idConfiguracionSubprueba);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<Pregunta> buscarPorNumeroVisible(
             Long idConfiguracionSubprueba, String numeroVisible) {
 

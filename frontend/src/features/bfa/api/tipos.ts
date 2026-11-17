@@ -17,8 +17,10 @@ export interface SubpruebaConfig {
   codigo: string;
   nombre: string;
   orden: number;
-  factor: string;
-  tiempoLimiteSegundos: number;
+  /** Nulo mientras no se cargue (E2 según GEN-01-BE, PR #51). */
+  factor: string | null;
+  /** Nulo si la configuración no fija tiempo (E2 según GEN-01-BE, PR #51). */
+  tiempoLimiteSegundos: number | null;
   tipoRespuesta: TipoRespuesta;
   opciones: number | null;
   numeroPreguntas: number;

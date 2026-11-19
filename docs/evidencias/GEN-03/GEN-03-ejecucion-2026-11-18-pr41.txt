@@ -1,0 +1,41 @@
+Evidencia GEN-03-TEST — PR #41 (2026-11-18, ejecutado por Rodrigo Romero)
+
+PR: #41 (GEN-03-BE)
+HEAD: a94175e (merge de main subido por Integración el 2026-11-17)
+Probado: pull/41/merge 88a332e (main d33f6a8)
+Entorno: local; JDK 17.0.12, Maven 3.9.16, PostgreSQL 17 en Docker (puerto 55432)
+Bases limpias: evaluaciones_ci5 (mvn verify) y evaluaciones_r9 (backend); Flyway aplicó las 5 migraciones
+Datos ficticios: archivo de datos de la colección de Postman de GEN-03 (catálogo de GEN-07 y tablas del #41); cargan sin errores
+
+TC-GEN-03-023 — PASÓ
+- mvn -B -f backend/pom.xml verify: Tests run: 70, Failures: 0, Errors: 0, Skipped: 0; spotless:check sin errores; BUILD SUCCESS.
+  (Las líneas ERROR del log son esperadas: pruebas negativas de los disparadores del catálogo.)
+- CI de a94175e: backend-build, frontend-build y reglas en verde (testing-ok y ci-ok pendientes de Testing).
+
+TC-GEN-03-024 — registrado sin conformidad (depende de GEN-06)
+- Colección de Postman, carpeta "TC-GEN-03-024 — Llamada sin sesión": 9 de 9 verificaciones (E5, E6 y E7 sin token: 401 NO_AUTENTICADO con timestamp, status, codigo, mensaje y ruta).
+  Una primera corrida marcó E7 con 400 porque el cuerpo usaba la variable {{p1}} sin resolver: era un defecto de la colección, corregido con un ID fijo de pregunta.
+- Base antes y después: 8 subpruebas PENDIENTE, 0 respuestas, 0 solicitudes de cálculo (sin cambios).
+
+Causa del bloqueo de TC-GEN-03-009 a 021 y 025 a 028
+- Sin el perfil de desarrollo, AutorizacionEvaluacionDenegadaAdapter responde 401 a toda llamada, antes de buscar la evaluación.
+
+Llamadas sin sesión (curl)
+PUT /EV-PRUEBA-01/subpruebas/VOC1/respuestas cuerpo={"respuestas":[{"preguntaId":9201,"opcion":"C"}]}
+{"timestamp":"2026-11-18T05:15:39.294036400Z","status":401,"codigo":"NO_AUTENTICADO","mensaje":"Se requiere autenticación.","ruta":"/api/v1/evaluaciones/EV-PRUEBA-01/subpruebas/VOC1/respuestas"}
+  -> HTTP 401
+PUT /EV-PRUEBA-03/subpruebas/FV/respuestas cuerpo={"palabras":[{"ordenEntrada":1,"texto":"mesa"}]}
+{"timestamp":"2026-11-18T05:15:39.312036100Z","status":401,"codigo":"NO_AUTENTICADO","mensaje":"Se requiere autenticación.","ruta":"/api/v1/evaluaciones/EV-PRUEBA-03/subpruebas/FV/respuestas"}
+  -> HTTP 401
+GET /EV-PRUEBA-01 
+{"timestamp":"2026-11-18T05:15:39.329036100Z","status":401,"codigo":"NO_AUTENTICADO","mensaje":"Se requiere autenticación.","ruta":"/api/v1/evaluaciones/EV-PRUEBA-01"}
+  -> HTTP 401
+POST /EV-NO-EXISTE/subpruebas/VOC1/iniciar 
+{"timestamp":"2026-11-18T05:15:39.345536Z","status":401,"codigo":"NO_AUTENTICADO","mensaje":"Se requiere autenticación.","ruta":"/api/v1/evaluaciones/EV-NO-EXISTE/subpruebas/VOC1/iniciar"}
+  -> HTTP 401
+PUT /EV-PRUEBA-01/subpruebas/VOC1/respuestas cuerpo={"respuestas": [
+{"timestamp":"2026-11-18T05:15:39.362036400Z","status":400,"codigo":"SOLICITUD_INVALIDA","mensaje":"El formato del cuerpo JSON es inválido.","ruta":"/api/v1/evaluaciones/EV-PRUEBA-01/subpruebas/VOC1/respuestas","detalles":[{"campo":"cuerpo","mensaje":"JSON mal formado"}]}
+  -> HTTP 400
+0 subpruebas modificadas | respuestas=0
+
+Observación: sin sesión y con JSON mal formado, E7 responde 400 antes que 401 (el cuerpo se valida antes del acceso). Anotada por Integración para cuando se integre GEN-06.

@@ -1,4 +1,4 @@
-# Casos de prueba GEN-04 — finalizar una evaluación (v1)
+# Casos de prueba GEN-04 — finalizar una evaluación (v2)
 
 ## Identificación
 
@@ -6,32 +6,40 @@
 - **Tareas de Desarrollo:** [GEN-04-FE](https://app.clickup.com/t/86bcvah5k) (sin PR) · [GEN-04-BE](https://app.clickup.com/t/86bcvah5j) (sin PR)
 - **Historia:** [GEN-04](https://app.clickup.com/t/86bcvah5d)
 - **Tester:** Rodrigo Romero
-- **Versión y fecha:** v1 · 2026-11-06
-- **Estado del documento:** diseño de casos; ninguno ejecutado.
+- **Versión y fecha:** v2 · 2026-11-18
+- **Estado del documento:** diseño de casos; ninguno ejecutado, porque GEN-04-BE y GEN-04-FE todavía no tienen PR.
+
+## Historial de cambios
+
+| Versión | Fecha | Cambios |
+| --- | --- | --- |
+| v1 | 2026-11-06 | Diseño inicial de 23 casos (PR #35). |
+| v2 | 2026-11-18 | DOC-04 aprobado el 2026-11-10: se quitan las marcas «provisional (DOC-04)». Documentación respondió las consultas C-1 y C-2 el 2026-11-18 y actualizó el contrato de E8: se fijan los resultados de TC-GEN-04-011 y 014. E4 y E8 incluyen `versionFormularioId` (ajuste del 2026-11-08) y `cerradaEn` por subprueba (2026-11-18); TC-GEN-04-014 y 016 lo verifican. Se actualizan la dependencia de GEN-03 (BUG-01 corregido; la entrega de GEN-03-BE es el PR #41) y la numeración de casos de uso. |
 
 ## Fuentes y estado
 
-| Fuente | Estado al 2026-11-06 | Uso en este documento |
+| Fuente | Estado al 2026-11-18 | Uso en este documento |
 | --- | --- | --- |
 | Criterios de aceptación de GEN-04, GEN-04-BE, GEN-04-FE y GEN-04-TEST (ClickUp) | Publicados en las tareas | Base de todos los casos |
-| Documento BFA — §5.3 (contratos E4 y E8) y Documento general — §5.2 (convenciones REST) | **Aprobados** ([DOC-05](https://app.clickup.com/t/86bctt9cy) cerrada el 2026-11-06) | Códigos HTTP, campos y formato de error |
-| Documento general — §5.1.7 (motor común) | **Aprobado** ([DOC-06](https://app.clickup.com/t/86bctt9db) cerrada el 2026-11-05) | Separación entre motor común y evaluador del test |
-| Documento general — §4.2 (ENT-COM-05 Evaluacion y ENT-COM-10 Resultado) | **Aprobado** ([DOC-03](https://app.clickup.com/t/86bctt9bt) `completed`) | Estados de evaluación y de resultado |
-| Documento general — §3 (DOC-04 rev. 2: §3.4, §3.7 y CU-BFA-P08) | [DOC-04](https://app.clickup.com/t/86bctt9cm) `in review` | Valores **provisionales**, marcados en cada caso |
+| Documento BFA — §5.3 (contratos E4 y E8) y Documento general — §5.2 (convenciones REST) | **Aprobados** ([DOC-05](https://app.clickup.com/t/86bctt9cy) `completed`), con los ajustes del 2026-11-08 (`versionFormularioId`) y del 2026-11-18 (`cerradaEn` en E4; cierre de subprueba vencida y `estadoResultado` en E8) | Códigos HTTP, campos y formato de error |
+| `docs/api/openapi.yaml` (GEN-00-API, en `main` desde el PR #37) | Refleja el contrato del 2026-11-08; todavía no incluye los ajustes del 2026-11-18 | Referencia; ante una diferencia manda el Documento BFA |
+| Documento general — §5.1.7 (motor común) | **Aprobado** ([DOC-06](https://app.clickup.com/t/86bctt9db) `completed`) | Separación entre motor común y evaluador del test |
+| Documento general — §4.2 (ENT-COM-05 Evaluacion, ENT-COM-06 y ENT-COM-10 Resultado) | **Aprobado** ([DOC-03](https://app.clickup.com/t/86bctt9bt) `completed`) | Estados de evaluación, cierre de subprueba y estados de resultado |
+| Documento general — §3 (DOC-04 rev. 2: §3.4, §3.7 y CU-BFA-P08) | **Aprobado** ([DOC-04](https://app.clickup.com/t/86bctt9cm) `completed` el 2026-11-10) | Reglas de finalización y parcialidad |
 | [DOC-07](https://app.clickup.com/t/86bctt9dn) — Calidad documental | `in progress` | Dependencia de GEN-04-TEST en ClickUp |
 | [GEN-06](https://app.clickup.com/t/86bcvaj7e) — Acceso y roles | `Open` | Casos de acceso **bloqueados** |
-| E12 — Publicar revisión vigente (`PUT /api/v1/evaluaciones/{evaluacionId}/resultados/vigente`) | Propuesta (Documento BFA §5.5); [BFA-BE-13](https://app.clickup.com/t/86bcw9yw5) `Open` | Caso de resultado disponible **bloqueado** |
+| E12 — Publicar revisión vigente (`PUT /api/v1/evaluaciones/{evaluacionId}/resultados/vigente`) | Documentado en el Documento BFA §5.5; [BFA-BE-13](https://app.clickup.com/t/86bcw9yw5) `Open`, sin implementar | Caso de resultado disponible **bloqueado** |
 | Estructura y reglas del repositorio GitHub | Vigente | Formato del archivo, PR y datos de prueba |
 
-Los resultados esperados que provienen de documentos aprobados no llevan marca. Los que dependen de DOC-04 se marcan como **provisional (DOC-04)** y se confirman cuando DOC-04 se cierre.
+Todos los resultados esperados provienen de documentos aprobados. Desde que DOC-04 se aprobó (2026-11-10), el resultado que la v1 marcaba como «provisional (DOC-04)» queda firme.
 
-**Numeración de casos de uso:** estos casos usan la numeración de DOC-04 rev. 2 del Documento general §3 (CU-BFA-P08 «Finalizar evaluación y consolidar resultados»), que es la que cita el contrato aprobado de E8. El Documento BFA §3 todavía conserva la propuesta anterior, con otra numeración.
+**Numeración de casos de uso:** estos casos usan la numeración de DOC-04 rev. 2 del Documento general §3 (CU-BFA-P08 «Finalizar evaluación y consolidar resultados»), que es la que cita el contrato aprobado de E8. Desde el 2026-11-08 el Documento BFA §3 usa la misma numeración.
 
 Los criterios de las tareas se citan con su texto de ClickUp, porque todavía no tienen ID. Cuando Documentación asigne los IDs `CA-`, se usarán aquí.
 
 ### Dependencia para ejecutar
 
-Finalizar exige subpruebas cerradas. En el PR #34 (GEN-03) el cierre por tiempo no se registra ([BUG-01](https://app.clickup.com/t/1k5fzqaz5ae)). Mientras no se corrija, no se pueden preparar evaluaciones con subpruebas `CERRADA`, y quedan sin poder ejecutarse todos los casos de este documento excepto TC-GEN-04-013, 014, 020 y 023.
+Finalizar exige subpruebas cerradas, y el cierre lo registra GEN-03-BE. El fallo del cierre por tiempo ([BUG-01](https://app.clickup.com/t/1k5fzqaz5ae)) se corrigió y se verificó en el PR #34; la entrega de GEN-03-BE es el PR #41, todavía sin fusionar, y ahí se vuelve a verificar. Mientras GEN-03-BE no esté en `main`, las evaluaciones con subpruebas `CERRADA` solo se pueden preparar en local sobre el PR #41 o cargándolas con SQL.
 
 ## Glosario
 
@@ -43,10 +51,11 @@ Finalizar exige subpruebas cerradas. En el PR #34 (GEN-03) el cierre por tiempo 
 | E3, E4, E5, E7 | Endpoints aprobados: crear evaluación, consultar su estado, iniciar una subprueba y registrar respuestas (Documento BFA §5.3). |
 | E8 | Endpoint aprobado para finalizar la evaluación: `POST /api/v1/evaluaciones/{evaluacionId}/finalizar` (Documento BFA §5.3). |
 | E9 | Endpoint aprobado para consultar resultados; pertenece a GEN-05. |
-| E12 | Endpoint propuesto, todavía no aprobado, para publicar la revisión vigente de un resultado. |
+| E12 | Endpoint para publicar la revisión vigente de un resultado (Documento BFA §5.5); lo implementa BFA-BE-13, que todavía no tiene PR. |
 | E13, E14, E18, E20 | Endpoints aprobados para registrar una cuenta, iniciar sesión, crear un Sujeto y crear un Periodo (Documento general §5.2.3). |
 | EN_CURSO / FINALIZADA | Estados de la evaluación (ENT-COM-05). |
 | PENDIENTE / ACTIVA / CERRADA | Estados de una subprueba dentro de una evaluación, según el contrato aprobado. |
+| `cerradaEn` | Fecha del cierre registrado de cada subprueba en E4 y E8, o nulo si no se cerró (ENT-COM-06). |
 | CALCULANDO / PENDIENTE_VALIDACION / DISPONIBLE | Estados del resultado (ENT-COM-10). Son independientes del estado de la evaluación: una evaluación puede estar `FINALIZADA` con su resultado todavía pendiente. |
 | PR / SHA | *Pull request* que se prueba / identificador del commit exacto probado. |
 | e2e | Prueba de extremo a extremo automatizada con Playwright (`tests/e2e/`). |
@@ -114,20 +123,20 @@ Son criterios documentales del modelo de datos, no de la tarea GEN-04; se listan
 - **GEN-04-BE: "Se utiliza el evaluador del test, sin incorporar fórmulas específicas en el motor común."** y **GEN-04: "El sistema utiliza el evaluador del test aplicado."** No son observables desde la API mientras exista un solo test (BFA); corresponden a la revisión de código de Integración. Las fórmulas de BFA se prueban en BFA-TEST-02 y BFA-TEST-04.
 - **GEN-04: "Backend y frontend funcionan integrados y superan las pruebas correspondientes."** Se ejecuta en [TEST-01-EJEC](https://app.clickup.com/t/86bcvajag).
 
-## Consultas pendientes a Documentación
+## Consultas a Documentación
 
-Huecos encontrados al diseñar los casos. Se comunican en la tarea [DOC-05](https://app.clickup.com/t/86bctt9cy); mientras sigan abiertas, los casos afectados no fijan ese resultado.
+Huecos encontrados al diseñar los casos. Se publicaron en la tarea [DOC-05](https://app.clickup.com/t/86bctt9cy) el 2026-11-17 y Documentación las respondió el 2026-11-18, actualizando E8 en el Documento BFA §5.3.
 
 | ID | Consulta | Fuentes | Casos afectados | Estado |
 | --- | --- | --- | --- | --- |
-| C-1 | ¿Qué hace E8 si una subprueba incluida está `ACTIVA` con el tiempo vencido pero su cierre todavía no se registró? ¿La cierra y finaliza, o responde `409 SUBPRUEBAS_PENDIENTES`? | Documento BFA E8; Documento general ENT-COM-06; Documento general §3, CU-BFA-P07 | TC-GEN-04-014 | Abierta |
-| C-2 | Con todos los insumos aprobados (claves y revisión de FV), ¿qué `estadoResultado` devuelve E8: `CALCULANDO` o `PENDIENTE_VALIDACION`? `DISPONIBLE` exige una revisión validada y publicada (ENT-COM-10, E12), que E8 no realiza. | Documento BFA E8 y §5.5; Documento general ENT-COM-10 | TC-GEN-04-011, TC-GEN-04-006 | Abierta |
+| C-1 | ¿Qué hace E8 si una subprueba incluida está `ACTIVA` con el tiempo vencido pero su cierre todavía no se registró? ¿La cierra y finaliza, o responde `409 SUBPRUEBAS_PENDIENTES`? | Documento BFA E8; Documento general ENT-COM-06; Documento general §3, CU-BFA-P07 | TC-GEN-04-014 | **Resuelta (2026-11-18):** una subprueba `ACTIVA` con `finLimite` vencido no bloquea: E8 registra su cierre (`cerradaEn` = `finLimite`, idempotente) y finaliza con `200`. `409 SUBPRUEBAS_PENDIENTES` solo si queda una subprueba incluida `PENDIENTE` o `ACTIVA` con tiempo. |
+| C-2 | Con todos los insumos aprobados (claves y revisión de FV), ¿qué `estadoResultado` devuelve E8: `CALCULANDO` o `PENDIENTE_VALIDACION`? `DISPONIBLE` exige una revisión validada y publicada (ENT-COM-10, E12), que E8 no realiza. | Documento BFA E8 y §5.5; Documento general ENT-COM-10 | TC-GEN-04-011, TC-GEN-04-006 | **Resuelta (2026-11-18):** `PENDIENTE_VALIDACION`. `CALCULANDO` solo se ve mientras el cálculo está en curso; `DISPONIBLE` llega cuando la revisión se valida y se publica con E12. |
 
 ## Datos de prueba (ficticios)
 
 Se usa la estructura de configuración del BFA publicada en el Documento BFA (códigos, orden y tiempos), con **preguntas, opciones y claves inventadas**. No se usan ítems reales.
 
-**Las claves ficticias no se marcan como aprobadas.** Por eso, en este entorno, toda finalización debe devolver `estadoResultado: PENDIENTE_VALIDACION` (Documento BFA E8: faltan insumos aprobados).
+**Toda finalización correcta devuelve `estadoResultado: PENDIENTE_VALIDACION`**, tanto si faltan insumos aprobados (como las claves ficticias sin aprobar) como si están todos (Documento BFA E8; respuesta a C-2). El catálogo de GEN-07 guarda las claves aparte (E29, BFA-BE-09).
 
 | Evaluación | Subpruebas incluidas y estado | Usada en |
 | --- | --- | --- |
@@ -140,7 +149,7 @@ Se usa la estructura de configuración del BFA publicada en el Documento BFA (c�
 | EV-PRUEBA-26 | VOC1 `CERRADA` y VOC2 `CERRADA`, sin finalizar | TC-GEN-04-019 |
 
 - **Una evaluación solo se puede finalizar una vez.** Por eso, cada caso que finaliza con éxito usa su propia copia de la evaluación indicada (por ejemplo, EV-PRUEBA-20a para TC-GEN-04-003 y EV-PRUEBA-20b para TC-GEN-04-004). TC-GEN-04-016 y 018 son la excepción: usan a propósito la misma evaluación finalizada en TC-GEN-04-011.
-- **EV-PRUEBA-23** se prepara llamando a E5 y dejando pasar el tiempo sin hacer otras peticiones. Si el backend cierra las subpruebas automáticamente al vencer, este estado no se puede preparar y TC-GEN-04-014 pasa a NO APLICA.
+- **EV-PRUEBA-23** se prepara llamando a E5 y dejando pasar el tiempo sin hacer otras peticiones. Si el backend ya cerró la subprueba al vencer (por ejemplo, con un cierre programado), el resultado esperado de TC-GEN-04-014 es el mismo: E8 finaliza y `cerradaEn` es igual a `finLimite`.
 - **Cuentas:** una cuenta ficticia de Sujeto dueña de todas las evaluaciones y otra sin permiso sobre EV-PRUEBA-20. **Salvo que el caso indique otra, todas las llamadas usan la cuenta del Sujeto dueño.**
 
 Las migraciones no cargan datos: la colección Postman crea sus propios datos por la API (cuenta y sesión con E13/E14, Sujeto y Periodo con E18/E20, evaluación con E3, inicio y respuestas con E5 y E7). Para observar el vencimiento en local se pueden usar duraciones cortas, indicándolo en la evidencia.
@@ -148,7 +157,7 @@ Las migraciones no cargan datos: la colección Postman crea sus propios datos po
 ## Entorno
 
 - **Frontend:** PR de GEN-04-FE sobre `pull/<n>/merge`, con `npm ci` y `npm run dev` en `frontend/`.
-- **Backend:** PR de GEN-04-BE sobre `pull/<n>/merge`, con `docker compose up -d db` y `mvn -f backend/pom.xml spring-boot:run`; colección Postman en `tests/api/` con variables `{{base_url}}` y `{{token}}` de una cuenta ficticia. Requiere el cierre de subpruebas de GEN-03 (BUG-01) y el catálogo de GEN-07-BE.
+- **Backend:** PR de GEN-04-BE sobre `pull/<n>/merge`, con `docker compose up -d db` y `mvn -f backend/pom.xml spring-boot:run`; colección Postman en `tests/api/` con variables `{{base_url}}` y `{{token}}` de una cuenta ficticia. Requiere GEN-03-BE (PR #41) y el catálogo de GEN-07-BE (en `main` desde el 2026-11-17). Mientras no exista GEN-06, se usa el perfil de desarrollo que autorizó Integración para GEN-03-BE (`SPRING_PROFILES_ACTIVE=desarrollo-sin-autenticacion`), si GEN-04-BE usa el mismo control de acceso.
 - **Comprobaciones en la base local:** algunos casos verifican la base de datos de la ejecución local, porque la API no expone ese dato. Se indica en cada caso.
 
 ## Casos — Frontend (navegador)
@@ -187,7 +196,7 @@ Las migraciones no cargan datos: la colección Postman crea sus propios datos po
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-04-006 | GEN-04-FE: "Se distinguen los resultados pendientes de validación de los disponibles." | Evaluación finalizada con resultado `DISPONIBLE` | 1. Abrir la evaluación finalizada.<br>2. Observar cómo se presenta el resultado. | El resultado se muestra como disponible, diferenciado de uno pendiente. **BLOQUEADO:** un resultado solo llega a `DISPONIBLE` con una revisión validada y publicada (ENT-COM-10, E12 propuesto). | Manual (navegador) |
+| TC-GEN-04-006 | GEN-04-FE: "Se distinguen los resultados pendientes de validación de los disponibles." | Evaluación finalizada con resultado `DISPONIBLE` | 1. Abrir la evaluación finalizada.<br>2. Observar cómo se presenta el resultado. | El resultado se muestra como disponible, diferenciado de uno pendiente. **BLOQUEADO:** un resultado solo llega a `DISPONIBLE` con una revisión validada y publicada con E12 (ENT-COM-10; Documento BFA E8), que BFA-BE-13 todavía no implementa. | Manual (navegador) |
 
 ### TC-GEN-04-007 — Error de conexión al finalizar
 
@@ -218,7 +227,7 @@ Las migraciones no cargan datos: la colección Postman crea sus propios datos po
 Contrato aprobado del Documento BFA §5.3 y convenciones del Documento general §5.2:
 
 - E4: `GET /api/v1/evaluaciones/{evaluacionId}`
-- E8: `POST /api/v1/evaluaciones/{evaluacionId}/finalizar` (sin cuerpo). Respuesta correcta: `200` con los campos de E4 más `resultadoId` y `estadoResultado`. Errores: `403 SIN_PERMISO`, `404 EVALUACION_NO_ENCONTRADA` y `409 SUBPRUEBAS_PENDIENTES`.
+- E8: `POST /api/v1/evaluaciones/{evaluacionId}/finalizar` (sin cuerpo). Respuesta correcta: `200` con los campos de E4 (incluidos `versionFormularioId` y `cerradaEn` por subprueba) más `resultadoId` y `estadoResultado`. Errores: `403 SIN_PERMISO`, `404 EVALUACION_NO_ENCONTRADA` y `409 SUBPRUEBAS_PENDIENTES` (hay una subprueba incluida `PENDIENTE` o `ACTIVA` con tiempo).
 
 En todo error se verifica además el cuerpo común (Documento general §5.2.2): `timestamp`, `status`, `codigo`, `mensaje`, `ruta` y, en errores de validación, `detalles`.
 
@@ -226,7 +235,7 @@ En todo error se verifica además el cuerpo común (Documento general §5.2.2): 
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-04-011 | GEN-04-BE: "El endpoint cumple el contrato E8 de DOC-05."<br>GEN-04-BE: "La evaluación finalizada conserva su resultado y estado de cálculo."<br>GEN-04: "Los resultados y sus estados quedan almacenados correctamente." | EV-PRUEBA-20 | 1. Llamar a E8. | `200` con `estado: FINALIZADA`, un `resultadoId` y `estadoResultado: PENDIENTE_VALIDACION`, porque las claves ficticias no están aprobadas. En un entorno con claves aprobadas, el valor esperado depende de la consulta C-2. | Manual (Postman) |
+| TC-GEN-04-011 | GEN-04-BE: "El endpoint cumple el contrato E8 de DOC-05."<br>GEN-04-BE: "La evaluación finalizada conserva su resultado y estado de cálculo."<br>GEN-04: "Los resultados y sus estados quedan almacenados correctamente." | EV-PRUEBA-20 | 1. Llamar a E8. | `200` con `estado: FINALIZADA`, un `resultadoId`, `estadoResultado: PENDIENTE_VALIDACION` y todas las subpruebas `CERRADA` con su `cerradaEn` (Documento BFA E8: el valor es el mismo con o sin insumos aprobados). | Manual (Postman) |
 
 ### TC-GEN-04-012 — Subprueba incluida pendiente
 
@@ -244,19 +253,19 @@ En todo error se verifica además el cuerpo común (Documento general §5.2.2): 
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-04-014 | GEN-04-BE: "Se rechaza la finalización cuando existen subpruebas incluidas sin cerrar." | EV-PRUEBA-23 | 1. Llamar a E8.<br>2. Llamar a E4. | Cuál de los dos comportamientos es el correcto queda pendiente de la consulta C-1: (a) `409 SUBPRUEBAS_PENDIENTES`, o (b) `200` con VOC1 `CERRADA` y la evaluación `FINALIZADA`. Fuera de esos dos, falla: en particular, la evaluación nunca puede quedar `FINALIZADA` con VOC1 `ACTIVA` (Documento general ENT-COM-05: `FINALIZADA` exige todas las subpruebas incluidas cerradas). | Manual (Postman) |
+| TC-GEN-04-014 | GEN-04-BE: "Se rechaza la finalización cuando existen subpruebas incluidas sin cerrar." | EV-PRUEBA-23 | 1. Llamar a E8.<br>2. Llamar a E4. | Paso 1: `200` con `estado: FINALIZADA`. Paso 2: VOC1 `CERRADA` con `cerradaEn` igual a su `finLimite`, y la evaluación `FINALIZADA` (Documento BFA E8). La evaluación nunca puede quedar `FINALIZADA` con VOC1 `ACTIVA` (Documento general ENT-COM-05). | Manual (Postman) |
 
 ### TC-GEN-04-015 — Aplicación parcial
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-04-015 | GEN-04: "Solo se finalizan evaluaciones cuyas subpruebas incluidas estén cerradas." | EV-PRUEBA-24 | 1. Llamar a E8.<br>2. Revisar en la base local los factores del resultado. | Paso 1: `200` con `estado: FINALIZADA`: las subpruebas no incluidas no bloquean la finalización. Paso 2: los factores que dependen de subpruebas no aplicadas no tienen valor (nulo), nunca 0 (provisional (DOC-04): CU-BFA-P08 A3). | Manual (Postman) |
+| TC-GEN-04-015 | GEN-04: "Solo se finalizan evaluaciones cuyas subpruebas incluidas estén cerradas." | EV-PRUEBA-24 | 1. Llamar a E8.<br>2. Revisar en la base local los factores del resultado. | Paso 1: `200` con `estado: FINALIZADA`: las subpruebas no incluidas no bloquean la finalización. Paso 2: los factores que dependen de subpruebas no aplicadas no tienen valor (nulo), nunca 0 (DOC-04: CU-BFA-P08 A3). | Manual (Postman) |
 
 ### TC-GEN-04-016 — La finalización se conserva
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-04-016 | GEN-04-BE: "La evaluación finalizada conserva su resultado y estado de cálculo."<br>GEN-04: "Los resultados y sus estados quedan almacenados correctamente." | EV-PRUEBA-20 ya finalizada en TC-GEN-04-011 | 1. Llamar a E4.<br>2. Esperar un minuto y repetir E4. | En las dos consultas la evaluación aparece `FINALIZADA` y todas sus subpruebas `CERRADA`. | Manual (Postman) |
+| TC-GEN-04-016 | GEN-04-BE: "La evaluación finalizada conserva su resultado y estado de cálculo."<br>GEN-04: "Los resultados y sus estados quedan almacenados correctamente." | EV-PRUEBA-20 ya finalizada en TC-GEN-04-011 | 1. Llamar a E4.<br>2. Esperar un minuto y repetir E4. | En las dos consultas la evaluación aparece `FINALIZADA` y todas sus subpruebas `CERRADA`, con el mismo `cerradaEn` en ambas. | Manual (Postman) |
 
 ### TC-GEN-04-017 — Insumos faltantes: resultado pendiente sin puntajes ficticios
 
@@ -313,5 +322,5 @@ En todo error se verifica además el cuerpo común (Documento general §5.2.2): 
 | ID | PR/SHA | Fecha | Resultado | Evidencia / bug |
 | --- | --- | --- | --- | --- |
 | TC-GEN-04-001 a 010 | — | — | BLOQUEADO: sin PR de GEN-04-FE | — |
-| TC-GEN-04-011 a 020, 023 | — | — | BLOQUEADO: sin PR de GEN-04-BE; además requieren el cierre de subpruebas de GEN-03 (BUG-01), salvo 013, 014, 020 y 023 | — |
+| TC-GEN-04-011 a 020, 023 | — | — | BLOQUEADO: sin PR de GEN-04-BE (al 2026-11-18). Además requieren GEN-03-BE (PR #41) para preparar subpruebas cerradas, salvo 013, 014, 020 y 023 | — |
 | TC-GEN-04-021, 022 | — | — | BLOQUEADO: GEN-06 sin implementar | — |

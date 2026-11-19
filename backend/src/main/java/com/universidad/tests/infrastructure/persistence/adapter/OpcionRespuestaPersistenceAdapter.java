@@ -144,6 +144,19 @@ public class OpcionRespuestaPersistenceAdapter implements OpcionRespuestaReposit
         return aDominio(guardada);
     }
 
+    @Override
+    @Transactional
+    public void eliminarPorId(Long idOpcion) {
+        OpcionRespuestaJpaEntity entidad =
+                opcionJpaRepository
+                        .findById(idOpcion)
+                        .orElseThrow(
+                                () -> new NoSuchElementException("No existe la opcion indicada"));
+        validarBorrador(entidad.getPregunta());
+        opcionJpaRepository.delete(entidad);
+        opcionJpaRepository.flush();
+    }
+
     private void validarBorrador(PreguntaJpaEntity pregunta) {
 
         EstadoVersionFormulario estado =

@@ -15,4 +15,6 @@ public interface OpcionRespuestaRepository {
     boolean existePorCodigo(Long idPregunta, String codigo);
 
     OpcionRespuesta guardar(OpcionRespuesta opcion);
+
+    void eliminarPorId(Long idOpcion);
 }

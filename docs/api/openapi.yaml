@@ -1463,7 +1463,16 @@ components:
       properties:
         opciones:
           type: array
-          items: { $ref: '#/components/schemas/OpcionRespuesta' }
+          items: { $ref: '#/components/schemas/OpcionVersionadaRequest' }
+
+    OpcionVersionadaRequest:
+      type: object
+      required: [letra, orden]
+      properties:
+        letra: { type: string, example: A }
+        orden: { type: integer, minimum: 1, example: 1 }
+        texto: { type: string, nullable: true }
+        recursoRef: { type: string, nullable: true }
 
     ClaveRequest:
       type: object

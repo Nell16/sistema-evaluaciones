@@ -1,0 +1,146 @@
+[
+  {
+    "id": "TC-GEN-02-001",
+    "titulo": "Configuraciones permitidas del test 1",
+    "estado": "PASÓ",
+    "obtenido": "13 subpruebas en orden 1–13 (VOC1…FV) con tiempo, respuesta y preguntas; períodos disponibles: 2026-2 — Segundo semestre 2026 / 2027-1 — Primer semestre 2027"
+  },
+  {
+    "id": "TC-GEN-02-002",
+    "titulo": "testId inválido (abc y 0)",
+    "estado": "PASÓ",
+    "obtenido": "Mensaje «El ID del test debe ser un número entero positivo. Vuelva al catálogo…»; no muestra el formulario"
+  },
+  {
+    "id": "TC-GEN-02-003",
+    "titulo": "Test inexistente (testId=2)",
+    "estado": "PASÓ",
+    "obtenido": "Aviso «No encontrado: El test seleccionado no existe o no está activo.» con opción de reintentar"
+  },
+  {
+    "id": "TC-GEN-02-004",
+    "titulo": "Enviar el formulario vacío",
+    "estado": "PASÓ",
+    "obtenido": "Errores en Evaluado («Ingrese el ID del evaluado.»), Período («Seleccione un período.») y letra FV; no se crea nada"
+  },
+  {
+    "id": "TC-GEN-02-005",
+    "titulo": "ID del evaluado no numérico",
+    "estado": "PASÓ",
+    "obtenido": "«El ID del evaluado debe ser un número entero positivo.»; no se llama a la búsqueda"
+  },
+  {
+    "id": "TC-GEN-02-006",
+    "titulo": "Iniciar sin confirmar al evaluado",
+    "estado": "PASÓ",
+    "obtenido": "«Busque y confirme al evaluado antes de iniciar.»; no avanza"
+  },
+  {
+    "id": "TC-GEN-02-007",
+    "titulo": "Evaluado inexistente (99)",
+    "estado": "PASÓ",
+    "obtenido": "Aviso «No encontrado: No existe un evaluado con ese ID. Debe registrarse antes de evaluarlo.» (SUJETO_NO_ENCONTRADO)"
+  },
+  {
+    "id": "TC-GEN-02-008",
+    "titulo": "Parcial sin subpruebas",
+    "estado": "PASÓ",
+    "obtenido": "«Seleccione al menos una subprueba.»; no avanza"
+  },
+  {
+    "id": "TC-GEN-02-009",
+    "titulo": "Letra de FV vacía, con un carácter que no es letra o con dos letras",
+    "estado": "PASÓ",
+    "obtenido": "«Fluidez Verbal requiere una sola letra inicial.» con letra vacía y con «5»; el campo solo admite un carácter (al escribir «ab» queda «a»); no avanza"
+  },
+  {
+    "id": "TC-GEN-02-010",
+    "titulo": "Aplicación completa con datos válidos",
+    "estado": "PASÓ",
+    "obtenido": "«Evaluación creada», En curso, #100, 13 subpruebas Pendiente, progreso 0 de 13; botón «Continuar con la evaluación»"
+  },
+  {
+    "id": "TC-GEN-02-011",
+    "titulo": "Parcial VOC1 y CV (marcadas en otro orden)",
+    "estado": "PASÓ",
+    "obtenido": "Creada con 2 subpruebas en orden oficial (VOC1, CV), sin pedir letra; progreso 0 de 2"
+  },
+  {
+    "id": "TC-GEN-02-012",
+    "titulo": "Parcial con FV",
+    "estado": "PASÓ",
+    "obtenido": "Al marcar FV aparece la letra; sin letra no avanza; con «S» se crea con FV"
+  },
+  {
+    "id": "TC-GEN-02-013",
+    "titulo": "Durante el envío no se avanza ni se crea otra",
+    "estado": "PASÓ",
+    "obtenido": "Mientras espera: campos deshabilitados, «Creando la evaluación en el servidor…» y sin «creada». El botón «Iniciando…» queda deshabilitado (está dentro del fieldset deshabilitado); un clic forzado durante el envío no crea otra (queda #100)"
+  },
+  {
+    "id": "TC-GEN-02-014",
+    "titulo": "Doble clic en «Iniciar evaluación»",
+    "estado": "PASÓ",
+    "obtenido": "Se crea una sola evaluación (#100, la primera del mock); un nuevo intento para el mismo evaluado y período se rechaza con 409"
+  },
+  {
+    "id": "TC-GEN-02-015",
+    "titulo": "Repetir el inicio para el mismo evaluado y período",
+    "estado": "PASÓ",
+    "obtenido": "Segundo inicio: aviso «No se puede continuar: El evaluado ya tiene una evaluación abierta… Retómela en lugar de iniciar otra.» (409 EVALUACION_EN_CURSO)"
+  },
+  {
+    "id": "TC-GEN-02-016",
+    "titulo": "Evaluado con una evaluación abierta (25)",
+    "estado": "PASÓ",
+    "obtenido": "409 EVALUACION_EN_CURSO: el sujeto 25 ya tiene la evaluación 15 abierta en 2026-2"
+  },
+  {
+    "id": "TC-GEN-02-017",
+    "titulo": "Sujeto 409",
+    "estado": "PASÓ",
+    "obtenido": "409 EVALUACION_EN_CURSO mostrado; no avanza"
+  },
+  {
+    "id": "TC-GEN-02-018",
+    "titulo": "Retomar la evaluación 15 (en curso)",
+    "estado": "PASÓ",
+    "obtenido": "#15 En curso: VOC1 Cerrada, VOC2 Activa, CV Pendiente, «tiempo restante 3:34 (según el servidor)»; igual al recuperar dos veces y tras recargar"
+  },
+  {
+    "id": "TC-GEN-02-019",
+    "titulo": "Retomar la evaluación 16 (finalizada)",
+    "estado": "PASÓ",
+    "obtenido": "#16 Finalizada con fin 29 oct 9:10, 2 de 2 cerradas; «La evaluación ya finalizó; no admite más respuestas.» y sin botón «Continuar»"
+  },
+  {
+    "id": "TC-GEN-02-020",
+    "titulo": "Retomar una evaluación inexistente (99)",
+    "estado": "PASÓ",
+    "obtenido": "Aviso «No encontrado: No existe una evaluación con ese ID.» (EVALUACION_NO_ENCONTRADA)"
+  },
+  {
+    "id": "TC-GEN-02-021",
+    "titulo": "Retomar con ID inválido",
+    "estado": "PASÓ",
+    "obtenido": "«El ID de la evaluación debe ser un número entero positivo.»; no consulta"
+  },
+  {
+    "id": "TC-GEN-02-022",
+    "titulo": "Acceso denegado (403)",
+    "estado": "PASÓ",
+    "obtenido": "Evaluado 403 y evaluación 403: «Acceso denegado: No tiene permiso para realizar esta acción o ver esta evaluación.»"
+  },
+  {
+    "id": "TC-GEN-02-023",
+    "titulo": "Error del servidor (500)",
+    "estado": "PASÓ",
+    "obtenido": "«Error del servidor: Ocurrió un error en el servidor. Intente de nuevo más tarde.» con botón Reintentar"
+  },
+  {
+    "id": "TC-GEN-02-024",
+    "titulo": "Sin conexión (503)",
+    "estado": "PASÓ",
+    "obtenido": "«Sin conexión: No se pudo conectar con el servidor…» al retomar y al buscar, con Reintentar; no avanza"
+  }
+]

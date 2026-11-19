@@ -1,0 +1,38 @@
+Regresión de interfaz GEN-02 sobre main d33f6a8 — 2026-11-18 07:50 (America/Managua)
+Interfaz: frontend de main d33f6a8 con los mocks por defecto (VITE_USAR_MOCKS sin definir).
+  npm ci y npm run build en la laptop del tester (Node v22.23.4, npm 10.9.9); la compilación se sirvió en local
+  y se recorrió con Chromium (Playwright) usando docs/evidencias/GEN-02/GEN-02-recorrido-interfaz.js.
+Datos: ficticios del mock (services/evaluacion.mock.ts).
+
+### Pruebas automáticas (TC-GEN-02-029): npx vitest run src/features/evaluacion src/services/evaluacion*.test.ts src/services/http.test.ts
+ Test Files  6 passed (6)
+      Tests  63 passed (63)
+
+### Recorrido de interfaz (TC-GEN-02-001 a 024)
+TC-GEN-02-001 | PASÓ | Configuraciones permitidas del test 1 | 13 subpruebas en orden 1–13 (VOC1…FV) con tiempo, respuesta y preguntas; períodos disponibles: 2026-2 — Segundo semestre 2026 / 2027-1 — Primer semestre 2027
+TC-GEN-02-002 | PASÓ | testId inválido (abc y 0) | Mensaje «El ID del test debe ser un número entero positivo. Vuelva al catálogo…»; no muestra el formulario
+TC-GEN-02-003 | PASÓ | Test inexistente (testId=2) | Aviso «No encontrado: El test seleccionado no existe o no está activo.» con opción de reintentar
+TC-GEN-02-004 | PASÓ | Enviar el formulario vacío | Errores en Evaluado («Ingrese el ID del evaluado.»), Período («Seleccione un período.») y letra FV; no se crea nada
+TC-GEN-02-005 | PASÓ | ID del evaluado no numérico | «El ID del evaluado debe ser un número entero positivo.»; no se llama a la búsqueda
+TC-GEN-02-006 | PASÓ | Iniciar sin confirmar al evaluado | «Busque y confirme al evaluado antes de iniciar.»; no avanza
+TC-GEN-02-007 | PASÓ | Evaluado inexistente (99) | Aviso «No encontrado: No existe un evaluado con ese ID. Debe registrarse antes de evaluarlo.» (SUJETO_NO_ENCONTRADO)
+TC-GEN-02-008 | PASÓ | Parcial sin subpruebas | «Seleccione al menos una subprueba.»; no avanza
+TC-GEN-02-009 | PASÓ | Letra de FV vacía, con un carácter que no es letra o con dos letras | «Fluidez Verbal requiere una sola letra inicial.» con letra vacía y con «5»; el campo solo admite un carácter (al escribir «ab» queda «a»); no avanza
+TC-GEN-02-010 | PASÓ | Aplicación completa con datos válidos | «Evaluación creada», En curso, #100, 13 subpruebas Pendiente, progreso 0 de 13; botón «Continuar con la evaluación»
+TC-GEN-02-011 | PASÓ | Parcial VOC1 y CV (marcadas en otro orden) | Creada con 2 subpruebas en orden oficial (VOC1, CV), sin pedir letra; progreso 0 de 2
+TC-GEN-02-012 | PASÓ | Parcial con FV | Al marcar FV aparece la letra; sin letra no avanza; con «S» se crea con FV
+TC-GEN-02-013 | PASÓ | Durante el envío no se avanza ni se crea otra | Mientras espera: campos deshabilitados, «Creando la evaluación en el servidor…» y sin «creada». El botón «Iniciando…» queda deshabilitado (está dentro del fieldset deshabilitado); un clic forzado durante el envío no crea otra (queda #100)
+TC-GEN-02-014 | PASÓ | Doble clic en «Iniciar evaluación» | Se crea una sola evaluación (#100, la primera del mock); un nuevo intento para el mismo evaluado y período se rechaza con 409
+TC-GEN-02-015 | PASÓ | Repetir el inicio para el mismo evaluado y período | Segundo inicio: aviso «No se puede continuar: El evaluado ya tiene una evaluación abierta… Retómela en lugar de iniciar otra.» (409 EVALUACION_EN_CURSO)
+TC-GEN-02-016 | PASÓ | Evaluado con una evaluación abierta (25) | 409 EVALUACION_EN_CURSO: el sujeto 25 ya tiene la evaluación 15 abierta en 2026-2
+TC-GEN-02-017 | PASÓ | Sujeto 409 | 409 EVALUACION_EN_CURSO mostrado; no avanza
+TC-GEN-02-018 | PASÓ | Retomar la evaluación 15 (en curso) | #15 En curso: VOC1 Cerrada, VOC2 Activa, CV Pendiente, «tiempo restante 3:34 (según el servidor)»; igual al recuperar dos veces y tras recargar
+TC-GEN-02-019 | PASÓ | Retomar la evaluación 16 (finalizada) | #16 Finalizada con fin 29 oct 9:10, 2 de 2 cerradas; «La evaluación ya finalizó; no admite más respuestas.» y sin botón «Continuar»
+TC-GEN-02-020 | PASÓ | Retomar una evaluación inexistente (99) | Aviso «No encontrado: No existe una evaluación con ese ID.» (EVALUACION_NO_ENCONTRADA)
+TC-GEN-02-021 | PASÓ | Retomar con ID inválido | «El ID de la evaluación debe ser un número entero positivo.»; no consulta
+TC-GEN-02-022 | PASÓ | Acceso denegado (403) | Evaluado 403 y evaluación 403: «Acceso denegado: No tiene permiso para realizar esta acción o ver esta evaluación.»
+TC-GEN-02-023 | PASÓ | Error del servidor (500) | «Error del servidor: Ocurrió un error en el servidor. Intente de nuevo más tarde.» con botón Reintentar
+TC-GEN-02-024 | PASÓ | Sin conexión (503) | «Sin conexión: No se pudo conectar con el servidor…» al retomar y al buscar, con Reintentar; no avanza
+TOTAL: 24 · PASÓ 24 · FALLÓ 0
+
+Capturas: docs/evidencias/GEN-02/capturas/TC-GEN-02-0NN.jpg (una por caso, página completa al terminar el caso).

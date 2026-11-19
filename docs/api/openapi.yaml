@@ -949,6 +949,11 @@ paths:
         '400': { $ref: '#/components/responses/SolicitudInvalida' }
         '401': { $ref: '#/components/responses/NoAutenticado' }
         '403': { $ref: '#/components/responses/SinPermiso' }
+        '409':
+          description: BAREMO_DUPLICADO — ya existe el nombre y la versión.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '422':
           description: BAREMO_INVALIDO — rangos superpuestos o incompletos.
           content:

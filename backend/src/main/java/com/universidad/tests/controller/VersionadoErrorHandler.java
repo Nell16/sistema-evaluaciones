@@ -1,6 +1,8 @@
 package com.universidad.tests.controller;
 
 import com.universidad.tests.application.service.AgregarPreguntaVersionadaService.PreguntaDuplicadaException;
+import com.universidad.tests.application.service.CargarBaremoBFAService.BaremoDuplicadoException;
+import com.universidad.tests.application.service.CargarBaremoBFAService.BaremoInvalidoException;
 import com.universidad.tests.application.service.VersionFormularioService.VersionDuplicadaException;
 import com.universidad.tests.domain.exception.NoAutenticadoException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,6 +58,18 @@ public class VersionadoErrorHandler {
     public ResponseEntity<ErrorResponse> versionDuplicada(
             Exception error, HttpServletRequest request) {
         return responder(HttpStatus.CONFLICT, "VERSION_DUPLICADA", error, request);
+    }
+
+    @ExceptionHandler(BaremoInvalidoException.class)
+    public ResponseEntity<ErrorResponse> baremoInvalido(
+            Exception error, HttpServletRequest request) {
+        return responder(HttpStatus.UNPROCESSABLE_ENTITY, "BAREMO_INVALIDO", error, request);
+    }
+
+    @ExceptionHandler(BaremoDuplicadoException.class)
+    public ResponseEntity<ErrorResponse> baremoDuplicado(
+            Exception error, HttpServletRequest request) {
+        return responder(HttpStatus.CONFLICT, "BAREMO_DUPLICADO", error, request);
     }
 
     private ResponseEntity<ErrorResponse> responder(

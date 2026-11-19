@@ -72,7 +72,8 @@ public class VersionFormularioService {
                                     anterior.getTipoRespuesta(),
                                     anterior.getInstruccionesRef(),
                                     anterior.getPracticaRef(),
-                                    anterior.getMaximoEntradas()));
+                                    anterior.getMaximoEntradas(),
+                                    anterior.getOpcionesEsperadas()));
             for (Pregunta pregunta :
                     preguntas.listarPorConfiguracion(anterior.getIdConfiguracionSubprueba())) {
                 Pregunta copia =

@@ -1,6 +1,7 @@
 package com.universidad.tests.controller;
 
 import com.universidad.tests.application.service.AgregarPreguntaVersionadaService.PreguntaDuplicadaException;
+import com.universidad.tests.application.service.VersionFormularioService.VersionDuplicadaException;
 import com.universidad.tests.domain.exception.NoAutenticadoException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -49,6 +50,12 @@ public class VersionadoErrorHandler {
     @ExceptionHandler(PreguntaDuplicadaException.class)
     public ResponseEntity<ErrorResponse> duplicada(Exception error, HttpServletRequest request) {
         return responder(HttpStatus.UNPROCESSABLE_ENTITY, "PREGUNTA_DUPLICADA", error, request);
+    }
+
+    @ExceptionHandler(VersionDuplicadaException.class)
+    public ResponseEntity<ErrorResponse> versionDuplicada(
+            Exception error, HttpServletRequest request) {
+        return responder(HttpStatus.CONFLICT, "VERSION_DUPLICADA", error, request);
     }
 
     private ResponseEntity<ErrorResponse> responder(

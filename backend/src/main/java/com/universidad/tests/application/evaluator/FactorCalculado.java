@@ -2,9 +2,7 @@ package com.universidad.tests.application.evaluator;
 
 import java.util.Objects;
 
-/**
- * Representa la puntuación y estado de cálculo de un factor individual o resultado compuesto.
- */
+/** Representa la puntuación y estado de cálculo de un factor individual o resultado compuesto. */
 public record FactorCalculado(
         String codigo,
         Integer puntuacionDirecta,
@@ -14,7 +12,6 @@ public record FactorCalculado(
 
     public enum EstadoCalculo {
         CALCULADO,
-        CALCULADA,
         PENDIENTE
     }
 
@@ -23,8 +20,10 @@ public record FactorCalculado(
         Objects.requireNonNull(estadoCalculo, "estadoCalculo es obligatorio");
     }
 
-    public static FactorCalculado calculada(String codigo, int puntuacionDirecta, Integer percentil) {
-        return new FactorCalculado(codigo, puntuacionDirecta, percentil, EstadoCalculo.CALCULADO, null);
+    public static FactorCalculado calculada(
+            String codigo, int puntuacionDirecta, Integer percentil) {
+        return new FactorCalculado(
+                codigo, puntuacionDirecta, percentil, EstadoCalculo.CALCULADO, null);
     }
 
     public static FactorCalculado pendiente(String codigo, String motivo) {

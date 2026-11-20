@@ -3,9 +3,7 @@ package com.universidad.tests.application.evaluator;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Representa el resultado consolidado por un evaluador de test psicométrico.
- */
+/** Representa el resultado consolidado por un evaluador de test psicométrico. */
 public record ResultadoEvaluacion(
         Long resultadoId,
         String estadoResultado,
@@ -21,9 +19,7 @@ public record ResultadoEvaluacion(
     }
 
     public static ResultadoEvaluacion pendienteValidacion(
-            Long resultadoId,
-            Map<String, FactorCalculado> factores,
-            String detalle) {
+            Long resultadoId, Map<String, FactorCalculado> factores, String detalle) {
         return new ResultadoEvaluacion(resultadoId, PENDIENTE_VALIDACION, factores, detalle);
     }
 }

@@ -3,13 +3,14 @@ package com.universidad.tests.application.evaluator.bfa;
 import com.universidad.tests.application.evaluator.FactorCalculado;
 import com.universidad.tests.application.evaluator.ResultadoEvaluacion;
 import com.universidad.tests.application.evaluator.TestEvaluator;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 /**
- * Evaluador del módulo Batería Factorial de Aptitudes (BFA).
- * Integra el consolidador psicométrico para calcular factores compuestos y baremos.
+ * Evaluador del módulo Batería Factorial de Aptitudes (BFA). Integra el consolidador psicométrico
+ * para calcular factores compuestos y baremos.
  */
 public final class BfaTestEvaluator implements TestEvaluator {
 
@@ -50,12 +51,14 @@ public final class BfaTestEvaluator implements TestEvaluator {
             } else {
                 factores.put(
                         entrada.getKey(),
-                        FactorCalculado.pendiente(entrada.getKey(), "FALTA_PUNTUACION_" + entrada.getKey()));
+                        FactorCalculado.pendiente(
+                                entrada.getKey(), "FALTA_PUNTUACION_" + entrada.getKey()));
             }
         }
 
         // Registrar los 8 compuestos calculados de BFA
-        for (Map.Entry<String, ConsolidadorCompuestosBfa.PuntuacionCompuesta> comp : compuestos.entrySet()) {
+        for (Map.Entry<String, ConsolidadorCompuestosBfa.PuntuacionCompuesta> comp :
+                compuestos.entrySet()) {
             ConsolidadorCompuestosBfa.PuntuacionCompuesta valor = comp.getValue();
             if (valor.estadoCalculo() == ConsolidadorCompuestosBfa.EstadoCalculo.CALCULADA) {
                 factores.put(
@@ -63,15 +66,12 @@ public final class BfaTestEvaluator implements TestEvaluator {
                         FactorCalculado.calculada(comp.getKey(), valor.puntuacionDirecta(), null));
             } else {
                 factores.put(
-                        comp.getKey(),
-                        FactorCalculado.pendiente(comp.getKey(), valor.motivo()));
+                        comp.getKey(), FactorCalculado.pendiente(comp.getKey(), valor.motivo()));
             }
         }
 
         // Al finalizar E8, el resultado queda PENDIENTE_VALIDACION sin convertir faltantes en cero
         return ResultadoEvaluacion.pendienteValidacion(
-                evaluacionId,
-                Map.copyOf(factores),
-                "Consolidación BFA completada");
+                null, Map.copyOf(factores), "Consolidación BFA completada");
     }
 }

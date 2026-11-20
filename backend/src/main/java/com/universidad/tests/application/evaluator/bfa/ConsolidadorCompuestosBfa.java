@@ -55,10 +55,12 @@ public final class ConsolidadorCompuestosBfa {
     }
 
     /** N1 applies its floor only after both numeric blocks' hits and errors have been combined. */
-    public int calcularN1(int aciertosBloqueA, int erroresBloqueA, int aciertosBloqueB,
-            int erroresBloqueB) {
-        if (aciertosBloqueA < 0 || erroresBloqueA < 0
-                || aciertosBloqueB < 0 || erroresBloqueB < 0) {
+    public int calcularN1(
+            int aciertosBloqueA, int erroresBloqueA, int aciertosBloqueB, int erroresBloqueB) {
+        if (aciertosBloqueA < 0
+                || erroresBloqueA < 0
+                || aciertosBloqueB < 0
+                || erroresBloqueB < 0) {
             throw new IllegalArgumentException("Aciertos y errores deben ser no negativos");
         }
         int aciertos = Math.addExact(aciertosBloqueA, aciertosBloqueB);
@@ -102,9 +104,12 @@ public final class ConsolidadorCompuestosBfa {
             destino.put(codigo, PuntuacionCompuesta.pendiente(faltante));
             return;
         }
-        int total = Math.addExact(
-                Math.addExact(Math.multiplyExact(primerPeso, primero), Math.multiplyExact(segundoPeso, segundo)),
-                Math.multiplyExact(tercerPeso, tercero));
+        int total =
+                Math.addExact(
+                        Math.addExact(
+                                Math.multiplyExact(primerPeso, primero),
+                                Math.multiplyExact(segundoPeso, segundo)),
+                        Math.multiplyExact(tercerPeso, tercero));
         destino.put(codigo, PuntuacionCompuesta.calculada(total));
     }
 
@@ -120,8 +125,8 @@ public final class ConsolidadorCompuestosBfa {
         return null;
     }
 
-    public record PuntuacionCompuesta(Integer puntuacionDirecta, EstadoCalculo estadoCalculo,
-            String motivo) {
+    public record PuntuacionCompuesta(
+            Integer puntuacionDirecta, EstadoCalculo estadoCalculo, String motivo) {
         public PuntuacionCompuesta {
             Objects.requireNonNull(estadoCalculo, "estadoCalculo es obligatorio");
             if (estadoCalculo == EstadoCalculo.CALCULADA && puntuacionDirecta == null) {

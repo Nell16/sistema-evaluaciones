@@ -4,9 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Registro y fábrica de evaluadores de test psicométricos.
- */
+/** Registro y fábrica de evaluadores de test psicométricos. */
 public class TestEvaluatorRegistry {
 
     private final Map<String, TestEvaluator> evaluadores = new ConcurrentHashMap<>();

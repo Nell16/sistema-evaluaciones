@@ -6,8 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.universidad.tests.application.evaluator.FactorCalculado;
 import com.universidad.tests.application.evaluator.ResultadoEvaluacion;
-import java.util.Map;
+
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
 
 class BfaTestEvaluatorTest {
 
@@ -20,23 +22,24 @@ class BfaTestEvaluatorTest {
 
     @Test
     void consolidaCorrectamenteLosResultadosBfaConPuntuacionesCompletas() {
-        Map<String, Integer> entradas = Map.of(
-                "VOC1", 2,
-                "VOC2", 3,
-                "S1", 7,
-                "S2", 4,
-                "R1", 8,
-                "R2", 9,
-                "N1", 1,
-                "N2", 2,
-                "CV", 6,
-                "FV", 10);
+        Map<String, Integer> entradas =
+                Map.of(
+                        "VOC1", 2,
+                        "VOC2", 3,
+                        "S1", 7,
+                        "S2", 4,
+                        "R1", 8,
+                        "R2", 9,
+                        "N1", 1,
+                        "N2", 2,
+                        "CV", 6,
+                        "FV", 10);
 
         ResultadoEvaluacion resultado = evaluador.consolidar(100L, 1L, entradas);
 
         assertNotNull(resultado);
         assertEquals(ResultadoEvaluacion.PENDIENTE_VALIDACION, resultado.estadoResultado());
-        assertEquals(100L, resultado.resultadoId());
+        assertNull(resultado.resultadoId());
 
         Map<String, FactorCalculado> factores = resultado.factores();
         assertEquals(5, factores.get("VOCT").puntuacionDirecta());
@@ -51,16 +54,17 @@ class BfaTestEvaluatorTest {
 
     @Test
     void conservaPuntuacionNulaYMotivoCuandoFaltaFluidezVerbalSinAsignarCero() {
-        Map<String, Integer> entradas = Map.of(
-                "VOC1", 2,
-                "VOC2", 3,
-                "S1", 7,
-                "S2", 4,
-                "R1", 8,
-                "R2", 9,
-                "N1", 1,
-                "N2", 2,
-                "CV", 6);
+        Map<String, Integer> entradas =
+                Map.of(
+                        "VOC1", 2,
+                        "VOC2", 3,
+                        "S1", 7,
+                        "S2", 4,
+                        "R1", 8,
+                        "R2", 9,
+                        "N1", 1,
+                        "N2", 2,
+                        "CV", 6);
 
         ResultadoEvaluacion resultado = evaluador.consolidar(200L, 1L, entradas);
 

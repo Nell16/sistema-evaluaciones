@@ -3,6 +3,7 @@ package com.universidad.tests.config.gen;
 import com.universidad.tests.application.evaluator.TestEvaluatorRegistry;
 import com.universidad.tests.application.evaluator.bfa.BfaTestEvaluator;
 import com.universidad.tests.application.evaluator.bfa.ConsolidadorCompuestosBfa;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

@@ -1,0 +1,130 @@
+PR #51 · pull/51/merge 84520d4 · base_url http://localhost:18080 · newman 6.2.1 · 2026-11-17
+
+## Paso 1: base recién migrada, sin datos
+newman
+
+GEN — Flujo común
+
+❏ GEN-01 / 1 Catálogo vacío (antes de cargar datos)
+↳ TC-GEN-01-001 E1 catálogo vacío
+  GET http://localhost:18080/api/v1/tests [200 OK, 166B, 86ms]
+  ✓  200 y lista vacía
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │                1 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 116ms                                     │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 2B (approx)                              │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 86ms [min: 86ms, max: 86ms, s.d.: 0µs] │
+└───────────────────────────────────────────────────────────────┘
+
+## Paso 2: datos de GEN-01-datos-prueba.sql (t3Id=3)
+newman
+
+GEN — Flujo común
+
+❏ GEN-01 / 2 Catálogo y detalle (con GEN-01-datos-prueba.sql)
+↳ TC-GEN-01-002 E1 lista solo los tests activos
+  GET http://localhost:18080/api/v1/tests [200 OK, 402B, 37ms]
+  ✓  200 y arreglo
+  ✓  incluye T1, T2 y T4 con su número de subpruebas y solo los campos del contrato
+  ✓  no incluye el test inactivo T3
+
+↳ TC-GEN-01-003 E2 usa la edición publicada más reciente, sin preguntas ni claves
+  GET http://localhost:18080/api/v1/tests/1 [200 OK, 849B, 36ms]
+  ✓  200 solo con los campos del contrato
+  ✓  trae las 3 configuraciones de v2 y no la única de v1
+
+↳ TC-GEN-01-004 E2 respeta el orden de aplicación
+  GET http://localhost:18080/api/v1/tests/1 [200 OK, 849B, 15ms]
+  ✓  orden 1, 2, 3 aunque se insertaron fuera de orden
+
+↳ TC-GEN-01-005 E2 selección con opciones uniformes
+  GET http://localhost:18080/api/v1/tests/1 [200 OK, 849B, 18ms]
+  ✓  SA: factor, tiempo, opciones, preguntas y práctica
+
+↳ TC-GEN-01-006 E2 opciones no uniformes y factor compartido
+  GET http://localhost:18080/api/v1/tests/1 [200 OK, 849B, 15ms]
+  ✓  SB: opciones nulo, mismo factor que SA, sin tiempo ni práctica
+
+↳ TC-GEN-01-007 E2 texto libre
+  GET http://localhost:18080/api/v1/tests/1 [200 OK, 849B, 14ms]
+  ✓  SC: opciones nulo, 0 preguntas y máximo de entradas
+
+↳ TC-GEN-01-008 E2 subprueba sin factor cargado
+  GET http://localhost:18080/api/v1/tests/4 [200 OK, 461B, 12ms]
+  ✓  200 y factor nulo
+
+↳ TC-GEN-01-009 E2 test sin edición publicada
+  GET http://localhost:18080/api/v1/tests/2 [404 Not Found, 338B, 11ms]
+  ✓  404 TEST_NO_ENCONTRADO con formato común de error
+
+↳ TC-GEN-01-010 E2 test inactivo
+  GET http://localhost:18080/api/v1/tests/3 [404 Not Found, 338B, 5ms]
+  ✓  404 TEST_NO_ENCONTRADO con formato común de error
+
+↳ TC-GEN-01-011 E2 test inexistente
+  GET http://localhost:18080/api/v1/tests/999999999 [404 Not Found, 354B, 5ms]
+  ✓  404 TEST_NO_ENCONTRADO con formato común de error
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │               10 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │               10 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                8 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │               13 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 323ms                                     │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 4.48kB (approx)                          │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 16ms [min: 5ms, max: 37ms, s.d.: 10ms] │
+└───────────────────────────────────────────────────────────────┘
+
+## Paso 3: observaciones
+newman
+
+GEN — Flujo común
+
+❏ GEN-01 / 3 Observaciones
+↳ O-2 E2 con testId no numérico
+  GET http://localhost:18080/api/v1/tests/abc [400 Bad Request, 251B, 27ms]
+  ✓  observado: 400 (el contrato de E2 no define este caso)
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │                1 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 54ms                                      │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 107B (approx)                            │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 27ms [min: 27ms, max: 27ms, s.d.: 0µs] │
+└───────────────────────────────────────────────────────────────┘

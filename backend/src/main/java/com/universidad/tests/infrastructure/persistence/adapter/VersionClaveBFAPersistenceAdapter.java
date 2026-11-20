@@ -1,0 +1,166 @@
+package com.universidad.tests.infrastructure.persistence.adapter;
+
+import com.universidad.tests.domain.model.EstadoVersionClaveBFA;
+import com.universidad.tests.domain.model.VersionClaveBFA;
+import com.universidad.tests.domain.port.AutorizacionClaveBFAPort;
+import com.universidad.tests.domain.repository.VersionClaveBFARepository;
+import com.universidad.tests.infrastructure.persistence.entity.VersionClaveBFAJpaEntity;
+import com.universidad.tests.infrastructure.persistence.entity.VersionFormularioJpaEntity;
+import com.universidad.tests.infrastructure.persistence.repository.VersionClaveBFAJpaRepository;
+import com.universidad.tests.infrastructure.persistence.repository.VersionFormularioJpaRepository;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+@Repository
+public class VersionClaveBFAPersistenceAdapter implements VersionClaveBFARepository {
+
+    private final VersionClaveBFAJpaRepository claveJpaRepository;
+    private final VersionFormularioJpaRepository formularioJpaRepository;
+    private final AutorizacionClaveBFAPort autorizacion;
+
+    public VersionClaveBFAPersistenceAdapter(
+            VersionClaveBFAJpaRepository claveJpaRepository,
+            VersionFormularioJpaRepository formularioJpaRepository,
+            AutorizacionClaveBFAPort autorizacion) {
+
+        this.claveJpaRepository = claveJpaRepository;
+        this.formularioJpaRepository = formularioJpaRepository;
+        this.autorizacion = autorizacion;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<VersionClaveBFA> buscarPorId(Long idClave) {
+
+        return claveJpaRepository.findById(idClave).map(this::aDominio);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VersionClaveBFA> listarPorVersionFormulario(Long idVersionFormulario) {
+
+        return claveJpaRepository
+                .findByVersionFormulario_IdVersionFormularioOrderByVersionAsc(idVersionFormulario)
+                .stream()
+                .map(this::aDominio)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<VersionClaveBFA> buscarPorFormularioYVersion(
+            Long idVersionFormulario, String version) {
+
+        return claveJpaRepository
+                .findByVersionFormulario_IdVersionFormularioAndVersion(idVersionFormulario, version)
+                .map(this::aDominio);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existePorFormularioYVersion(Long idVersionFormulario, String version) {
+
+        return claveJpaRepository.existsByVersionFormulario_IdVersionFormularioAndVersion(
+                idVersionFormulario, version);
+    }
+
+    // CREAR UNA CLAVE NUEVA
+    @Override
+    @Transactional
+    public VersionClaveBFA guardar(VersionClaveBFA clave) {
+
+        if (clave == null) {
+            throw new IllegalArgumentException("La clave de correccion es obligatoria");
+        }
+
+        if (clave.getIdClave() != null) {
+            throw new IllegalStateException("No se permite actualizar claves mediante este metodo");
+        }
+
+        if (clave.getEstado() != EstadoVersionClaveBFA.BORRADOR) {
+            throw new IllegalArgumentException("Una clave nueva debe iniciar en BORRADOR");
+        }
+
+        VersionFormularioJpaEntity formulario =
+                formularioJpaRepository
+                        .findById(clave.getIdVersionFormulario())
+                        .orElseThrow(
+                                () ->
+                                        new NoSuchElementException(
+                                                "No existe la version de formulario indicada"));
+
+        if (claveJpaRepository.existsByVersionFormulario_IdVersionFormularioAndVersion(
+                clave.getIdVersionFormulario(), clave.getVersion())) {
+
+            throw new IllegalArgumentException(
+                    "Ya existe una clave con esa version para el formulario");
+        }
+
+        VersionClaveBFAJpaEntity entidad =
+                new VersionClaveBFAJpaEntity(
+                        formulario, clave.getVersion(), clave.getReferenciaFuente());
+
+        return aDominio(claveJpaRepository.saveAndFlush(entidad));
+    }
+
+    // APROBAR UNA CLAVE
+    @Override
+    @Transactional
+    public VersionClaveBFA aprobar(Long idClave, String evidenciaAprobacion) {
+
+        validarId(idClave);
+
+        autorizacion.exigirPermisoAprobarClave(idClave);
+
+        VersionClaveBFAJpaEntity entidad =
+                claveJpaRepository
+                        .findById(idClave)
+                        .orElseThrow(
+                                () -> new NoSuchElementException("No existe la clave indicada"));
+
+        entidad.aprobar(evidenciaAprobacion);
+
+        return aDominio(claveJpaRepository.saveAndFlush(entidad));
+    }
+
+    // RETIRAR UNA CLAVE
+    @Override
+    @Transactional
+    public VersionClaveBFA retirar(Long idClave) {
+
+        validarId(idClave);
+
+        autorizacion.exigirPermisoRetirarClave(idClave);
+
+        VersionClaveBFAJpaEntity entidad =
+                claveJpaRepository
+                        .findById(idClave)
+                        .orElseThrow(
+                                () -> new NoSuchElementException("No existe la clave indicada"));
+
+        entidad.retirar();
+
+        return aDominio(claveJpaRepository.saveAndFlush(entidad));
+    }
+
+    private void validarId(Long idClave) {
+
+        if (idClave == null || idClave <= 0) {
+            throw new IllegalArgumentException("El identificador de la clave debe ser positivo");
+        }
+    }
+
+    private VersionClaveBFA aDominio(VersionClaveBFAJpaEntity entidad) {
+
+        return VersionClaveBFA.restaurar(
+                entidad.getIdClave(),
+                entidad.getIdVersionFormulario(),
+                entidad.getVersion(),
+                entidad.getReferenciaFuente(),
+                entidad.getEstado(),
+                entidad.getEvidenciaAprobacion());
+    }
+}

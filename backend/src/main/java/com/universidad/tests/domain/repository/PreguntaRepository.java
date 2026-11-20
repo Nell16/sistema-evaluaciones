@@ -10,6 +10,8 @@ public interface PreguntaRepository {
 
     List<Pregunta> listarPorConfiguracion(Long idConfiguracionSubprueba);
 
+    int contarPorConfiguracion(Long idConfiguracionSubprueba);
+
     Optional<Pregunta> buscarPorNumeroVisible(Long idConfiguracionSubprueba, String numeroVisible);
 
     boolean existePorNumeroVisible(Long idConfiguracionSubprueba, String numeroVisible);

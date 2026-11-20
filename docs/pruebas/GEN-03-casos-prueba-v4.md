@@ -1,13 +1,13 @@
-# Casos de prueba GEN-03 — presentar preguntas y registrar respuestas (v3)
+# Casos de prueba GEN-03 — presentar preguntas y registrar respuestas (v4)
 
 ## Identificación
 
 - **Tarea de Testing:** [GEN-03-TEST](https://app.clickup.com/t/86bcx2xfn)
-- **Tareas de Desarrollo:** [GEN-03-FE](https://app.clickup.com/t/86bcvah5a) (PR #22) · [GEN-03-BE](https://app.clickup.com/t/86bcvah59) (PR #34, que también incluye una pantalla de frontend)
+- **Tareas de Desarrollo:** [GEN-03-FE](https://app.clickup.com/t/86bcvah5a) (PR #22) · [GEN-03-BE](https://app.clickup.com/t/86bcvah59) (PR #41; el PR #34 se cerró sin fusionar el 2026-11-13)
 - **Historia:** [GEN-03](https://app.clickup.com/t/86bcvah55)
 - **Tester:** Rodrigo Romero
-- **Versión y fecha:** v3 · 2026-11-09
-- **Estado del documento:** diseño de casos. Las ejecuciones de la v2 sobre el PR #34 están en «Registro de ejecución»; la próxima se hace con esta versión.
+- **Versión y fecha:** v4 · 2026-11-18
+- **Estado del documento:** diseño de casos y registro de ejecuciones. La prueba completa del PR #41 se hace con esta versión cuando tenga el perfil de desarrollo (ver «Entorno»).
 
 ## Historial de cambios
 
@@ -16,23 +16,26 @@
 | v1 | 2026-11-05 | Diseño inicial de 24 casos con valores provisionales (PR #24). |
 | v2 | 2026-11-06 | DOC-05 y DOC-06 aprobados: los valores del contrato, las convenciones REST y el motor común dejan de ser provisionales. Se cierra la consulta C-3. Las referencias a casos de uso pasan a la numeración de DOC-04 rev. 2. C-4 y C-5 quedan resueltas en comportamiento y abiertas solo en lo que falta del contrato. TC-GEN-03-004 y TC-GEN-03-022 incorporan escenarios de DOC-04 rev. 2. Se registran los cambios en revisión que pueden afectar estos casos. |
 | v3 | 2026-11-09 | Contrato actualizado el 08-nov: E7 de Fluidez Verbal usa `ordenEntrada` y los estados de subprueba quedan unificados. Se agregan los criterios propios de GEN-03-TEST a la matriz. TC-GEN-03-009 y TC-GEN-03-013 verifican el esquema completo de E5 y E7. TC-GEN-03-002 incluye la letra inicial y la recuperación al recargar. Casos nuevos de backend para Fluidez Verbal: TC-GEN-03-025 a TC-GEN-03-028. Consultas nuevas C-6 (E24) y C-7 (errores de E7 en FV). Registro de las ejecuciones del PR #34. |
+| v4 | 2026-11-18 | DOC-04 aprobado el 2026-11-10: se quitan las marcas «provisional (DOC-04)». Documentación respondió las consultas C-1, C-2, C-4, C-5 y C-7 y actualizó el contrato el 2026-11-18: se fijan los resultados de TC-GEN-03-006, 010, 018, 019, 026 y 028. La entrega de backend pasa a ser el PR #41 y la de frontend el PR #22. TC-GEN-03-012 se adapta al catálogo de GEN-07, que no guarda claves con las preguntas. Se agrega EV-PRUEBA-05 para los casos de vencimiento. Registro de las ejecuciones del 12-nov (PR #34) y del 18-nov (PR #41), con evidencia en `docs/evidencias/GEN-03/`. |
 
 ## Fuentes y estado
 
-| Fuente | Estado al 2026-11-09 | Uso en este documento |
+| Fuente | Estado al 2026-11-18 | Uso en este documento |
 | --- | --- | --- |
 | Criterios de aceptación de GEN-03, GEN-03-BE, GEN-03-FE y GEN-03-TEST (ClickUp) | Publicados en las tareas | Base de todos los casos |
-| Documento BFA — §5 (contratos E4–E7) y Documento general — §5.2 (convenciones REST) | **Aprobados** ([DOC-05](https://app.clickup.com/t/86bctt9cy) `completed`), con los ajustes del 2026-11-08 (`ordenEntrada` en Fluidez Verbal, `versionFormularioId` en E4) | Códigos HTTP, campos y formato de error |
-| Documento general — §5.2.4 (E22 a E31, entre ellos E24 de instrucciones y práctica) | Agregada el 2026-11-08; `docs/api/openapi.yaml` la publica en el PR #37 (GEN-00-API) | Solo referencia: ninguna tarea de GEN-03 lista E24 (consulta C-6) |
+| Documento BFA — §5 (contratos E4–E7) y Documento general — §5.2 (convenciones REST) | **Aprobados** ([DOC-05](https://app.clickup.com/t/86bctt9cy) `completed`), con los ajustes del 2026-11-08 (`ordenEntrada` en Fluidez Verbal, `versionFormularioId` en E4) y del 2026-11-18 (respuestas a las consultas de este documento: `cerradaEn` en E4, repetición idempotente de E5, campo `palabras` en E6 y códigos de E7) | Códigos HTTP, campos y formato de error |
+| `docs/api/openapi.yaml` (GEN-00-API, en `main` desde el PR #37) | Refleja el contrato del 2026-11-08; todavía no incluye los ajustes del 2026-11-18 | Referencia; ante una diferencia manda el Documento BFA |
+| Documento general — §4.2, ENT-COM-13 (`permitirRetroceso`) | Agregado el 2026-11-18 por la consulta C-1 | Navegación dentro de la subprueba (TC-GEN-03-006) |
+| Documento general — §5.2.4 (E22 a E31, entre ellos E24 de instrucciones y práctica) | Agregada el 2026-11-08 y publicada en `openapi.yaml` | Solo referencia: ninguna tarea de GEN-03 lista E24 (consulta C-6) |
 | Documento general — §5.1 (arquitectura y motor común) | **Aprobado** ([DOC-06](https://app.clickup.com/t/86bctt9db) `completed`) | Estados, orden y control de tiempo |
 | Documento general — §4.2 (entidades ENT-COM) y §4.6 (CA-01 a CA-10 del modelo) | **Aprobado** ([DOC-03](https://app.clickup.com/t/86bctt9bt) `completed`) | Reglas de respuesta, cierre y pertenencia |
-| Documento general — §3 (DOC-04 rev. 2: reglas, catálogo de estados y casos de uso CU-GEN y CU-BFA-P01 a P12) | [DOC-04](https://app.clickup.com/t/86bctt9cm) `in review`; el 2026-11-08 unificó los estados con el contrato | Valores **provisionales**, marcados en cada caso |
+| Documento general — §3 (DOC-04 rev. 2: reglas, catálogo de estados y casos de uso CU-GEN y CU-BFA-P01 a P12) | **Aprobado** ([DOC-04](https://app.clickup.com/t/86bctt9cm) `completed` el 2026-11-10) | Reglas de aplicación, recuperación y cierre |
 | [DOC-02](https://app.clickup.com/t/86bctt9b8) — Requisitos | `completed` | Referencia |
 | [DOC-07](https://app.clickup.com/t/86bctt9dn) — Calidad documental | `in progress` | Dependencia de GEN-03-TEST en ClickUp |
 | [GEN-06](https://app.clickup.com/t/86bcvaj7e) — Acceso y roles | `Open` | Casos de acceso **bloqueados** |
 | Estructura y reglas del repositorio GitHub | Vigente | Formato del archivo, PR y datos de prueba |
 
-Los resultados esperados que provienen de documentos aprobados no llevan marca. Los que dependen de DOC-04 se marcan como **provisional (DOC-04)** y se confirman cuando DOC-04 se cierre.
+Todos los resultados esperados provienen de documentos aprobados. Desde que DOC-04 se aprobó (2026-11-10), los resultados que la v3 marcaba como «provisional (DOC-04)» quedan firmes.
 
 **Numeración de casos de uso:** desde el 2026-11-08 el Documento BFA §3 usa la misma numeración que DOC-04 rev. 2 y que el contrato aprobado (E5 → CU-BFA-P05 «Iniciar y presentar una subprueba»; E7 → CU-BFA-P06 «Registrar y cambiar respuestas», que incluye las palabras de Fluidez Verbal).
 
@@ -40,14 +43,13 @@ Los resultados esperados que provienen de documentos aprobados no llevan marca. 
 
 Los criterios de las tareas se citan con su texto de ClickUp, porque todavía no tienen ID. Cuando Documentación asigne los IDs `CA-`, se usarán aquí.
 
-### Cambios en revisión que pueden afectar estos casos
+### Propuestas sin aprobar que pueden afectar estos casos
 
-Solicitados en DOC-04 el 2026-11-06; no forman parte del contrato aprobado:
+Observaciones de la revisión de DOC-04 que Documentación dejó como propuesta en DOC-05 el 2026-11-10, para que decidan Desarrollo y la revisión documental. No forman parte del contrato aprobado:
 
-- **Estados de subprueba:** resuelto el 2026-11-08. DOC-04 usa ahora `PENDIENTE / ACTIVA / CERRADA`, igual que el contrato.
-- **Selección múltiple:** se pidió ajustar E6 y E7 para guardar, recuperar y desmarcar varias opciones en Desplazamiento (S2). Estos casos cubren solo selección única y texto libre.
+- **Selección múltiple:** ajustar E6 y E7 para guardar, recuperar y desmarcar varias opciones en Desplazamiento (S2). Estos casos cubren solo selección única y texto libre.
 - **Entrega anticipada:** DOC-04 rev. 2 la menciona como forma de cierre, pero el contrato aprobado no la incluye. No se prueba en esta versión.
-- **Permisos del aplicador:** se pidió distinguir su acceso al progreso y al reloj del acceso a las respuestas.
+- **Permisos del aplicador:** distinguir su acceso al progreso y al reloj del acceso a las respuestas.
 
 ## Glosario
 
@@ -60,6 +62,8 @@ Solicitados en DOC-04 el 2026-11-06; no forman parte del contrato aprobado:
 | E24 | Endpoint complementario de instrucciones y ejemplos de práctica de una subprueba, antes de E5 (Documento general §5.2.4). |
 | FV | Fluidez Verbal: subprueba de texto libre sin preguntas, con hasta 75 entradas y una letra inicial asignada. |
 | `ordenEntrada` | Posición de cada palabra de FV en E6 y E7. |
+| `permitirRetroceso` | Dato de la configuración de subprueba (ENT-COM-13, expuesto en E2) que indica si se puede volver a preguntas anteriores dentro de la subprueba activa. En BFA es `true` en todas. |
+| `cerradaEn` | Fecha del cierre registrado de cada subprueba en E4, o nulo si no se cerró. |
 | PENDIENTE / ACTIVA / CERRADA | Estados de una subprueba dentro de una evaluación, según el contrato aprobado. |
 | Aplicador | Función del Académico o Coordinador con permiso sobre la aplicación; no responde por el Sujeto (DOC-04 rev. 2 §2.2). |
 | PR / SHA | *Pull request* que se prueba / identificador del commit exacto probado. |
@@ -130,22 +134,22 @@ Son criterios documentales del modelo de datos, no de la tarea GEN-03; se listan
 **Criterios sin caso funcional en este documento:**
 
 - **GEN-03-FE: "Los componentes pueden reutilizarse en distintas familias BFA sin duplicar la lógica general."** No es observable desde el navegador; corresponde a la revisión de código de Integración.
-- **GEN-03: "Las subpruebas se ejecutan según su configuración y reglas aprobadas."** No hay configuración aprobada que permita fijar todos los resultados esperados; TC-GEN-03-006 y TC-GEN-03-016 cubren la parte de navegación y orden.
+- **GEN-03: "Las subpruebas se ejecutan según su configuración y reglas aprobadas."** Cobertura parcial: TC-GEN-03-006 (navegación según `permitirRetroceso`), TC-GEN-03-009 (tiempo oficial) y TC-GEN-03-016 (orden). El contenido aprobado de cada subprueba depende del material de [DOC-08](https://app.clickup.com/t/86bcvaj7m).
 - **GEN-03: "Backend y frontend funcionan integrados y superan sus pruebas correspondientes."** Se ejecuta en [TEST-01-EJEC](https://app.clickup.com/t/86bcvajag).
 
-## Consultas pendientes a Documentación
+## Consultas a Documentación
 
-Huecos o contradicciones encontrados al diseñar los casos. Se comunican en la tarea [DOC-05](https://app.clickup.com/t/86bctt9cy); mientras sigan abiertas, los casos afectados no fijan ese resultado.
+Huecos o contradicciones encontrados al diseñar los casos. Se publicaron en la tarea [DOC-05](https://app.clickup.com/t/86bctt9cy) el 2026-11-17 y Documentación las respondió el 2026-11-18, actualizando el Documento BFA §5.3 y el Documento general ENT-COM-13. Mientras una consulta siga abierta, los casos afectados no fijan ese resultado.
 
 | ID | Consulta | Fuentes | Casos afectados | Estado |
 | --- | --- | --- | --- | --- |
-| C-1 | ¿Qué subpruebas permiten volver a preguntas anteriores mientras están activas y dónde se configura? DOC-04 rev. 2 §3.2 lo permite "cuando su modalidad lo permita", pero ni la configuración de subprueba ni E2 tienen ese dato. | Documento BFA §2.6 y §5.2; Documento general ENT-COM-13 y §3.2 | TC-GEN-03-006 | Abierta |
-| C-2 | ¿Qué código devuelve E7 si la pregunta pertenece a otra subprueba de la misma edición? E7 solo menciona `422 RESPUESTA_INVALIDA` para opción ajena o pregunta de otra edición. | Documento BFA E7; Documento general ENT-COM-09 | TC-GEN-03-018 | Abierta |
+| C-1 | ¿Qué subpruebas permiten volver a preguntas anteriores mientras están activas y dónde se configura? DOC-04 rev. 2 §3.2 lo permite "cuando su modalidad lo permita", pero ni la configuración de subprueba ni E2 tienen ese dato. | Documento BFA §2.6 y §5.2; Documento general ENT-COM-13 y §3.2 | TC-GEN-03-006 | **Resuelta (2026-11-18):** se agrega `permitirRetroceso` a ENT-COM-13, expuesto en E2; en BFA es `true` en todas las subpruebas. |
+| C-2 | ¿Qué código devuelve E7 si la pregunta pertenece a otra subprueba de la misma edición? E7 solo menciona `422 RESPUESTA_INVALIDA` para opción ajena o pregunta de otra edición. | Documento BFA E7; Documento general ENT-COM-09 | TC-GEN-03-018 | **Resuelta (2026-11-18):** `422 RESPUESTA_INVALIDA`, agregado al texto de E7. |
 | C-3 | ¿E5, E6 y E7 responden `401 NO_AUTENTICADO` y `403 SIN_PERMISO`? | Documento general §5.2.1 | TC-GEN-03-022, TC-GEN-03-024 | **Resuelta:** la convención aprobada §5.2.1 aplica a toda operación protegida. |
-| C-4 | ¿Qué código devuelve repetir E5 sobre la misma subprueba ACTIVA? El comportamiento lo define DOC-04 rev. 2 (CU-BFA-P05: mismo inicio y fin), pero E5 lista `409 HAY_SUBPRUEBA_ACTIVA` sin aclarar si aplica a la misma subprueba. | Documento BFA E5; Documento general §3, CU-BFA-P05 | TC-GEN-03-010 | Abierta (solo el código) |
-| C-5 | ¿Cómo se comprueba desde la API que una subprueba se cerró una sola vez? El comportamiento lo define DOC-04 rev. 2 (CU-BFA-P07 A1: un cierre repetido devuelve el mismo cierre), pero E4 no expone la fecha de cierre ni eventos de auditoría. | Documento BFA E4; Documento general §3, CU-BFA-P07, ENT-COM-06 y ENT-COM-11 | TC-GEN-03-019 | Abierta (solo la observación) |
-| C-6 | ¿Qué tarea implementa y consume E24 (instrucciones y ejemplos de práctica)? GEN-03-BE y GEN-03-FE solo listan E5, E6 y E7, y E4 sigue diciendo que instrucciones y práctica ocurren en el frontend sin estado en el servidor. Mientras no se defina, TC-GEN-03-003 comprueba que haya instrucciones y práctica antes de E5, sin exigir el contenido de E24. | Documento general §5.2.4 (E24); Documento BFA E4; descripciones de GEN-03-BE y GEN-03-FE | TC-GEN-03-003 | Abierta |
-| C-7 | ¿Qué código devuelve E7 en Fluidez Verbal si una palabra llega con texto vacío, con un `ordenEntrada` repetido o si se supera `maximoEntradas`? E7 exige texto no vacío, orden único y el límite de entradas, pero solo nombra `400 SOLICITUD_INVALIDA` y `422 RESPUESTA_INVALIDA` (este último para opciones y preguntas). Tampoco nombra el campo con el que E6 devuelve las palabras de FV. | Documento BFA E6 y E7 | TC-GEN-03-026, TC-GEN-03-028 | Abierta |
+| C-4 | ¿Qué código devuelve repetir E5 sobre la misma subprueba ACTIVA? El comportamiento lo define DOC-04 rev. 2 (CU-BFA-P05: mismo inicio y fin), pero E5 lista `409 HAY_SUBPRUEBA_ACTIVA` sin aclarar si aplica a la misma subprueba. | Documento BFA E5; Documento general §3, CU-BFA-P05 | TC-GEN-03-010 | **Resuelta (2026-11-18):** repetir E5 es idempotente, `200` con el mismo `inicio` y `finLimite`; `409 HAY_SUBPRUEBA_ACTIVA` solo si hay otra subprueba distinta `ACTIVA`. |
+| C-5 | ¿Cómo se comprueba desde la API que una subprueba se cerró una sola vez? El comportamiento lo define DOC-04 rev. 2 (CU-BFA-P07 A1: un cierre repetido devuelve el mismo cierre), pero E4 no expone la fecha de cierre ni eventos de auditoría. | Documento BFA E4; Documento general §3, CU-BFA-P07, ENT-COM-06 y ENT-COM-11 | TC-GEN-03-019 | **Resuelta (2026-11-18):** E4 agrega `cerradaEn` por subprueba; un cierre repetido devuelve el mismo valor. |
+| C-6 | ¿Qué tarea implementa y consume E24 (instrucciones y ejemplos de práctica)? GEN-03-BE y GEN-03-FE solo listan E5, E6 y E7, y E4 sigue diciendo que instrucciones y práctica ocurren en el frontend sin estado en el servidor. Mientras no se defina, TC-GEN-03-003 comprueba que haya instrucciones y práctica antes de E5, sin exigir el contenido de E24. | Documento general §5.2.4 (E24); Documento BFA E4; descripciones de GEN-03-BE y GEN-03-FE | TC-GEN-03-003 | Abierta: es de Integración, no de contrato |
+| C-7 | ¿Qué código devuelve E7 en Fluidez Verbal si una palabra llega con texto vacío, con un `ordenEntrada` repetido o si se supera `maximoEntradas`? E7 exige texto no vacío, orden único y el límite de entradas, pero solo nombra `400 SOLICITUD_INVALIDA` y `422 RESPUESTA_INVALIDA` (este último para opciones y preguntas). Tampoco nombra el campo con el que E6 devuelve las palabras de FV. | Documento BFA E6 y E7 | TC-GEN-03-026, TC-GEN-03-028 | **Resuelta (2026-11-18):** `400 SOLICITUD_INVALIDA` con `detalles` en los tres casos; E6 de FV devuelve el campo `palabras`. |
 
 ## Datos de prueba (ficticios)
 
@@ -155,14 +159,15 @@ Se usa la estructura de configuración del BFA publicada en el Documento BFA (c�
 - **EV-PRUEBA-02:** misma estructura que EV-PRUEBA-01, de otro sujeto ficticio, para los casos de acceso.
 - **EV-PRUEBA-03:** aplicación parcial solo con FV (300 s, texto libre, hasta 75 entradas), con letra inicial asignada.
 - **EV-PRUEBA-04:** como EV-PRUEBA-03, pero sin letra inicial, solo para el paso 2 de TC-GEN-03-025. E3 no permite crearla (`409 LETRA_NO_ASIGNADA`), así que se carga directamente en la base de prueba.
+- **EV-PRUEBA-05:** como EV-PRUEBA-01, pero con 20 s por subprueba, solo para observar el vencimiento y el cierre (TC-GEN-03-015, 017 y 019) sin esperar el tiempo oficial. La evidencia indica que se usó esta duración.
 - **Cuentas:** una cuenta ficticia de Sujeto dueña de EV-PRUEBA-01 y EV-PRUEBA-03; otra de Sujeto sin relación con EV-PRUEBA-02; y una de Académico o Coordinador con permiso de aplicador sobre EV-PRUEBA-01.
 
-Las migraciones no cargan datos: la colección Postman crea sus propios datos por la API (cuenta y sesión con E13/E14, Sujeto y Periodo con E18/E20, evaluación con E3). Mientras no exista E3 (GEN-02-BE), los datos ficticios, incluidas las claves de TC-GEN-03-012 y la letra de EV-PRUEBA-03, se cargan con SQL en una base local limpia; la ejecución registra cómo se cargaron.
+Las migraciones no cargan datos: la colección Postman crea sus propios datos por la API (cuenta y sesión con E13/E14, Sujeto y Periodo con E18/E20, evaluación con E3). Mientras no exista E3 (GEN-02-BE), los datos ficticios se cargan con SQL en una base local limpia, sobre el catálogo versionado de GEN-07 (las versiones se crean en `BORRADOR` y después se publican); la ejecución registra cómo se cargaron. El catálogo guarda las claves de corrección aparte (E29, BFA-BE-09), así que los datos de estos casos no las incluyen.
 
 ## Entorno
 
-- **Frontend:** hay dos implementaciones de la pantalla de subprueba: la del PR #22 (GEN-03-FE) y la del PR #34. Integración decidirá cuál se fusiona (comentario del 2026-11-07 en el PR #34); los casos TC-GEN-03-001 a 008 se ejecutan sobre esa. Se prueba con `npm ci` y `npm run dev` en `frontend/`, sobre `pull/<n>/merge`.
-- **Backend:** PR de GEN-03-BE (hoy, PR #34) sobre `pull/<n>/merge`, con `docker compose up -d db` y `mvn -f backend/pom.xml spring-boot:run`; colección Postman en `tests/api/` con variables `{{base_url}}` y `{{token}}` de una cuenta ficticia. Requiere las tablas de catálogo de GEN-07-BE: por decisión de Integración del 2026-11-07, el PR #23 (GEN-07-BE) se fusiona primero y el PR #34 se adapta a sus tablas.
+- **Frontend:** Integración decidió el 2026-11-12 que la pantalla de subprueba es la del PR #22 (GEN-03-FE). Los casos TC-GEN-03-001 a 008 se ejecutan sobre ese PR cuando salga de borrador con las rutas de E5 a E7 del contrato. Se prueba con `npm ci` y `npm run dev` en `frontend/`, sobre `pull/<n>/merge`.
+- **Backend:** PR #41 (GEN-03-BE) sobre `pull/<n>/merge`, con `docker compose up -d db` y `mvn -f backend/pom.xml spring-boot:run`; colección Postman en `tests/api/` con variables `{{base_url}}` y `{{token}}` de una cuenta ficticia. Usa las tablas de catálogo de GEN-07-BE (PR #23, fusionado el 2026-11-17). Mientras no exista GEN-06, el backend niega toda llamada con `401`; las pruebas se hacen con el perfil de desarrollo que autorizó Integración, apagado por defecto: `SPRING_PROFILES_ACTIVE=desarrollo-sin-autenticacion`. Ese perfil no sirve para TC-GEN-03-022 ni 024, que esperan la autenticación real.
 
 ## Casos — Frontend (navegador)
 
@@ -176,7 +181,7 @@ Las migraciones no cargan datos: la colección Postman crea sus propios datos po
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-03-002 | GEN-03-FE: "Los componentes permiten representar los tipos de preguntas y respuestas definidos por el motor común."<br>GEN-03: "Las respuestas se almacenan y pueden recuperarse correctamente." | EV-PRUEBA-03, FV activa, con letra inicial asignada | 1. Observar la letra que se muestra.<br>2. Escribir una palabra.<br>3. Agregar una segunda palabra.<br>4. Recargar la página. | Se presenta un campo de texto libre con la letra que devuelve E5 (`letraInicial`). Cada palabra se guarda como una entrada con su `ordenEntrada`, en el orden escrito (E7 de FV), y se informa como confirmada. Al recargar, aparecen las mismas palabras en el mismo orden (E6 de FV devuelve las palabras registradas con su orden). | Manual (navegador) |
+| TC-GEN-03-002 | GEN-03-FE: "Los componentes permiten representar los tipos de preguntas y respuestas definidos por el motor común."<br>GEN-03: "Las respuestas se almacenan y pueden recuperarse correctamente." | EV-PRUEBA-03, FV activa, con letra inicial asignada | 1. Observar la letra que se muestra.<br>2. Escribir una palabra.<br>3. Agregar una segunda palabra.<br>4. Recargar la página. | Se presenta un campo de texto libre con la letra que devuelve E5 (`letraInicial`). Cada palabra se guarda como una entrada con su `ordenEntrada`, en el orden escrito (E7 de FV), y se informa como confirmada. Al recargar, aparecen las mismas palabras en el mismo orden (E6 de FV devuelve el campo `palabras` con las registradas y su orden). | Manual (navegador) |
 
 ### TC-GEN-03-003 — Instrucciones y práctica antes del tiempo oficial
 
@@ -188,7 +193,7 @@ Las migraciones no cargan datos: la colección Postman crea sus propios datos po
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-03-004 | GEN-03-FE: "El temporizador visual utiliza el tiempo informado por el backend."<br>GEN-03: "El tiempo oficial es controlado por el servidor y no se reinicia al recargar la página." | EV-PRUEBA-01, VOC1 ACTIVA (300 s); backend disponible | 1. Esperar hasta el segundo 120 aproximadamente.<br>2. Anotar `segundosRestantes` de E4.<br>3. Recargar la página y comparar con E4. | El temporizador coincide con el tiempo que informa E4 y, tras recargar, continúa desde ese tiempo: no restituye los 300 s ni duplica respuestas (provisional (DOC-04): CU-BFA-P04, resultado verificable). | Manual; candidato e2e (TEST-01-EJEC) |
+| TC-GEN-03-004 | GEN-03-FE: "El temporizador visual utiliza el tiempo informado por el backend."<br>GEN-03: "El tiempo oficial es controlado por el servidor y no se reinicia al recargar la página." | EV-PRUEBA-01, VOC1 ACTIVA (300 s); backend disponible | 1. Esperar hasta el segundo 120 aproximadamente.<br>2. Anotar `segundosRestantes` de E4.<br>3. Recargar la página y comparar con E4. | El temporizador coincide con el tiempo que informa E4 y, tras recargar, continúa desde ese tiempo: no restituye los 300 s ni duplica respuestas (DOC-04: CU-BFA-P04, resultado verificable). | Manual; candidato e2e (TEST-01-EJEC) |
 
 ### TC-GEN-03-005 — Respuesta pendiente frente a confirmada
 
@@ -200,7 +205,7 @@ Las migraciones no cargan datos: la colección Postman crea sus propios datos po
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-03-006 | GEN-03-FE: "La navegación respeta las restricciones establecidas para cada subprueba."<br>GEN-03: "La aplicación no permite saltar el orden establecido ni regresar a subpruebas finalizadas." | EV-PRUEBA-01, VOC1 ACTIVA con varias preguntas respondidas | 1. Volver a una pregunta anterior de VOC1.<br>2. Intentar pasar a VOC2 antes de que venza VOC1.<br>3. Con VOC1 cerrada, intentar volver a VOC1. | Dentro de la subprueba activa se puede volver a preguntas anteriores (Documento BFA §5.2); no se puede pasar a la siguiente antes del vencimiento ni volver a una cerrada (Documento general §5.1.7). Restricciones de navegación interna por subprueba: pendiente de la consulta C-1. | Manual (navegador) |
+| TC-GEN-03-006 | GEN-03-FE: "La navegación respeta las restricciones establecidas para cada subprueba."<br>GEN-03: "La aplicación no permite saltar el orden establecido ni regresar a subpruebas finalizadas." | EV-PRUEBA-01, VOC1 ACTIVA con varias preguntas respondidas | 1. Volver a una pregunta anterior de VOC1.<br>2. Intentar pasar a VOC2 antes de que venza VOC1.<br>3. Con VOC1 cerrada, intentar volver a VOC1. | Dentro de la subprueba activa se puede volver a preguntas anteriores, porque en BFA `permitirRetroceso` es `true` en todas las subpruebas (Documento general ENT-COM-13; Documento BFA E2). No se puede pasar a la siguiente antes del vencimiento ni volver a una cerrada (Documento general §5.1.7). | Manual (navegador) |
 
 ### TC-GEN-03-007 — Fallo al guardar una respuesta
 
@@ -235,7 +240,7 @@ En todo error se verifica además el cuerpo común (Documento general §5.2.2): 
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-03-010 | GEN-03-BE: "Los reintentos no generan respuestas duplicadas ni reinician el tiempo."<br>GEN-03: "El tiempo oficial es controlado por el servidor y no se reinicia al recargar la página." | VOC1 ya iniciada con E5 | 1. Anotar `inicio` y `finLimite`.<br>2. Esperar unos segundos.<br>3. Repetir E5 para VOC1. | `inicio` y `finLimite` no cambian y no se otorga tiempo adicional (provisional (DOC-04): CU-BFA-P05). Código de respuesta: pendiente de la consulta C-4. | Manual (Postman) |
+| TC-GEN-03-010 | GEN-03-BE: "Los reintentos no generan respuestas duplicadas ni reinician el tiempo."<br>GEN-03: "El tiempo oficial es controlado por el servidor y no se reinicia al recargar la página." | VOC1 ya iniciada con E5 | 1. Anotar `inicio` y `finLimite`.<br>2. Esperar unos segundos.<br>3. Repetir E5 para VOC1. | `200` con el mismo `inicio` y `finLimite`: repetir E5 sobre la misma subprueba es idempotente y no otorga tiempo adicional (Documento BFA E5; DOC-04: CU-BFA-P05). No corresponde `409 HAY_SUBPRUEBA_ACTIVA`, que aplica solo a otra subprueba distinta. | Manual (Postman) |
 
 ### TC-GEN-03-011 — Obtener preguntas de la subprueba activa
 
@@ -247,7 +252,7 @@ En todo error se verifica además el cuerpo común (Documento general §5.2.2): 
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-03-012 | GEN-03-BE: "La API no expone claves de corrección ni información restringida." | VOC1 ACTIVA, con claves ficticias conocidas | 1. Llamar a E6 para VOC1.<br>2. Revisar todo el cuerpo de la respuesta. | La respuesta no contiene la clave correcta de ninguna pregunta ni información restringida (Documento BFA E6). | Manual (Postman) |
+| TC-GEN-03-012 | GEN-03-BE: "La API no expone claves de corrección ni información restringida." | VOC1 ACTIVA. Si el entorno permite cargar claves ficticias (E29, BFA-BE-09), se cargan antes; si no, se revisa la forma de la respuesta | 1. Llamar a E6 para VOC1.<br>2. Revisar todo el cuerpo de la respuesta. | La respuesta no contiene la clave correcta de ninguna pregunta ni información restringida (Documento BFA E6). | Manual (Postman) |
 
 ### TC-GEN-03-013 — Registrar y recuperar una respuesta en plazo
 
@@ -283,13 +288,13 @@ En todo error se verifica además el cuerpo común (Documento general §5.2.2): 
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-03-018 | GEN-03-BE: "Las respuestas se almacenan asociadas a la evaluación, subprueba y pregunta o entrada correspondiente."<br>Descripción de GEN-03-BE: "El backend debe validar […] la pertenencia de cada respuesta a la subprueba correspondiente." | VOC1 ACTIVA; `preguntaId` de una pregunta de VOC2 | 1. Enviar con E7, en VOC1, una respuesta a la pregunta de VOC2. | Se rechaza y no queda almacenada (Documento general ENT-COM-09). Código: pendiente de la consulta C-2. | Manual (Postman) |
+| TC-GEN-03-018 | GEN-03-BE: "Las respuestas se almacenan asociadas a la evaluación, subprueba y pregunta o entrada correspondiente."<br>Descripción de GEN-03-BE: "El backend debe validar […] la pertenencia de cada respuesta a la subprueba correspondiente." | VOC1 ACTIVA; `preguntaId` de una pregunta de VOC2 | 1. Enviar con E7, en VOC1, una respuesta a la pregunta de VOC2. | `422 RESPUESTA_INVALIDA` y no queda almacenada (Documento BFA E7; Documento general ENT-COM-09). | Manual (Postman) |
 
 ### TC-GEN-03-019 — Cierre único de la subprueba
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-03-019 | GEN-03-BE: "Cada subprueba se cierra una sola vez." | VOC1 cerrada por vencimiento del tiempo | 1. Llamar a E4.<br>2. Llamar a E5 para VOC1.<br>3. Llamar de nuevo a E4. | VOC1 aparece `CERRADA` en ambas consultas y E5 responde `409 SUBPRUEBA_CERRADA`. Un cierre repetido devuelve el mismo cierre (provisional (DOC-04): CU-BFA-P07 A1). Cómo comprobar desde la API que hubo un solo cierre: pendiente de la consulta C-5. | Manual (Postman) |
+| TC-GEN-03-019 | GEN-03-BE: "Cada subprueba se cierra una sola vez." | VOC1 cerrada por vencimiento del tiempo | 1. Llamar a E4.<br>2. Llamar a E5 para VOC1.<br>3. Llamar de nuevo a E4. | VOC1 aparece `CERRADA` en ambas consultas, con el mismo `cerradaEn` (no nulo), y E5 responde `409 SUBPRUEBA_CERRADA`. Un cierre repetido devuelve el mismo cierre (Documento BFA E4; DOC-04: CU-BFA-P07 A1). | Manual (Postman) |
 
 ### TC-GEN-03-020 — Evaluación o subprueba inexistente
 
@@ -307,7 +312,7 @@ En todo error se verifica además el cuerpo común (Documento general §5.2.2): 
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-03-022 | Descripción de GEN-03-BE: "El backend debe validar […] los permisos […]." | EV-PRUEBA-02 de otro sujeto; sesión de una cuenta sin permiso sobre ella. Sesión de aplicador sobre EV-PRUEBA-01. | 1. Con la cuenta sin permiso, llamar a E5, E6 y E7 sobre EV-PRUEBA-02.<br>2. Con la cuenta de aplicador, enviar E7 sobre EV-PRUEBA-01. | Paso 1: `403 SIN_PERMISO` (Documento general §5.2.1) y no se modifica nada. Paso 2: se rechaza, porque el aplicador no responde por el Sujeto (provisional (DOC-04): §2.2 y CU-BFA-P06). **BLOQUEADO** hasta que GEN-06 implemente el acceso. | Manual (Postman) |
+| TC-GEN-03-022 | Descripción de GEN-03-BE: "El backend debe validar […] los permisos […]." | EV-PRUEBA-02 de otro sujeto; sesión de una cuenta sin permiso sobre ella. Sesión de aplicador sobre EV-PRUEBA-01. | 1. Con la cuenta sin permiso, llamar a E5, E6 y E7 sobre EV-PRUEBA-02.<br>2. Con la cuenta de aplicador, enviar E7 sobre EV-PRUEBA-01. | Paso 1: `403 SIN_PERMISO` (Documento general §5.2.1) y no se modifica nada. Paso 2: se rechaza, porque el aplicador no responde por el Sujeto (DOC-04: §2.2 y CU-BFA-P06). **BLOQUEADO** hasta que GEN-06 implemente el acceso. | Manual (Postman) |
 
 ### TC-GEN-03-023 — Pruebas automatizadas del PR
 
@@ -333,7 +338,7 @@ En todo error se verifica además el cuerpo común (Documento general §5.2.2): 
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-03-026 | GEN-03-BE: "Las respuestas se almacenan asociadas a la evaluación, subprueba y pregunta o entrada correspondiente."<br>GEN-03: "Las respuestas se almacenan y pueden recuperarse correctamente." | EV-PRUEBA-03, FV `ACTIVA` y dentro de plazo | 1. Enviar con E7 `{"palabras":[{"ordenEntrada":1,"texto":"mesa"},{"ordenEntrada":2,"texto":"montaña"}]}`, sin pregunta ni opción.<br>2. Llamar a E6 para FV. | E7 responde `200` con el avance (`codigo`, `registradas`, `totalRespondidas` y `segundosRestantes`). E6 devuelve las dos palabras con su `ordenEntrada` y su texto original ("mesa", "montaña"). El nombre del campo de E6 que las contiene está pendiente de la consulta C-7. | Manual (Postman) |
+| TC-GEN-03-026 | GEN-03-BE: "Las respuestas se almacenan asociadas a la evaluación, subprueba y pregunta o entrada correspondiente."<br>GEN-03: "Las respuestas se almacenan y pueden recuperarse correctamente." | EV-PRUEBA-03, FV `ACTIVA` y dentro de plazo | 1. Enviar con E7 `{"palabras":[{"ordenEntrada":1,"texto":"mesa"},{"ordenEntrada":2,"texto":"montaña"}]}`, sin pregunta ni opción.<br>2. Llamar a E6 para FV. | E7 responde `200` con el avance (`codigo`, `registradas`, `totalRespondidas` y `segundosRestantes`). E6 devuelve el campo `palabras` con las dos palabras, su `ordenEntrada` y su texto original ("mesa", "montaña") (Documento BFA E6). | Manual (Postman) |
 
 ### TC-GEN-03-027 — Reenviar palabras no las duplica
 
@@ -345,16 +350,19 @@ En todo error se verifica además el cuerpo común (Documento general §5.2.2): 
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e |
 | --- | --- | --- | --- | --- | --- |
-| TC-GEN-03-028 | GEN-03-BE: "Los endpoints cumplen los contratos aprobados de DOC-05." | EV-PRUEBA-03, FV `ACTIVA`; `maximoEntradas` = 75 | 1. Enviar con E7 una palabra con texto vacío.<br>2. Enviar dos palabras con el mismo `ordenEntrada`.<br>3. Enviar las 75 entradas permitidas y después una con `ordenEntrada` 76. | Los envíos de los pasos 1, 2 y la entrada 76 se rechazan con el formato común de error y no se almacenan: E6 no los muestra. En FV el texto debe ser no vacío, el orden único y hasta `maximoEntradas` (Documento BFA E7). El código de cada rechazo está pendiente de la consulta C-7. | Manual (Postman) |
+| TC-GEN-03-028 | GEN-03-BE: "Los endpoints cumplen los contratos aprobados de DOC-05." | EV-PRUEBA-03, FV `ACTIVA`; `maximoEntradas` = 75 | 1. Enviar con E7 una palabra con texto vacío.<br>2. Enviar dos palabras con el mismo `ordenEntrada`.<br>3. Enviar las 75 entradas permitidas y después una con `ordenEntrada` 76. | Los envíos de los pasos 1, 2 y la entrada 76 responden `400 SOLICITUD_INVALIDA` con `detalles` y no se almacenan: E6 no los muestra. Las 75 entradas permitidas se aceptan. En FV el texto debe ser no vacío, el orden único y hasta `maximoEntradas` (Documento BFA E7). | Manual (Postman) |
 
 ## Registro de ejecución
 
-Las ejecuciones sobre el PR #34 se hicieron con los casos de la v2, en local sobre `pull/34/merge`, con base de datos limpia y datos ficticios cargados con SQL. El detalle está en los comentarios del PR.
+Todas las ejecuciones se hicieron en local sobre `pull/<n>/merge`, con base de datos limpia y datos ficticios cargados con SQL. Las del 06-nov usaron los casos de la v2 y las del 12 y 18-nov los de la v3; el detalle está en los comentarios de cada PR y en `docs/evidencias/GEN-03/`.
 
 | ID | PR/SHA | Fecha | Resultado | Evidencia / bug |
 | --- | --- | --- | --- | --- |
 | TC-GEN-03-001 a 024 | #34 / `a503aac` | 2026-11-06 | FALLÓ: 10 pasan, 8 fallan, 6 bloqueados (tras la segunda pasada) | [Comentario en el PR #34](https://github.com/Nell16/sistema-evaluaciones/pull/34#issuecomment-6679442680) · [BUG-01](https://app.clickup.com/t/1k5fzqaz5ae) · [BUG-02](https://app.clickup.com/t/1k5fzqaz5af) |
 | TC-GEN-03-001 a 024 | #34 / `9297a47` | 2026-11-06 | FALLÓ en dos pasadas: 21 pasan, falla TC-GEN-03-002, bloqueados TC-GEN-03-022 y 024. BUG-01 y BUG-02 corregidos | [Comentario en el PR #34](https://github.com/Nell16/sistema-evaluaciones/pull/34#issuecomment-6696393057) · [BUG-03](https://app.clickup.com/t/1k5fzqaz5m9) |
-| TC-GEN-03-001 a 008 | #22 / — | — | Pendiente: PR con conflictos con `main`; Integración debe decidir qué frontend se fusiona | — |
-| TC-GEN-03-025 a 028 | — | — | Nuevos en la v3; se ejecutan en la próxima prueba del PR de GEN-03-BE | — |
-| TC-GEN-03-022, 024 | — | — | BLOQUEADO: GEN-06 sin implementar | — |
+| TC-GEN-03-002, 025 a 028 | #34 / `718cdb0` (`pull/34/merge` `9cfa34f`) | 2026-11-12 | PASÓ: corrección de BUG-03 verificada. Regresión de TC-GEN-03-009 a 021 y de BUG-01 con Postman: 81 de 81 verificaciones. El #34 se cerró sin fusionar el 2026-11-13; Integración aceptó esta verificación como evidencia para el #41 (mismo commit `55c1175`) | [Comentario en el PR #34](https://github.com/Nell16/sistema-evaluaciones/pull/34#issuecomment-6813496475) · `docs/evidencias/GEN-03/GEN-03-ejecucion-2026-11-12-pr34.txt` |
+| TC-GEN-03-023 | #41 / `a94175e` (`pull/41/merge` `88a332e`) | 2026-11-18 | PASÓ: `mvn verify` en local, 70 pruebas sin fallos y Spotless en verde; `backend-build` del CI en verde | `docs/evidencias/GEN-03/GEN-03-ejecucion-2026-11-18-pr41.txt` |
+| TC-GEN-03-024 | #41 / `a94175e` | 2026-11-18 | Registrado sin conformidad: sin sesión, E5, E6 y E7 responden `401 NO_AUTENTICADO` con el formato común y la base no cambia; el adaptador del PR niega toda llamada. Se confirma cuando exista GEN-06 | `docs/evidencias/GEN-03/GEN-03-ejecucion-2026-11-18-pr41.txt` |
+| TC-GEN-03-009 a 021, 025 a 028 | #41 / `a94175e` | 2026-11-18 | BLOQUEADO: toda llamada responde `401` hasta que el PR agregue el perfil de desarrollo | [Pedido en el PR #41](https://github.com/Nell16/sistema-evaluaciones/pull/41#issuecomment-6969828182) |
+| TC-GEN-03-001 a 008 | #22 / `dbcc0bd` | 2026-11-18 | BLOQUEADO: borrador con contrato provisional; además necesita el backend del #41 con el perfil de desarrollo | — |
+| TC-GEN-03-022 | — | — | BLOQUEADO: GEN-06 sin implementar | — |

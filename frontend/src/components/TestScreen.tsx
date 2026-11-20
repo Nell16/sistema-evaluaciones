@@ -27,7 +27,11 @@ export type TestScreenProps = {
   phaseTitle?: string;
   phaseDescription?: string;
   questionResource?: ReactNode;
+  textMaxLength?: number;
+  /** Oculta el estado de guardado cuando no hay respuesta que guardar (instrucciones, cierre). */
+  showSaveStatus?: boolean;
   primaryActionLabel?: string;
+  primaryActionDisabled?: boolean;
   /** Sustituye el texto "Pregunta X de Y" (numeración de la hoja, total desconocido...). */
   questionLabel?: string;
   promptVariant?: PromptVariant;
@@ -36,7 +40,10 @@ export type TestScreenProps = {
   numeric?: boolean;
   /** Reemplaza el área de respuesta (por ejemplo, la grilla de Fluidez Verbal). */
   responseArea?: ReactNode;
+  /** Botón secundario (por ejemplo "Anterior"); solo se muestra si hay etiqueta y manejador. */
+  secondaryActionLabel?: string;
   previousActionLabel?: string;
+  onBack?: () => void;
   onPrevious?: () => void;
   onSelect?: (optionId: string) => void;
   onTextResponse?: (value: string) => void;
@@ -92,13 +99,18 @@ export function TestScreen({
   phaseTitle,
   phaseDescription,
   questionResource,
+  textMaxLength,
+  showSaveStatus = true,
   primaryActionLabel,
+  primaryActionDisabled = false,
   questionLabel,
   promptVariant = 'title',
   optionsLayout = 'list',
   numeric = false,
   responseArea,
+  secondaryActionLabel,
   previousActionLabel,
+  onBack,
   onPrevious,
   onSelect = noop,
   onTextResponse,
@@ -111,6 +123,12 @@ export function TestScreen({
   const timerSeconds =
     timeRemainingSeconds === null ? undefined : Math.max(0, timeRemainingSeconds);
   const sectionHeadingId = isActiveQuestion ? headingId : `${headingId}-phase`;
+
+  // dos formas de pedir el botón "Anterior": secondaryActionLabel/onBack (GEN-03-FE)
+  // u onPrevious/previousActionLabel (UI-04). se admiten ambas sin pisarse.
+  const backHandler = onBack ?? onPrevious;
+  const backLabel =
+    secondaryActionLabel ?? (onPrevious ? (previousActionLabel ?? 'Anterior') : undefined);
 
   return (
     <section
@@ -165,6 +183,7 @@ export function TestScreen({
             ) : (
               <TextResponseField
                 value={textResponse}
+                maxLength={textMaxLength}
                 onChange={onTextResponse ?? (() => undefined)}
               />
             )}
@@ -182,14 +201,19 @@ export function TestScreen({
       </div>
 
       <footer className="test-footer">
-        <SaveStatus state={saveState} />
+        {showSaveStatus && <SaveStatus state={saveState} />}
         <div className="test-actions">
-          {onPrevious && (
-            <button className="secondary-action" type="button" onClick={onPrevious}>
-              {previousActionLabel ?? 'Anterior'}
+          {backHandler && backLabel && (
+            <button className="secondary-action" type="button" onClick={backHandler}>
+              {backLabel}
             </button>
           )}
-          <button className="primary-action" type="button" onClick={onNext}>
+          <button
+            className="primary-action"
+            type="button"
+            disabled={primaryActionDisabled}
+            onClick={onNext}
+          >
             {primaryActionLabel ?? (phase === 'closed' ? 'Continuar' : 'Siguiente')}
           </button>
         </div>

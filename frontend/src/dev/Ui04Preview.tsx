@@ -11,8 +11,8 @@ const nombresFase: Record<TestPhase, string> = {
   active: 'Pregunta',
   closed: 'Cerrada',
 };
-const guardados = ['saved', 'saving', 'error'] as const;
-const nombresGuardado: Record<SaveState, string> = {
+const guardados = ['saved', 'saving', 'error'] as const satisfies readonly SaveState[];
+const nombresGuardado: Record<(typeof guardados)[number], string> = {
   saved: 'Guardado',
   saving: 'Guardando',
   error: 'Error de guardado',

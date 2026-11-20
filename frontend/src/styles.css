@@ -370,6 +370,20 @@ button {
   border-color: var(--test-ink);
 }
 
+.primary-action:disabled {
+  color: var(--test-secondary);
+  background: var(--test-line);
+  border-color: var(--test-secondary);
+  cursor: not-allowed;
+}
+
+.test-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
 /* UI-04 · variantes visuales BFA ------------------------------------------------ */
 
 .question-prompt--statement {
@@ -611,12 +625,6 @@ button {
   outline-offset: 2px;
 }
 
-/* Pie y vista previa */
-.test-actions {
-  display: flex;
-  gap: 0.6rem;
-}
-
 .secondary-action {
   min-width: 5.25rem;
   padding: 0.65rem 0.9rem;
@@ -630,6 +638,31 @@ button {
 .secondary-action:focus-visible {
   outline: 3px solid var(--test-secondary);
   outline-offset: 3px;
+}
+
+.save-status--pending {
+  color: var(--test-ink);
+  font-weight: 600;
+}
+
+.question-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--test-line);
+}
+
+.test-loading {
+  margin: 0;
+  padding: 2rem 1rem;
+  color: var(--test-secondary);
+  text-align: center;
+}
+
+.test-retry {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 1rem 1rem;
 }
 
 .preview-control-grid--subpruebas {
@@ -698,14 +731,13 @@ button {
   }
 
   .test-actions {
-    width: 100%;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    margin-left: 0;
   }
 
-  .test-actions > button {
-    flex: 1;
-  }
-
-  .primary-action {
+  .primary-action,
+  .secondary-action {
     width: 100%;
   }
 

@@ -6,10 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.universidad.tests.application.evaluator.FactorCalculado;
 import com.universidad.tests.application.evaluator.ResultadoEvaluacion;
-
-import org.junit.jupiter.api.Test;
-
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 class BfaTestEvaluatorTest {
 

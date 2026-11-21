@@ -3,7 +3,6 @@ package com.universidad.tests.application.evaluator.bfa;
 import com.universidad.tests.application.evaluator.FactorCalculado;
 import com.universidad.tests.application.evaluator.ResultadoEvaluacion;
 import com.universidad.tests.application.evaluator.TestEvaluator;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;

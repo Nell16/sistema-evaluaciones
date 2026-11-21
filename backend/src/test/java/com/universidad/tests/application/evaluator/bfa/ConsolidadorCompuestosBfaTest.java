@@ -6,10 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.universidad.tests.application.evaluator.bfa.ConsolidadorCompuestosBfa.EstadoCalculo;
 import com.universidad.tests.application.evaluator.bfa.ConsolidadorCompuestosBfa.PuntuacionCompuesta;
-
-import org.junit.jupiter.api.Test;
-
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 class ConsolidadorCompuestosBfaTest {
 

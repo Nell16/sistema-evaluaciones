@@ -39,7 +39,7 @@ class CalificadorSeleccionBfaTest {
     }
 
     @Test
-    void cuentaAciertosErroresYSinResponderPorSeparado() {
+    void cuentaAciertosErroresYOmisionesPorSeparado() {
         List<RespuestaSeleccionBfa> respuestas =
                 List.of(resp(101, 1L), resp(102, 3L), resp(103, 3L), resp(104, 1L));
 
@@ -48,7 +48,7 @@ class CalificadorSeleccionBfaTest {
     }
 
     @Test
-    void opcionNulaCuentaComoSinResponderNoComoError() {
+    void opcionNulaCuentaComoOmisionNoComoError() {
         List<RespuestaSeleccionBfa> respuestas =
                 Arrays.asList(resp(101, null), resp(102, 2L), resp(103, null));
 
@@ -57,7 +57,7 @@ class CalificadorSeleccionBfaTest {
     }
 
     @Test
-    void bloqueSinRespuestasQuedaTodoSinResponder() {
+    void bloqueSinRespuestasQuedaTodoComoOmisiones() {
         assertEquals(
                 new ConteoBloqueBfa(0, 0, 5), calificador.calificar(List.of(), claveFicticia()));
     }

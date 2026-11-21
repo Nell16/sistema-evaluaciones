@@ -7,7 +7,7 @@ import java.util.Objects;
 
 /**
  * Compara las respuestas de un bloque BFA de selección con su clave y cuenta aciertos, errores y
- * preguntas sin contestar.
+ * omisiones (preguntas sin contestar).
  *
  * <p>Sirve para R1, R2, N1-A, N1-B, N2-A y N2-B. No aplica fórmulas de factor (N1, N2, RT, NT): eso
  * corresponde a la consolidación. No consulta ni guarda datos.
@@ -20,7 +20,7 @@ public final class CalificadorSeleccionBfa {
      * @param respuestas respuestas registradas en el bloque
      * @param clave respuestas correctas del bloque: id de pregunta a id de opción correcta. Debe
      *     traer solo las preguntas de este bloque.
-     * @return aciertos, errores y preguntas sin contestar del bloque
+     * @return aciertos, errores y omisiones del bloque
      * @throws IllegalArgumentException si la clave está vacía, si hay una respuesta a una pregunta
      *     que no está en la clave o si una pregunta tiene más de una respuesta
      */
@@ -49,7 +49,7 @@ public final class CalificadorSeleccionBfa {
 
         int aciertos = 0;
         int errores = 0;
-        int sinResponder = 0;
+        int omisiones = 0;
         for (Map.Entry<Long, Long> entrada : clave.entrySet()) {
             Long correcta =
                     Objects.requireNonNull(
@@ -58,13 +58,13 @@ public final class CalificadorSeleccionBfa {
                                     + entrada.getKey());
             Long elegida = opcionPorPregunta.get(entrada.getKey());
             if (elegida == null) {
-                sinResponder++;
+                omisiones++;
             } else if (elegida.equals(correcta)) {
                 aciertos++;
             } else {
                 errores++;
             }
         }
-        return new ConteoBloqueBfa(aciertos, errores, sinResponder);
+        return new ConteoBloqueBfa(aciertos, errores, omisiones);
     }
 }

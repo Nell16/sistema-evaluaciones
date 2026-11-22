@@ -2,7 +2,18 @@ package com.universidad.tests.domain.model.bfa;
 
 import com.universidad.tests.domain.model.TipoRespuesta;
 
-/** Las 13 subpruebas oficiales del BFA, con orden y limites definidos en el documento BFA. */
+/**
+ * Las 13 subpruebas oficiales del BFA.
+ *
+ * <p>Fuentes: orden y tiempos en Documento BFA, seccion 2.6 (Aplicacion, orden y tiempos
+ * oficiales; total 84 min 30 s); codigos, tipo de respuesta, maximo de entradas y factor en la
+ * tabla de valores de las 13 subpruebas del contrato E2 (openapi.yaml, DOC-06).
+ *
+ * <p>Pendiente: S2 (Desplazamiento) figura aqui como SELECCION de opcion unica, segun el contrato
+ * vigente (E7 acepta una sola opcion). DOC-04 y los casos de GEN-03 (v4) indican que S2 necesita
+ * guardar, recuperar y desmarcar varias opciones por pregunta; queda pendiente de ese cambio de
+ * contrato, que no corresponde a BFA-BE-01.
+ */
 public enum SubpruebaBfa {
     VOC1(1, "VOC1", "Vocabulario - Forma A", 300, TipoRespuesta.SELECCION, null, "VOC1"),
     VOC2(2, "VOC2", "Vocabulario - Forma B", 360, TipoRespuesta.SELECCION, null, "VOC2"),

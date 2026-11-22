@@ -5,15 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.universidad.tests.domain.model.Subprueba;
 import com.universidad.tests.domain.model.VersionFormulario;
 import com.universidad.tests.domain.model.bfa.ConfiguracionBfa;
-import com.universidad.tests.domain.model.bfa.ConfiguracionBfaTest;
+import com.universidad.tests.domain.model.bfa.ConfiguracionBfaFixture;
 import com.universidad.tests.domain.repository.ConfiguracionSubpruebaRepository;
 import com.universidad.tests.domain.repository.SubpruebaRepository;
 import com.universidad.tests.domain.repository.TestRepository;
 import com.universidad.tests.domain.repository.VersionFormularioRepository;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,10 +53,10 @@ class ConsultarConfiguracionBfaUseCaseTest {
                                         TEST_ID, "BFA", "Bateria BFA", null, true)));
         when(subpruebas.listarPorTest(TEST_ID))
                 .thenReturn(
-                        ConfiguracionBfaTest.catalogoOficial());
+                        ConfiguracionBfaFixture.catalogoOficial());
         when(configuraciones.listarPorVersion(VERSION_ID))
                 .thenReturn(
-                        ConfiguracionBfaTest.configuracionOficial());
+                        ConfiguracionBfaFixture.configuracionOficial());
 
         ConfiguracionBfa cfg = useCase.porVersion(VERSION_ID);
 

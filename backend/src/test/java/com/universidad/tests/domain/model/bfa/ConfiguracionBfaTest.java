@@ -1,5 +1,9 @@
 package com.universidad.tests.domain.model.bfa;
 
+import static com.universidad.tests.domain.model.bfa.ConfiguracionBfaFixture.VERSION_ID;
+import static com.universidad.tests.domain.model.bfa.ConfiguracionBfaFixture.catalogoOficial;
+import static com.universidad.tests.domain.model.bfa.ConfiguracionBfaFixture.config;
+import static com.universidad.tests.domain.model.bfa.ConfiguracionBfaFixture.configuracionOficial;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -8,46 +12,10 @@ import com.universidad.tests.domain.exception.bfa.ConfiguracionBfaInvalidaExcept
 import com.universidad.tests.domain.model.ConfiguracionSubprueba;
 import com.universidad.tests.domain.model.Subprueba;
 import com.universidad.tests.domain.model.TipoRespuesta;
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ConfiguracionBfaTest {
-
-    private static final long TEST_ID = 1L;
-    private static final long VERSION_ID = 10L;
-
-    static List<Subprueba> catalogoOficial() {
-        List<Subprueba> lista = new ArrayList<>();
-        for (SubpruebaBfa s : SubpruebaBfa.values()) {
-            lista.add(
-                    new Subprueba(
-                            100L + s.getOrden(), TEST_ID, s.getCodigo(), s.getNombre(), null));
-        }
-        return lista;
-    }
-
-    static ConfiguracionSubprueba config(
-            SubpruebaBfa s, int orden, Integer tiempo, Integer maxEntradas) {
-        return new ConfiguracionSubprueba(
-                200L + s.getOrden(),
-                VERSION_ID,
-                100L + s.getOrden(),
-                orden,
-                tiempo,
-                s.getTipoRespuesta(),
-                "instrucciones/" + s.getCodigo(),
-                null,
-                maxEntradas);
-    }
-
-    static List<ConfiguracionSubprueba> configuracionOficial() {
-        List<ConfiguracionSubprueba> lista = new ArrayList<>();
-        for (SubpruebaBfa s : SubpruebaBfa.values()) {
-            lista.add(config(s, s.getOrden(), s.getTiempoLimiteSegundos(), s.getMaximoEntradas()));
-        }
-        return lista;
-    }
 
     @Test
     void perfilOficialTiene13SubpruebasYDuracionTotalDe5070Segundos() {
@@ -94,7 +62,7 @@ class ConfiguracionBfaTest {
     @Test
     void subpruebaNoOficialSeRechaza() {
         List<Subprueba> catalogo = catalogoOficial();
-        catalogo.add(new Subprueba(999L, TEST_ID, "XX", "Extra", null));
+        catalogo.add(new Subprueba(999L, ConfiguracionBfaFixture.TEST_ID, "XX", "Extra", null));
         List<ConfiguracionSubprueba> cfgs = configuracionOficial();
         cfgs.add(
                 new ConfiguracionSubprueba(

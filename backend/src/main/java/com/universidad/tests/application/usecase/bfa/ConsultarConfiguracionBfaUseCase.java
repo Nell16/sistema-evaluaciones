@@ -11,7 +11,14 @@ import java.util.NoSuchElementException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Entrega la configuracion validada de una edicion del BFA a partir del catalogo versionado. */
+/**
+ * Entrega la configuracion validada de una edicion del BFA a partir del catalogo versionado.
+ *
+ * <p>Solo lee el catalogo de GEN-07: no lo carga. Mientras el test BFA, sus 13 subpruebas y la
+ * configuracion de la edicion no existan en la base, responde "Falta la subprueba ...". La carga
+ * se hace con los endpoints de contenido versionado (E25 a E28, PR #65 a #68) o con una migracion
+ * de datos; quien la realiza esta pendiente de decision.
+ */
 @Service
 public class ConsultarConfiguracionBfaUseCase {
 

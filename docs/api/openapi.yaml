@@ -318,13 +318,19 @@ paths:
       description: >-
         Consolida factores, compuestos y percentiles a partir de los puntajes de cada subprueba, con
         versiones exactas de reglas, clave y baremo. Si faltan decisiones FV o insumos aprobados, el
-        resultado queda PENDIENTE_VALIDACION sin convertir faltantes en cero. Repetir la finalización
-        devuelve el cierre existente sin otro cálculo. La publicación va aparte (E12). CU-BFA-P07, CU-BFA-P08.
+        resultado queda PENDIENTE_VALIDACION sin convertir faltantes en cero; CALCULANDO solo se usa
+        mientras el cálculo está en curso y DISPONIBLE después de validar y publicar mediante E12.
+        Repetir la finalización devuelve el cierre existente sin otro cálculo. Una subprueba ACTIVA cuyo
+        finLimite ya venció se cierra de forma idempotente con cerradaEn igual a finLimite y no bloquea
+        E8. CU-BFA-P07, CU-BFA-P08.
       parameters:
         - $ref: '#/components/parameters/EvaluacionId'
       responses:
         '200':
-          description: Evaluación FINALIZADA, con resultadoId y estadoResultado.
+          description: >-
+            Evaluación FINALIZADA con resultadoId, estadoResultado, versionFormularioId y cerradaEn
+            por subprueba. Cuando termina el cálculo sin publicación validada, estadoResultado es
+            PENDIENTE_VALIDACION; DISPONIBLE solo se alcanza después de la revisión y publicación E12.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/EvaluacionResponse' }
@@ -336,7 +342,10 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409':
-          description: SUBPRUEBAS_PENDIENTES — hay ejecuciones incluidas sin cerrar.
+          description: >-
+            SUBPRUEBAS_PENDIENTES solo cuando una subprueba incluida está PENDIENTE o está ACTIVA
+            y su finLimite aún no ha vencido. Una subprueba ACTIVA vencida se cierra con cerradaEn
+            igual a finLimite y no causa este error.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -1132,6 +1141,7 @@ components:
             properties:
               codigo: { type: string, example: VOC1 }
               estado: { type: string, enum: [PENDIENTE, ACTIVA, CERRADA], example: CERRADA }
+              cerradaEn: { type: string, format: date-time, nullable: true, description: Instante de cierre; para cierre por vencimiento coincide con finLimite., example: '2026-10-30T15:42:10Z' }
         resultadoId: { type: integer, format: int64, nullable: true, description: Lo devuelve E8 al finalizar. }
         estadoResultado: { type: string, nullable: true, description: Lo devuelve E8 al finalizar (ej. PENDIENTE_VALIDACION). }
 

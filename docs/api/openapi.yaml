@@ -53,7 +53,8 @@ paths:
       description: >-
         Devuelve el test y las configuraciones de la edición publicada identificada, en orden de
         aplicación, sin preguntas ni claves. numeroPreguntas es el conteo de reactivos reales (FV tiene
-        0); maximoEntradas vale 75 en FV y nulo en selección. CU-BFA-P02.
+        0); maximoEntradas vale 75 en FV y nulo en selección. La edición identificada es la publicada
+        más reciente del test. CU-BFA-P02.
       parameters:
         - $ref: '#/components/parameters/TestId'
       responses:
@@ -65,7 +66,7 @@ paths:
         '401': { $ref: '#/components/responses/NoAutenticado' }
         '403': { $ref: '#/components/responses/SinPermiso' }
         '404':
-          description: TEST_NO_ENCONTRADO — el test no existe.
+          description: TEST_NO_ENCONTRADO — el test no existe, está inactivo o no tiene edición publicada.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -1069,7 +1070,7 @@ components:
         id: { type: integer, format: int64, example: 1 }
         codigo: { type: string, example: BFA }
         nombre: { type: string, example: Batería Factorial de Aptitudes }
-        numeroSubpruebas: { type: integer, example: 13 }
+        numeroSubpruebas: { type: integer, description: Subpruebas registradas para el test., example: 13 }
 
     TestDetalleResponse:
       type: object
@@ -1088,11 +1089,11 @@ components:
         codigo: { type: string, example: VOC1 }
         nombre: { type: string, example: Vocabulario - Forma A }
         orden: { type: integer, example: 1 }
-        factor: { type: string, example: VOC1 }
-        tiempoLimiteSegundos: { type: integer, example: 300 }
+        factor: { type: string, nullable: true, description: 'Factor al que aporta la subprueba (Documento BFA §5.3); varias subpruebas pueden compartirlo, p. ej. N1-A y N1-B aportan a N1. Nulo si aún no se cargó.', example: VOC1 }
+        tiempoLimiteSegundos: { type: integer, nullable: true, example: 300 }
         tipoRespuesta: { type: string, enum: [SELECCION, TEXTO_LIBRE], example: SELECCION }
-        opciones: { type: integer, nullable: true, example: 5 }
-        numeroPreguntas: { type: integer, example: 37 }
+        opciones: { type: integer, nullable: true, description: Opciones de cada pregunta. Nulo en texto libre o si las preguntas cargadas no tienen todas el mismo número., example: 5 }
+        numeroPreguntas: { type: integer, description: Preguntas cargadas en la configuración (sin práctica)., example: 37 }
         maximoEntradas: { type: integer, nullable: true, example: null }
         tienePractica: { type: boolean, example: true }
 

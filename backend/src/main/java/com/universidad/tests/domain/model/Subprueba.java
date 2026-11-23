@@ -7,9 +7,15 @@ public class Subprueba {
     private String codigo;
     private String nombre;
     private String descripcion;
+    private String factor;
 
     public Subprueba(
-            Long idSubprueba, Long idTest, String codigo, String nombre, String descripcion) {
+            Long idSubprueba,
+            Long idTest,
+            String codigo,
+            String nombre,
+            String descripcion,
+            String factor) {
 
         if (idTest == null) {
             throw new IllegalArgumentException("La subprueba debe pertenecer a un test");
@@ -21,6 +27,7 @@ public class Subprueba {
         setCodigo(codigo);
         setNombre(nombre);
         setDescripcion(descripcion);
+        setFactor(factor);
     }
 
     public Long getIdSubprueba() {
@@ -59,5 +66,17 @@ public class Subprueba {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public String getFactor() {
+        return factor;
+    }
+
+    // Factor al que aporta la subprueba; nulo si aun no se carga
+    public void setFactor(String factor) {
+        if (factor != null && factor.isBlank()) {
+            throw new IllegalArgumentException("El factor no puede estar vacio");
+        }
+        this.factor = factor;
     }
 }

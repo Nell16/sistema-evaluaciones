@@ -32,6 +32,9 @@ public class SubpruebaJpaEntity {
     @Column(name = "descripcion", columnDefinition = "text")
     private String descripcion;
 
+    @Column(name = "factor", length = 80)
+    private String factor;
+
     protected SubpruebaJpaEntity() {
         // Constructor requerido por JPA
     }
@@ -68,6 +71,13 @@ public class SubpruebaJpaEntity {
         this.descripcion = descripcion;
     }
 
+    public void asignarFactor(String factor) {
+        if (factor != null && factor.isBlank()) {
+            throw new IllegalArgumentException("El factor no puede estar vacio");
+        }
+        this.factor = factor;
+    }
+
     public Long getIdSubprueba() {
         return idSubprueba;
     }
@@ -90,5 +100,9 @@ public class SubpruebaJpaEntity {
 
     public String getDescripcion() {
         return descripcion;
+    }
+
+    public String getFactor() {
+        return factor;
     }
 }

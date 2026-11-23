@@ -18,7 +18,12 @@ public final class ConfiguracionBfaFixture {
         for (SubpruebaBfa s : SubpruebaBfa.values()) {
             lista.add(
                     new Subprueba(
-                            100L + s.getOrden(), TEST_ID, s.getCodigo(), s.getNombre(), null));
+                            100L + s.getOrden(),
+                            TEST_ID,
+                            s.getCodigo(),
+                            s.getNombre(),
+                            null,
+                            s.getFactor()));
         }
         return lista;
     }

@@ -62,7 +62,8 @@ class ConfiguracionBfaTest {
     @Test
     void subpruebaNoOficialSeRechaza() {
         List<Subprueba> catalogo = catalogoOficial();
-        catalogo.add(new Subprueba(999L, ConfiguracionBfaFixture.TEST_ID, "XX", "Extra", null));
+        catalogo.add(
+                new Subprueba(999L, ConfiguracionBfaFixture.TEST_ID, "XX", "Extra", null, null));
         List<ConfiguracionSubprueba> cfgs = configuracionOficial();
         cfgs.add(
                 new ConfiguracionSubprueba(

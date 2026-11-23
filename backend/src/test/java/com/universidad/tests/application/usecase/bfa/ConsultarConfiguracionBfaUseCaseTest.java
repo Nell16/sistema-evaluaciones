@@ -35,8 +35,7 @@ class ConsultarConfiguracionBfaUseCaseTest {
         subpruebas = mock(SubpruebaRepository.class);
         configuraciones = mock(ConfiguracionSubpruebaRepository.class);
         useCase =
-                new ConsultarConfiguracionBfaUseCase(
-                        tests, versiones, subpruebas, configuraciones);
+                new ConsultarConfiguracionBfaUseCase(tests, versiones, subpruebas, configuraciones);
     }
 
     private VersionFormulario version(long idTest) {
@@ -52,11 +51,9 @@ class ConsultarConfiguracionBfaUseCaseTest {
                                 new com.universidad.tests.domain.model.Test(
                                         TEST_ID, "BFA", "Bateria BFA", null, true)));
         when(subpruebas.listarPorTest(TEST_ID))
-                .thenReturn(
-                        ConfiguracionBfaFixture.catalogoOficial());
+                .thenReturn(ConfiguracionBfaFixture.catalogoOficial());
         when(configuraciones.listarPorVersion(VERSION_ID))
-                .thenReturn(
-                        ConfiguracionBfaFixture.configuracionOficial());
+                .thenReturn(ConfiguracionBfaFixture.configuracionOficial());
 
         ConfiguracionBfa cfg = useCase.porVersion(VERSION_ID);
 

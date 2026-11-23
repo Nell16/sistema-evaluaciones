@@ -1,0 +1,52 @@
+Verificación de Testing del PR #45 (BFA-FE-01, cliente y tipos de la API de BFA)
+Ejecución: 2026-11-18 07:15 (America/Managua)
+Código probado: pull/45/merge 713479e (PR #45 head c789d13 + main d33f6a8), copia aparte del repositorio
+Entorno: Node v22.23.4 · npm 10.9.9 · npm ci (205 paquetes)
+Script de verificación: docs/evidencias/BFA-TEST-01/PR45-bfaApi.verificacion-testing.test.ts
+  (se copió en frontend/src/features/bfa/api/ solo en la copia aparte; no forma parte del PR)
+
+### npm run typecheck
+EXIT typecheck=0
+### npm run lint
+EXIT lint=0
+### npm run format:check
+All matched files use Prettier code style!
+EXIT format:check=0
+### npm run test
+ Test Files  14 passed (14)
+      Tests  111 passed (111)
+EXIT test=0
+### npm run build
+✓ built in 1.28s
+EXIT build=0
+
+### npx vitest run src/features/bfa/api/ --reporter=verbose (con el script de verificación)
+ ✓ TC-003 E1 GET /api/v1/tests
+ ✓ TC-004 E2 GET /api/v1/tests/{testId}
+ ✓ TC-005 E3 POST /api/v1/evaluaciones con el cuerpo del contrato
+ ✓ TC-006 E4 GET /api/v1/evaluaciones/{id}
+ ✓ TC-007 E24 GET …/subpruebas/{codigo}/instrucciones
+ ✓ TC-008 E5 POST …/iniciar sin cuerpo
+ ✓ TC-009 E6 GET …/preguntas
+ ✓ TC-010 E7 selección: PUT con respuestas {preguntaId, opcion}
+ ✓ TC-011 E7 FV: PUT con palabras {ordenEntrada, texto}, sin preguntaId ni opcion
+ ✓ TC-012 E8 POST …/finalizar sin cuerpo
+ ✓ TC-013 el código de subprueba se codifica en la ruta
+ ✓ TC-014 envía Content-Type application/json
+ ✓ TC-015 400 SOLICITUD_INVALIDA: rechaza con ApiError y conserva status y codigo
+ ✓ TC-015 401 NO_AUTENTICADO: rechaza con ApiError y conserva status y codigo
+ ✓ TC-015 403 SIN_PERMISO: rechaza con ApiError y conserva status y codigo
+ ✓ TC-015 404 EVALUACION_NO_ENCONTRADA: rechaza con ApiError y conserva status y codigo
+ ✓ TC-015 409 HAY_SUBPRUEBA_ACTIVA: rechaza con ApiError y conserva status y codigo
+ ✓ TC-015 422 OPCION_NO_PERTENECE: rechaza con ApiError y conserva status y codigo
+ ✓ TC-015 500 ERROR_INTERNO: rechaza con ApiError y conserva status y codigo
+ ✓ TC-016 error sin cuerpo JSON: ApiError con el status y mensaje genérico
+ ✓ TC-017 fallo de conexión: la promesa se rechaza (no se da por guardado)
+ ✓ TC-018 respuesta correcta: devuelve el cuerpo tal cual
+ ✓ TC-019 hoy no envía Authorization: Bearer (pendiente de GEN-06)
+ ✓ bfaApi.test.ts: envía PUT con palabras y ordenEntrada, sin pregunta ni opción
+ ✓ bfaApi.test.ts: E5 y E6 usan las rutas del contrato
+ Test Files  2 passed (2)
+      Tests  25 passed (25)
+
+npx tsc --noEmit con el script de verificación incluido: sin errores.

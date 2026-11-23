@@ -1,0 +1,73 @@
+Evidencia GEN-03-TEST — PR #34, arreglo de BUG-03 (2026-11-12, ejecutado por Rodrigo Romero)
+
+PR: #34 (cerrado sin fusionar el 2026-11-13; la entrega de GEN-03-BE es el #41)
+HEAD: 718cdb0 (corrección de BUG-03: 55c1175, también incluida en el #41)
+Probado: pull/34/merge 9cfa34f (main 5093a48)
+Entorno: local; PostgreSQL 17 en Docker (puerto 55432), bases limpias evaluaciones_r6 (FV) y evaluaciones_r7 (regresión)
+Datos ficticios cargados con SQL: EV-PRUEBA-03 (FV, letra R), EV-PRUEBA-03B (copia para el navegador), EV-PRUEBA-04 (FV sin letra)
+
+Resultado
+- TC-GEN-03-002 (navegador): PASÓ. Muestra "Letra asignada: R" (la de E5). "rana" y "ratón" se guardan como entradas 1 y 2 sin pregunta y se informan como guardadas. Tras recargar aparecen en las mismas posiciones, el reloj sigue (04:18, sin reiniciarse) y "reloj" se agrega como entrada 3 sin sobrescribir. Base: 1|rana, 2|ratón, 3|reloj, sin pregunta_id.
+- TC-GEN-03-025 a 028 (API): PASÓ (detalle abajo).
+- Regresión de TC-GEN-03-009 a 021 y BUG-01 con la colección de Postman (base evaluaciones_r7): 31 peticiones, 81 verificaciones, 0 fallidas.
+- Observaciones (no bloqueantes): E5 y E7 devuelven campos fuera del contrato; las pantallas de instrucciones y práctica muestran "Guardado" sin haber guardado nada.
+
+Llamadas de TC-GEN-03-025 a 028 (respuestas largas recortadas)
+===== TC-GEN-03-025
+POST /EV-PRUEBA-03/subpruebas/FV/iniciar
+  -> 200 {"codigo":"FV","nombre":"Fluidez Verbal","orden":1,"duracionSegundos":300,"estado":"ACTIVA","segundosRestantes":300,"inicio":"2026-11-12T03:21:44.371708100Z","finLimite":"2026-11-12T03:26:44.371708100Z","instrucciones":"Instrucciones ficticias de Fluidez Verbal","permitirRetroceso":true,"letraInicial":"R","maximoEntrada …(recortado)
+  paso 1: finLimite - inicio = 300 s; letraInicial = R; campos = codigo, nombre, orden, duracionSegundos, estado, segundosRestantes, inicio, finLimite, instrucciones, permitirRetroceso, letraInicial, maximoEntradas
+POST /EV-PRUEBA-04/subpruebas/FV/iniciar
+  -> 409 {"timestamp":"2026-11-12T03:21:44.435709200Z","status":409,"codigo":"LETRA_NO_CONFIGURADA","mensaje":"FV requiere una letra inicial asignada antes de iniciar.","ruta":"/api/v1/evaluaciones/EV-PRUEBA-04/subpruebas/FV/iniciar","detalles":[{"campo":"letraInicial","mensaje":"FV requiere una letra inicial asignada antes de i …(recortado)
+GET /EV-PRUEBA-04
+  -> 200 {"id":"EV-PRUEBA-04","sujetoId":"SUJ-FICT-01","estado":"EN_CURSO","subpruebas":[{"codigo":"FV","nombre":"Fluidez Verbal","orden":1,"duracionSegundos":300,"estado":"PENDIENTE","segundosRestantes":null,"inicio":null,"finLimite":null,"instrucciones":"Instrucciones ficticias de Fluidez Verbal","permitirRetroceso":true,"letr …(recortado)
+SQL select estado, fecha_inicio from evaluacion_subprueba where evaluacion_id='EV-PRUEBA-04'
+  -> PENDIENTE|
+>>> TC-025: PASA — paso 1 ok; paso 2 409 LETRA_NO_CONFIGURADA, FV PENDIENTE
+
+===== TC-GEN-03-026
+PUT /EV-PRUEBA-03/subpruebas/FV/respuestas {"palabras":[{"ordenEntrada":1,"texto":"mesa"},{"ordenEntrada":2,"texto":"montaña"}]}
+  -> 200 {"evaluacionId":"EV-PRUEBA-03","subpruebaCodigo":"FV","preguntaId":null,"totalRespondidas":2,"totalPreguntas":0,"guardado":true,"codigo":"FV","registradas":2,"segundosRestantes":299}
+  campos E7: evaluacionId, subpruebaCodigo, preguntaId, totalRespondidas, totalPreguntas, guardado, codigo, registradas, segundosRestantes; fuera del contrato: evaluacionId, subpruebaCodigo, preguntaId, totalPreguntas, guardado
+GET /EV-PRUEBA-03/subpruebas/FV/preguntas
+  -> 200 {"codigo":"FV","segundosRestantes":299,"permitirRetroceso":true,"preguntas":[],"palabras":[{"ordenEntrada":1,"texto":"mesa"},{"ordenEntrada":2,"texto":"montaña"}],"letraInicial":"R","maximoEntradas":75}
+SQL select orden_entrada, valor_texto, pregunta_id from respuesta_evaluacion where evaluacion_id='EV-PRUEBA-03' order by orden_entrada
+  -> 1|mesa| / 2|montaña|
+>>> TC-026: PASA — E7 200 (registradas 2, totalRespondidas 2); E6 2 palabras: 1:mesa, 2:montaña
+
+===== TC-GEN-03-027
+PUT /EV-PRUEBA-03/subpruebas/FV/respuestas {"palabras":[{"ordenEntrada":1,"texto":"mesa"},{"ordenEntrada":2,"texto":"montaña"}]}
+  -> 200 {"evaluacionId":"EV-PRUEBA-03","subpruebaCodigo":"FV","preguntaId":null,"totalRespondidas":2,"totalPreguntas":0,"guardado":true,"codigo":"FV","registradas":2,"segundosRestantes":299}
+GET /EV-PRUEBA-03/subpruebas/FV/preguntas
+  -> 200 {"codigo":"FV","segundosRestantes":299,"permitirRetroceso":true,"preguntas":[],"palabras":[{"ordenEntrada":1,"texto":"mesa"},{"ordenEntrada":2,"texto":"montaña"}],"letraInicial":"R","maximoEntradas":75}
+SQL select count(*) from respuesta_evaluacion where evaluacion_id='EV-PRUEBA-03'
+  -> 2
+>>> TC-027: PASA — reenvío 200; totalRespondidas 2 -> 2; E6 2 palabras; filas 2
+
+===== TC-GEN-03-028
+PUT /EV-PRUEBA-03/subpruebas/FV/respuestas {"palabras":[{"ordenEntrada":3,"texto":""}]}
+  -> 400 {"timestamp":"2026-11-12T03:21:45.041707900Z","status":400,"codigo":"SOLICITUD_INVALIDA","mensaje":"Texto de palabra vacío.","ruta":"/api/v1/evaluaciones/EV-PRUEBA-03/subpruebas/FV/respuestas","detalles":[{"campo":"texto","mensaje":"El texto es obligatorio."}]}
+PUT /EV-PRUEBA-03/subpruebas/FV/respuestas {"palabras":[{"ordenEntrada":3,"texto":"luna"},{"ordenEntrada":3,"texto":"lago"}]}
+  -> 400 {"timestamp":"2026-11-12T03:21:45.050708Z","status":400,"codigo":"SOLICITUD_INVALIDA","mensaje":"Orden de entrada inválido.","ruta":"/api/v1/evaluaciones/EV-PRUEBA-03/subpruebas/FV/respuestas","detalles":[{"campo":"ordenEntrada","mensaje":"El orden debe ser único y estar entre 1 y 75"}]}
+GET /EV-PRUEBA-03/subpruebas/FV/preguntas
+  -> 200 {"codigo":"FV","segundosRestantes":299,"permitirRetroceso":true,"preguntas":[],"palabras":[{"ordenEntrada":1,"texto":"mesa"},{"ordenEntrada":2,"texto":"montaña"}],"letraInicial":"R","maximoEntradas":75}
+PUT /EV-PRUEBA-03/subpruebas/FV/respuestas {"palabras":[{"ordenEntrada":1,"texto":"palabra1"},{"ordenEntrada":2,"texto":"palabra2"},{"ordenEntrada":3,"texto":"palabra3"},{"ordenEntrada":4,"texto":"palabr
+  -> 200 {"evaluacionId":"EV-PRUEBA-03","subpruebaCodigo":"FV","preguntaId":null,"totalRespondidas":75,"totalPreguntas":0,"guardado":true,"codigo":"FV","registradas":75,"segundosRestantes":299}
+PUT /EV-PRUEBA-03/subpruebas/FV/respuestas {"palabras":[{"ordenEntrada":76,"texto":"palabra76"}]}
+  -> 400 {"timestamp":"2026-11-12T03:21:45.391708Z","status":400,"codigo":"SOLICITUD_INVALIDA","mensaje":"Orden de entrada inválido.","ruta":"/api/v1/evaluaciones/EV-PRUEBA-03/subpruebas/FV/respuestas","detalles":[{"campo":"ordenEntrada","mensaje":"El orden debe ser único y estar entre 1 y 75"}]}
+GET /EV-PRUEBA-03/subpruebas/FV/preguntas
+  -> 200 {"codigo":"FV","segundosRestantes":298,"permitirRetroceso":true,"preguntas":[],"palabras":[{"ordenEntrada":1,"texto":"palabra1"},{"ordenEntrada":2,"texto":"palabra2"},{"ordenEntrada":3,"texto":"palabra3"},{"ordenEntrada":4,"texto":"palabra4"},{"ordenEntrada":5,"texto":"palabra5"},{"ordenEntrada":6,"texto":"palabra6"},{" …(recortado)
+SQL select count(*), max(orden_entrada), count(*) filter (where orden_entrada=76) from respuesta_evaluacion where evaluacion_id='EV-PRUEBA-03'
+  -> 75|75|0
+>>> TC-028: PASA — vacío 400 SOLICITUD_INVALIDA; repetido 400 SOLICITUD_INVALIDA; 75 entradas 200; entrada 76 400 SOLICITUD_INVALIDA; E6 75 palabras; base 75|75|0
+
+ "TC-025": {
+ "TC-026": {
+  "evaluacionId",
+  "subpruebaCodigo",
+  "preguntaId",
+  "totalPreguntas",
+  "guardado"
+ ],
+ "TC-027": {
+ "TC-028": {

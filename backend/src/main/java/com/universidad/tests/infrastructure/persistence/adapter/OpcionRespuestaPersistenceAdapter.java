@@ -48,6 +48,13 @@ public class OpcionRespuestaPersistenceAdapter implements OpcionRespuestaReposit
 
     @Override
     @Transactional(readOnly = true)
+    public List<Long> contarPorPreguntaDeConfiguracion(Long idConfiguracionSubprueba) {
+
+        return opcionJpaRepository.contarPorPreguntaDeConfiguracion(idConfiguracionSubprueba);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<OpcionRespuesta> buscarPorCodigo(Long idPregunta, String codigo) {
 
         return opcionJpaRepository

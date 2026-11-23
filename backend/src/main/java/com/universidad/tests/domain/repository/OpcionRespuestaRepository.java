@@ -10,6 +10,9 @@ public interface OpcionRespuestaRepository {
 
     List<OpcionRespuesta> listarPorPregunta(Long idPregunta);
 
+    // Cantidad de opciones de cada pregunta que tiene opciones en la configuracion
+    List<Long> contarPorPreguntaDeConfiguracion(Long idConfiguracionSubprueba);
+
     Optional<OpcionRespuesta> buscarPorCodigo(Long idPregunta, String codigo);
 
     boolean existePorCodigo(Long idPregunta, String codigo);

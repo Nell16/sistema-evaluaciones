@@ -250,10 +250,8 @@ class EvaluacionApiIntegrationTest {
 
         String letra =
                 jdbc.queryForObject(
-                        "select f.letra_inicial from aplicacion_fluidez_bfa f"
-                                + " join evaluacion_subprueba es"
-                                + " on es.id_evaluacion_subprueba = f.id_evaluacion_subprueba"
-                                + " where es.id_evaluacion = ?",
+                        "select es.letra_inicial from evaluacion_subprueba es"
+                                + " where es.id_evaluacion = ? and es.codigo = 'FV'",
                         String.class,
                         idDe(resultado));
         assertThat(letra).isEqualTo("M");
@@ -312,7 +310,7 @@ class EvaluacionApiIntegrationTest {
                         () ->
                                 jdbc.update(
                                         "insert into evaluacion (id_sujeto, id_version_formulario,"
-                                                + " id_test, id_periodo, estado, iniciada_en)"
+                                                + " id_test, id_periodo, estado, fecha_inicio)"
                                                 + " values (?, ?, ?, ?, 'EN_CURSO', now())",
                                         sujetoId,
                                         version.getIdVersionFormulario(),

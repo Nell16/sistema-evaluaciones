@@ -1,10 +1,17 @@
 # DOC-03 Modelo de datos
 
-**Estado: pendiente de definición y aprobación.** No existen tablas del dominio en este esqueleto.
+**Estado: Propuesta del sprint 03.**
 
-Posibles conceptos por investigar en el análisis funcional: evaluados, períodos, preguntas, opciones, intentos, respuestas, resultados e informes.
+## Diagrama y temas del modelo
 
-El equipo documentador debe acordar entidades, atributos, relaciones, restricciones, trazabilidad y protección de datos **antes** de generar SQL o clases JPA.
+El diagrama reúne el núcleo común aprobado en DOC-40, las tablas de claves y baremos de BFA y las propuestas de calificación de DOC-34-BFAW:
+[editable en Draw.io](../diagramas/modelo-er.drawio) · [vista PNG](../diagramas/modelo-er.png).
+DOC-34-OTR reutiliza las tablas comunes de calificación para Thurstone y Allport. Orientación Vocacional no tiene calificación automática definida. La propuesta de baremos genéricos (OTR-05) y la diferencia de auditoría entre DOC-31 y DOC-35-COM quedan pendientes de decisión.
+
+- [Ítems y formularios](items-formularios.md)
+- [Aplicación y respuestas (DOC-33, seguimiento en ClickUp)](https://app.clickup.com/t/1k5fzqb0ft6): el documento del tema aún no está en el repositorio.
+- [Calificación, escalas y baremos](calificacion-baremos.md)
+- [Identidad, periodos y auditoría](identidad-auditoria.md)
 
 ## Decisiones registradas en el repositorio
 

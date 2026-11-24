@@ -8,6 +8,12 @@ public interface EvaluacionRepository {
     // Devuelve la evaluacion con sus subpruebas ordenadas por orden de aplicacion
     Optional<Evaluacion> buscarPorId(Long idEvaluacion);
 
+    boolean existeEnCurso(Long idSujeto, Long idTest, Long idPeriodo);
+
     // Inserta (id nulo) la evaluacion y sus subpruebas
     Evaluacion guardar(Evaluacion evaluacion);
+
+    default Evaluacion guardarNueva(Evaluacion evaluacion) {
+        return guardar(evaluacion);
+    }
 }

@@ -1,5 +1,7 @@
 package com.universidad.tests.infrastructure.persistence.adapter;
 
+import com.universidad.tests.domain.exception.ErroresEvaluacion;
+import com.universidad.tests.domain.model.EstadoEvaluacion;
 import com.universidad.tests.domain.model.Evaluacion;
 import com.universidad.tests.domain.model.EvaluacionSubprueba;
 import com.universidad.tests.domain.repository.EvaluacionRepository;
@@ -35,6 +37,22 @@ public class EvaluacionPersistenceAdapter implements EvaluacionRepository {
                                         e,
                                         subpruebaJpa.findByIdEvaluacionOrderByOrdenAsc(
                                                 e.getIdEvaluacion())));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existeEnCurso(Long idSujeto, Long idTest, Long idPeriodo) {
+        return evaluacionJpa.existsByIdSujetoAndIdTestAndIdPeriodoAndEstado(
+                idSujeto, idTest, idPeriodo, EstadoEvaluacion.EN_CURSO);
+    }
+
+    @Override
+    @Transactional
+    public Evaluacion guardarNueva(Evaluacion evaluacion) {
+        if (existeEnCurso(evaluacion.idSujeto(), evaluacion.idTest(), evaluacion.idPeriodo())) {
+            throw ErroresEvaluacion.evaluacionEnCurso();
+        }
+        return guardar(evaluacion);
     }
 
     @Override

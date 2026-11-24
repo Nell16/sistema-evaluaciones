@@ -24,3 +24,10 @@ Las colecciones de pruebas de API viven aquí. Sirven para revisar Pull Requests
 - Solo cuando todos los criterios aplicables pasan, comenta la conformidad del SHA probado y coloca o solicita `testing-ok` conforme a los permisos acordados. Si cambia el código, repite las pruebas afectadas.
 
 Consulta también [tests/README.md](../README.md) para el flujo completo Desarrollo → Testing → Integración y los enlaces a tareas reales.
+
+## Colección del Sprint 03 (API publicada)
+
+- `BFA.postman_collection.json`: colección base contra la API publicada en el VPS, con carpetas Acceso, Catálogo, Evaluación, Resultados, Administración y Gestión. Cada carpeta la completa su tarea (TEST-31 a TEST-34).
+- `publico.postman_environment.json` (main, puerto 8091) y `release.postman_environment.json` (release, puerto 8092): traen `base_url`, `token`, `correo` y `contrasena` vacíos.
+- La solicitud **E14 Abrir sesión** (carpeta Acceso) guarda el token en `{{token}}` y la colección lo envía como `Authorization: Bearer`.
+- La contraseña de las cuentas demo va **solo** en el «current value» de tu entorno local. Nunca en el «initial value», en un export ni en el repositorio.

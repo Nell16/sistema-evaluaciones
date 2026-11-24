@@ -150,6 +150,10 @@ public class EvaluacionSubpruebaJpaEntity {
         return fechaCierre;
     }
 
+    public void setLetraInicial(String letraInicial) {
+        this.letraInicial = letraInicial;
+    }
+
     public String getLetraInicial() {
         return letraInicial;
     }

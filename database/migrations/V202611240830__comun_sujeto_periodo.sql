@@ -40,3 +40,9 @@ ALTER TABLE evaluacion ADD CONSTRAINT fk_evaluacion_sujeto
 
 ALTER TABLE evaluacion ADD CONSTRAINT fk_evaluacion_periodo
     FOREIGN KEY (id_periodo) REFERENCES periodo(id_periodo);
+
+-- E3 / DOC-04 CU-GEN-04: un sujeto no puede tener dos evaluaciones abiertas del mismo
+-- test en el mismo período. Protege también frente a dos solicitudes simultáneas.
+CREATE UNIQUE INDEX uq_evaluacion_en_curso
+    ON evaluacion (id_sujeto, id_test, id_periodo)
+    WHERE estado = 'EN_CURSO';

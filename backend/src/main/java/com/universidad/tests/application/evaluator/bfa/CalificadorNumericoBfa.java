@@ -18,6 +18,24 @@ import java.util.Set;
  */
 public final class CalificadorNumericoBfa {
 
+    /**
+     * Comprueba el contexto del catalogo y la cobertura exacta de la clave antes del conteo. La
+     * procedencia y aprobacion de la clave deben resolverse en el flujo de seleccion versionada.
+     */
+    public ConteoBloqueBfa calificarVersionado(
+            BloqueNumericoVersionado bloque,
+            Collection<RespuestaSeleccionBfa> respuestas,
+            Map<Long, Long> clave,
+            Collection<OpcionRespuesta> opciones) {
+        Objects.requireNonNull(bloque, "El bloque versionado es obligatorio");
+        Objects.requireNonNull(clave, "La clave es obligatoria");
+        if (!bloque.idsPreguntas().equals(clave.keySet())) {
+            throw new IllegalArgumentException(
+                    "La clave no cubre exactamente las preguntas del bloque aplicado");
+        }
+        return calificar(bloque.codigoSubprueba(), respuestas, clave, opciones);
+    }
+
     public ConteoBloqueBfa calificar(
             String codigoSubprueba,
             Collection<RespuestaSeleccionBfa> respuestas,

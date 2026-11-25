@@ -6,6 +6,8 @@ Esta integración reúne la persistencia de [PR #69](https://github.com/Nell16/s
 
 E30 (`POST /api/v1/baremos`) guarda la cabecera `baremo_bfa` y sus celdas `rango_baremo_bfa`. Un baremo recién cargado no habilita percentiles. La tabla `asignacion_baremo_bfa` vincula un baremo con una versión exacta de formulario y una versión exacta de reglas. La aprobación requiere evidencia; una asignación retirada deja de ser candidata. No se agregó una ruta REST de aprobación porque no figura en OpenAPI.
 
+En E30, los errores 400 `SOLICITUD_INVALIDA` incluyen `detalles` con los campos inválidos y un mensaje breve. Un baremo repetido responde 422 `BAREMO_INVALIDO`, conforme a las respuestas declaradas en OpenAPI; E30 no declara 409.
+
 La migración es `V202611251021__bfa_baremos.sql`, posterior a las migraciones integradas al iniciar BFA-BE-37. El custodio de migraciones debe validar su orden antes de fusionar.
 
 ## Conversión

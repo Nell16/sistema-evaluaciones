@@ -113,7 +113,7 @@ public class CargarBaremoBFAService {
 
     public static class BaremoDuplicadoException extends IllegalStateException {
         public BaremoDuplicadoException() {
-            super("BAREMO_DUPLICADO");
+            super("Ya existe un baremo con el mismo nombre y versión");
         }
     }
 

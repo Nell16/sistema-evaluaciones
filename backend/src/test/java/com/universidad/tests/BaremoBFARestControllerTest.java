@@ -1,5 +1,6 @@
 package com.universidad.tests;
 
+import static org.hamcrest.Matchers.hasItems;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -84,7 +85,36 @@ class BaremoBFARestControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"nombre\":\"BFA\",\"rangos\":[]}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.codigo").value("SOLICITUD_INVALIDA"));
+                .andExpect(jsonPath("$.codigo").value("SOLICITUD_INVALIDA"))
+                .andExpect(jsonPath("$.mensaje").value("La solicitud contiene datos inválidos"))
+                .andExpect(
+                        jsonPath("$.detalles[*].campo")
+                                .value(hasItems("version", "anioNorma", "rangos")));
+    }
+
+    @Test
+    void rechazaJsonMalFormadoConDetalleSinExponerClases() throws Exception {
+        mvc.perform(
+                        post("/api/v1/baremos")
+                                .header("Authorization", BEARER)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("SOLICITUD_INVALIDA"))
+                .andExpect(jsonPath("$.mensaje").value("La solicitud contiene datos inválidos"))
+                .andExpect(jsonPath("$.detalles[0].campo").value("cuerpo"));
+    }
+
+    @Test
+    void rechazaPercentilFueraDeRangoConDetalleDelCampo() throws Exception {
+        mvc.perform(
+                        post("/api/v1/baremos")
+                                .header("Authorization", BEARER)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(CUERPO.replace("\"percentil\":5", "\"percentil\":100")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("SOLICITUD_INVALIDA"))
+                .andExpect(jsonPath("$.detalles[0].campo").value("rangos[0].percentil"));
     }
 
     @Test
@@ -100,14 +130,17 @@ class BaremoBFARestControllerTest {
     }
 
     @Test
-    void rechazaBaremoDuplicado() throws Exception {
+    void rechazaBaremoDuplicadoConEl422DelContrato() throws Exception {
         when(servicio.cargarDatos(any())).thenThrow(new BaremoDuplicadoException());
         mvc.perform(
                         post("/api/v1/baremos")
                                 .header("Authorization", BEARER)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(CUERPO))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.codigo").value("BAREMO_DUPLICADO"));
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.codigo").value("BAREMO_INVALIDO"))
+                .andExpect(
+                        jsonPath("$.mensaje")
+                                .value("Ya existe un baremo con el mismo nombre y versión"));
     }
 }

@@ -2,7 +2,7 @@
 
 ## Alcance
 
-La migración `V202611241102__bfa_claves_versionadas.sql`, recuperada del PR #50 para
+La migración `V202611251600__bfa_claves_versionadas.sql`, recuperada del PR #50 para
 BFA-BE-32, agrega `version_clave_bfa` y `entrada_clave_bfa`. Este tema documenta
 exclusivamente las claves de preguntas de selección. Fluidez Verbal usa respuestas
 de texto libre y no genera entradas de clave cerrada.

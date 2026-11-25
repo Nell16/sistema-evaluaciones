@@ -1,15 +1,21 @@
 package com.universidad.tests.controller;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.universidad.tests.application.service.AutenticacionService;
 import com.universidad.tests.application.service.ConsultaEvaluacionService;
+import com.universidad.tests.application.service.IdentidadSesion;
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
 import com.universidad.tests.dto.response.EvaluacionResponse;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -19,9 +25,21 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(EvaluacionController.class)
 class EvaluacionControllerTest {
 
+    // Token ficticio; la validacion real se prueba en AutenticacionServiceTest
+    private static final String BEARER = "Bearer token-ficticio";
+
     @Autowired private MockMvc mvc;
 
     @MockitoBean private ConsultaEvaluacionService consultaService;
+
+    @MockitoBean private AutenticacionService autenticacion;
+
+    @BeforeEach
+    void sesionValida() {
+        when(autenticacion.validar(anyString())).thenReturn(Optional.empty());
+        when(autenticacion.validar("token-ficticio"))
+                .thenReturn(Optional.of(new IdentidadSesion(1L, 1L, "SUJETO", Set.of())));
+    }
 
     @Test
     void e4DevuelveElEstadoComoPideElContrato() throws Exception {
@@ -44,7 +62,7 @@ class EvaluacionControllerTest {
                                         new EvaluacionResponse.SubpruebaEstado(
                                                 "VOC2", "ACTIVA", null))));
 
-        mvc.perform(get("/api/v1/evaluaciones/15"))
+        mvc.perform(get("/api/v1/evaluaciones/15").header("Authorization", BEARER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(15))
                 .andExpect(jsonPath("$.testId").value(1))
@@ -63,7 +81,7 @@ class EvaluacionControllerTest {
     void e4Responde404ConElFormatoComunDeError() throws Exception {
         when(consultaService.consultar(99L)).thenThrow(new EvaluacionNoEncontradaException(99L));
 
-        mvc.perform(get("/api/v1/evaluaciones/99"))
+        mvc.perform(get("/api/v1/evaluaciones/99").header("Authorization", BEARER))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.codigo").value("EVALUACION_NO_ENCONTRADA"))

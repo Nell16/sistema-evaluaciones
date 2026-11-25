@@ -53,7 +53,8 @@ paths:
       description: >-
         Devuelve el test y las configuraciones de la edición publicada identificada, en orden de
         aplicación, sin preguntas ni claves. numeroPreguntas es el conteo de reactivos reales (FV tiene
-        0); maximoEntradas vale 75 en FV y nulo en selección. CU-BFA-P02.
+        0); maximoEntradas vale 75 en FV y nulo en selección. La edición identificada es la publicada
+        más reciente del test. CU-BFA-P02.
       parameters:
         - $ref: '#/components/parameters/TestId'
       responses:
@@ -65,7 +66,7 @@ paths:
         '401': { $ref: '#/components/responses/NoAutenticado' }
         '403': { $ref: '#/components/responses/SinPermiso' }
         '404':
-          description: TEST_NO_ENCONTRADO — el test no existe.
+          description: TEST_NO_ENCONTRADO — el test no existe, está inactivo o no tiene edición publicada.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -317,13 +318,19 @@ paths:
       description: >-
         Consolida factores, compuestos y percentiles a partir de los puntajes de cada subprueba, con
         versiones exactas de reglas, clave y baremo. Si faltan decisiones FV o insumos aprobados, el
-        resultado queda PENDIENTE_VALIDACION sin convertir faltantes en cero. Repetir la finalización
-        devuelve el cierre existente sin otro cálculo. La publicación va aparte (E12). CU-BFA-P07, CU-BFA-P08.
+        resultado queda PENDIENTE_VALIDACION sin convertir faltantes en cero; CALCULANDO solo se usa
+        mientras el cálculo está en curso y DISPONIBLE después de validar y publicar mediante E12.
+        Repetir la finalización devuelve el cierre existente sin otro cálculo. Una subprueba ACTIVA cuyo
+        finLimite ya venció se cierra de forma idempotente con cerradaEn igual a finLimite y no bloquea
+        E8. CU-BFA-P07, CU-BFA-P08.
       parameters:
         - $ref: '#/components/parameters/EvaluacionId'
       responses:
         '200':
-          description: Evaluación FINALIZADA, con resultadoId y estadoResultado.
+          description: >-
+            Evaluación FINALIZADA con resultadoId, estadoResultado, versionFormularioId y cerradaEn
+            por subprueba. Cuando termina el cálculo sin publicación validada, estadoResultado es
+            PENDIENTE_VALIDACION; DISPONIBLE solo se alcanza después de la revisión y publicación E12.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/EvaluacionResponse' }
@@ -335,7 +342,10 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409':
-          description: SUBPRUEBAS_PENDIENTES — hay ejecuciones incluidas sin cerrar.
+          description: >-
+            SUBPRUEBAS_PENDIENTES solo cuando una subprueba incluida está PENDIENTE o está ACTIVA
+            y su finLimite aún no ha vencido. Una subprueba ACTIVA vencida se cierra con cerradaEn
+            igual a finLimite y no causa este error.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -1060,7 +1070,7 @@ components:
         id: { type: integer, format: int64, example: 1 }
         codigo: { type: string, example: BFA }
         nombre: { type: string, example: Batería Factorial de Aptitudes }
-        numeroSubpruebas: { type: integer, example: 13 }
+        numeroSubpruebas: { type: integer, description: Subpruebas registradas para el test., example: 13 }
 
     TestDetalleResponse:
       type: object
@@ -1079,11 +1089,11 @@ components:
         codigo: { type: string, example: VOC1 }
         nombre: { type: string, example: Vocabulario - Forma A }
         orden: { type: integer, example: 1 }
-        factor: { type: string, example: VOC1 }
-        tiempoLimiteSegundos: { type: integer, example: 300 }
+        factor: { type: string, nullable: true, description: 'Factor al que aporta la subprueba (Documento BFA §5.3); varias subpruebas pueden compartirlo, p. ej. N1-A y N1-B aportan a N1. Nulo si aún no se cargó.', example: VOC1 }
+        tiempoLimiteSegundos: { type: integer, nullable: true, example: 300 }
         tipoRespuesta: { type: string, enum: [SELECCION, TEXTO_LIBRE], example: SELECCION }
-        opciones: { type: integer, nullable: true, example: 5 }
-        numeroPreguntas: { type: integer, example: 37 }
+        opciones: { type: integer, nullable: true, description: Opciones de cada pregunta. Nulo en texto libre o si las preguntas cargadas no tienen todas el mismo número., example: 5 }
+        numeroPreguntas: { type: integer, description: Preguntas cargadas en la configuración (sin práctica)., example: 37 }
         maximoEntradas: { type: integer, nullable: true, example: null }
         tienePractica: { type: boolean, example: true }
 
@@ -1131,6 +1141,7 @@ components:
             properties:
               codigo: { type: string, example: VOC1 }
               estado: { type: string, enum: [PENDIENTE, ACTIVA, CERRADA], example: CERRADA }
+              cerradaEn: { type: string, format: date-time, nullable: true, description: Instante de cierre; para cierre por vencimiento coincide con finLimite., example: '2026-10-30T15:42:10Z' }
         resultadoId: { type: integer, format: int64, nullable: true, description: Lo devuelve E8 al finalizar. }
         estadoResultado: { type: string, nullable: true, description: Lo devuelve E8 al finalizar (ej. PENDIENTE_VALIDACION). }
 

@@ -46,10 +46,20 @@ public final class MatrizPermisos {
     // E22
     public static final String OPERACION_AUTORIZAR = "OPERACION_AUTORIZAR";
 
+    // E5-E7: captura de respuestas reservada al sujeto dentro de su asignacion.
+    public static final String SUBPRUEBA_INICIAR = "SUBPRUEBA_INICIAR";
+    public static final String EVALUACION_FINALIZAR = "EVALUACION_FINALIZAR";
+    public static final String ITEMS_LEER = "ITEMS_LEER";
+    public static final String RESPUESTA_ESCRIBIR = "RESPUESTA_ESCRIBIR";
+
     // Permiso -> roles que lo reciben
     private static final Map<String, Set<Rol>> APROBADA = new LinkedHashMap<>();
 
     static {
+        APROBADA.put(SUBPRUEBA_INICIAR, Set.of(SUJETO));
+        APROBADA.put(EVALUACION_FINALIZAR, Set.of(SUJETO));
+        APROBADA.put(ITEMS_LEER, Set.of(SUJETO));
+        APROBADA.put(RESPUESTA_ESCRIBIR, Set.of(SUJETO));
         // E25-E31: Coordinador (contrato y GEN-33-BE)
         APROBADA.put(CONFIGURAR_BFA, Set.of(COORDINADOR));
         APROBADA.put(INSTRUCCIONES_EDITAR, Set.of(COORDINADOR));

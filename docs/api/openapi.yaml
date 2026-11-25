@@ -895,6 +895,11 @@ paths:
         '400': { $ref: '#/components/responses/SolicitudInvalida' }
         '401': { $ref: '#/components/responses/NoAutenticado' }
         '403': { $ref: '#/components/responses/SinPermiso' }
+        '404':
+          description: RECURSO_NO_ENCONTRADO — versión o pregunta inexistente en esa versión.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409':
           description: VERSION_NO_EDITABLE — la versión no está en BORRADOR.
           content:
@@ -1474,7 +1479,22 @@ components:
       properties:
         opciones:
           type: array
-          items: { $ref: '#/components/schemas/OpcionRespuesta' }
+          minItems: 1
+          items: { $ref: '#/components/schemas/OpcionVersionadaRequest' }
+
+    OpcionVersionadaRequest:
+      type: object
+      required: [letra]
+      anyOf:
+        - required: [texto]
+          properties: { texto: { type: string, minLength: 1 } }
+        - required: [recursoRef]
+          properties: { recursoRef: { type: string, minLength: 1 } }
+      properties:
+        letra: { type: string, minLength: 1, maxLength: 40, example: A }
+        orden: { type: integer, minimum: 1, description: Posición en la lista si se omite., example: 1 }
+        texto: { type: string, nullable: true }
+        recursoRef: { type: string, nullable: true }
 
     ClaveRequest:
       type: object

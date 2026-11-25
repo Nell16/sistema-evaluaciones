@@ -2,8 +2,7 @@ package com.universidad.tests.controller;
 
 import com.universidad.tests.application.service.AgregarPreguntaVersionadaService.PreguntaDuplicadaException;
 import com.universidad.tests.application.service.VersionFormularioService.VersionDuplicadaException;
-import com.universidad.tests.domain.exception.NoAutenticadoException;
-import com.universidad.tests.domain.exception.SinPermisoException;
+import com.universidad.tests.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.NoSuchElementException;
@@ -14,6 +13,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+// Errores propios del versionado con el formato comun (Documento general §5.2.2).
+// NO_AUTENTICADO y SIN_PERMISO los responde ManejadorErroresSeguridad.
 @RestControllerAdvice(
         assignableTypes = {
             ConfiguracionVersionadaController.class,
@@ -30,17 +31,6 @@ public class VersionadoErrorHandler {
     public ResponseEntity<ErrorResponse> solicitudInvalida(
             Exception error, HttpServletRequest request) {
         return responder(HttpStatus.BAD_REQUEST, "SOLICITUD_INVALIDA", error, request);
-    }
-
-    @ExceptionHandler({SecurityException.class, SinPermisoException.class})
-    public ResponseEntity<ErrorResponse> sinPermiso(Exception error, HttpServletRequest request) {
-        return responder(HttpStatus.FORBIDDEN, "SIN_PERMISO", error, request);
-    }
-
-    @ExceptionHandler(NoAutenticadoException.class)
-    public ResponseEntity<ErrorResponse> noAutenticado(
-            Exception error, HttpServletRequest request) {
-        return responder(HttpStatus.UNAUTHORIZED, "NO_AUTENTICADO", error, request);
     }
 
     @ExceptionHandler(NoSuchElementException.class)
@@ -75,7 +65,4 @@ public class VersionadoErrorHandler {
                                 error.getMessage(),
                                 request.getRequestURI()));
     }
-
-    public record ErrorResponse(
-            Instant timestamp, int status, String codigo, String mensaje, String ruta) {}
 }

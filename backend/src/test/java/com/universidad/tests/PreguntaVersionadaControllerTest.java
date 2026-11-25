@@ -9,8 +9,10 @@ import com.universidad.tests.application.service.AgregarPreguntaVersionadaServic
 import com.universidad.tests.application.service.AgregarPreguntaVersionadaService.PreguntaDuplicadaException;
 import com.universidad.tests.application.service.AutenticacionService;
 import com.universidad.tests.application.service.IdentidadSesion;
+import com.universidad.tests.controller.ManejadorErroresSeguridad;
 import com.universidad.tests.controller.PreguntaVersionadaController;
 import com.universidad.tests.controller.VersionadoErrorHandler;
+import com.universidad.tests.domain.exception.SinPermisoException;
 import com.universidad.tests.dto.PreguntaCreada;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -25,7 +27,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(PreguntaVersionadaController.class)
-@Import(VersionadoErrorHandler.class)
+@Import({VersionadoErrorHandler.class, ManejadorErroresSeguridad.class})
 class PreguntaVersionadaControllerTest {
     @Autowired private MockMvc mvc;
     @MockitoBean private AgregarPreguntaVersionadaService servicio;
@@ -72,13 +74,14 @@ class PreguntaVersionadaControllerTest {
     @Test
     void permisoDenegadoResponde403() throws Exception {
         when(servicio.agregar(anyLong(), anyString(), anyString(), anyInt(), anyString(), any()))
-                .thenThrow(new SecurityException("denegado"));
+                .thenThrow(new SinPermisoException());
         mvc.perform(
                         post(RUTA)
                                 .header("Authorization", "Bearer " + TOKEN)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(CUERPO))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("SIN_PERMISO"));
     }
 
     @Test
@@ -90,7 +93,8 @@ class PreguntaVersionadaControllerTest {
                                 .header("Authorization", "Bearer " + TOKEN)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(CUERPO))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.codigo").value("RECURSO_NO_ENCONTRADO"));
     }
 
     @Test
@@ -115,7 +119,8 @@ class PreguntaVersionadaControllerTest {
                                 .header("Authorization", "Bearer " + TOKEN)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(CUERPO))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.codigo").value("PREGUNTA_DUPLICADA"));
     }
 
     @Test

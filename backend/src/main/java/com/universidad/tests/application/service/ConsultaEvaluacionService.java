@@ -17,19 +17,24 @@ public class ConsultaEvaluacionService {
     private final EvaluacionRepository evaluacionRepository;
     private final Clock reloj;
     private final AutorizacionEvaluacionPort autorizacion;
+    private final CierreSubpruebasService cierre;
 
     @Autowired
     public ConsultaEvaluacionService(
-            EvaluacionRepository evaluacionRepository, AutorizacionEvaluacionPort autorizacion) {
-        this(evaluacionRepository, autorizacion, Clock.systemUTC());
+            EvaluacionRepository evaluacionRepository,
+            AutorizacionEvaluacionPort autorizacion,
+            CierreSubpruebasService cierre) {
+        this(evaluacionRepository, autorizacion, cierre, Clock.systemUTC());
     }
 
     // Reloj inyectable para probar el tiempo restante
     public ConsultaEvaluacionService(
             EvaluacionRepository evaluacionRepository,
             AutorizacionEvaluacionPort autorizacion,
+            CierreSubpruebasService cierre,
             Clock reloj) {
         this.autorizacion = autorizacion;
+        this.cierre = cierre;
         this.evaluacionRepository = evaluacionRepository;
         this.reloj = reloj;
     }
@@ -41,6 +46,11 @@ public class ConsultaEvaluacionService {
                         .orElseThrow(() -> new EvaluacionNoEncontradaException(idEvaluacion));
         autorizacion.exigirPermisoConsultarEvaluacion(
                 evaluacion.idEvaluacion(), evaluacion.idSujeto());
+        cierre.cerrarVencidas(idEvaluacion);
+        evaluacion =
+                evaluacionRepository
+                        .buscarPorId(idEvaluacion)
+                        .orElseThrow(() -> new EvaluacionNoEncontradaException(idEvaluacion));
         Instant ahora = reloj.instant();
 
         return new EvaluacionResponse(

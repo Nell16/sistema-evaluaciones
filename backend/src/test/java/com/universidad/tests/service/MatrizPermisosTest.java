@@ -12,9 +12,16 @@ class MatrizPermisosTest {
     private final MatrizPermisos matriz = MatrizPermisos.aprobada();
 
     @Test
-    void sujetoSoloLeeSuIdentidadSuPeriodoYRecuperaSuIntento() {
+    void sujetoConsultaSuIdentidadYRespondeEnSuAsignacion() {
         assertThat(matriz.permisosDe(Rol.SUJETO))
-                .containsExactlyInAnyOrder("SUJETO_LEER", "PERIODO_LEER", "RECUPERAR_INTENTO");
+                .containsExactlyInAnyOrder(
+                        "SUJETO_LEER",
+                        "PERIODO_LEER",
+                        "RECUPERAR_INTENTO",
+                        "EVALUACION_FINALIZAR",
+                        "SUBPRUEBA_INICIAR",
+                        "ITEMS_LEER",
+                        "RESPUESTA_ESCRIBIR");
     }
 
     @Test

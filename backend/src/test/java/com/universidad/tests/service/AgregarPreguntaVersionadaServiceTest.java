@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 import com.universidad.tests.application.service.AgregarPreguntaVersionadaService;
 import com.universidad.tests.application.service.AgregarPreguntaVersionadaService.PreguntaDuplicadaException;
 import com.universidad.tests.application.service.EdicionContenidoVersionadoService;
+import com.universidad.tests.domain.exception.SinPermisoException;
 import com.universidad.tests.domain.model.ConfiguracionSubprueba;
 import com.universidad.tests.domain.model.EstadoVersionFormulario;
 import com.universidad.tests.domain.model.Pregunta;
@@ -68,11 +69,10 @@ class AgregarPreguntaVersionadaServiceTest {
 
     @Test
     void permisoDenegadoNoConsultaNiGuarda() {
-        doThrow(new SecurityException("denegado"))
-                .when(autorizacion)
-                .exigirPermisoEditarContenido(11L);
+        doThrow(new SinPermisoException()).when(autorizacion).exigirPermisoEditarContenido(11L);
         assertThrows(
-                SecurityException.class, () -> servicio.agregar(11L, "R1", "1", 1, "Serie", null));
+                SinPermisoException.class,
+                () -> servicio.agregar(11L, "R1", "1", 1, "Serie", null));
         verifyNoInteractions(versiones, subpruebas, configuraciones, preguntas, edicion);
     }
 

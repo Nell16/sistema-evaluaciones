@@ -55,7 +55,14 @@ class AutenticacionServiceTest {
         assertThat(sesion.token()).isNotBlank();
         assertThat(sesion.rolActivo()).isEqualTo("SUJETO");
         assertThat(sesion.permisos())
-                .containsExactly("PERIODO_LEER", "RECUPERAR_INTENTO", "SUJETO_LEER");
+                .containsExactly(
+                        "EVALUACION_FINALIZAR",
+                        "ITEMS_LEER",
+                        "PERIODO_LEER",
+                        "RECUPERAR_INTENTO",
+                        "RESPUESTA_ESCRIBIR",
+                        "SUBPRUEBA_INICIAR",
+                        "SUJETO_LEER");
         assertThat(sesion.expiraEn()).isAfter(Instant.now());
         assertThat(sesiones.guardadas).hasSize(1);
         Sesion guardada = sesiones.guardadas.get(0);

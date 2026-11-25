@@ -12,6 +12,7 @@ import com.universidad.tests.infrastructure.persistence.repository.EvaluacionSub
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
@@ -29,14 +30,28 @@ public class EvaluacionPersistenceAdapter implements EvaluacionRepository {
     @Override
     @Transactional(readOnly = true)
     public Optional<Evaluacion> buscarPorId(Long idEvaluacion) {
-        return evaluacionJpa
-                .findById(idEvaluacion)
-                .map(
-                        e ->
-                                aDominio(
-                                        e,
-                                        subpruebaJpa.findByIdEvaluacionOrderByOrdenAsc(
-                                                e.getIdEvaluacion())));
+        return evaluacionJpa.findById(idEvaluacion).map(this::aDominio);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<Evaluacion> buscarPorIdParaActualizar(Long idEvaluacion) {
+        return evaluacionJpa.buscarParaActualizar(idEvaluacion).map(this::aDominio);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void iniciarSubprueba(EvaluacionSubprueba subprueba) {
+        subpruebaJpa
+                .findById(subprueba.idEvaluacionSubprueba())
+                .orElseThrow()
+                .iniciar(subprueba.fechaInicio(), subprueba.fechaFinLimite());
+    }
+
+    private Evaluacion aDominio(EvaluacionJpaEntity evaluacion) {
+        return aDominio(
+                evaluacion,
+                subpruebaJpa.findByIdEvaluacionOrderByOrdenAsc(evaluacion.getIdEvaluacion()));
     }
 
     @Override

@@ -174,7 +174,11 @@ class EvaluacionApiIntegrationTest {
 
     @Test
     void noDuplicaLaEvaluacionAbiertaDelMismoSujetoTestYPeriodo() throws Exception {
-        ejecutar(iniciar(cuerpo(null, null))).andExpect(status().isCreated());
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
 
         ejecutar(iniciar(cuerpo(null, null)))
                 .andExpect(status().isConflict())
@@ -182,6 +186,28 @@ class EvaluacionApiIntegrationTest {
                 .andExpect(jsonPath("$.ruta").value("/api/v1/evaluaciones"));
 
         assertThat(contar("evaluacion where id_sujeto = " + sujetoId)).isEqualTo(1);
+        assertThat(
+                        jdbc.queryForList(
+                                """
+                                select id_cuenta, accion, entidad_tipo, entidad_id, id_evaluacion,
+                                       ocurrido_en is not null as fechado
+                                from evento_auditoria where id_cuenta = ?
+                                """,
+                                cuentaId))
+                .containsExactly(
+                        Map.of(
+                                "id_cuenta",
+                                cuentaId,
+                                "accion",
+                                "INICIAR_EVALUACION",
+                                "entidad_tipo",
+                                "EVALUACION",
+                                "entidad_id",
+                                id,
+                                "id_evaluacion",
+                                id,
+                                "fechado",
+                                true));
     }
 
     @Test
@@ -461,6 +487,113 @@ class EvaluacionApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombres").doesNotExist())
                 .andExpect(jsonPath("$.apellidos").doesNotExist());
+    }
+
+    @Test
+    void e8FinalizaSinInventarResultadosYRepiteSinDuplicarAuditoria() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        jdbc.update(
+                "update evaluacion_subprueba set estado='CERRADA',fecha_inicio=statement_timestamp(),fecha_fin_limite=statement_timestamp()+interval '5 minutes',fecha_cierre=statement_timestamp() where id_evaluacion=?",
+                id);
+        rolPrueba = "SUJETO";
+        permisosPrueba = Set.of("EVALUACION_FINALIZAR", "RECUPERAR_INTENTO");
+        var primero =
+                ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.estado").value("FINALIZADA"))
+                        .andExpect(jsonPath("$.estadoResultado").value("PENDIENTE_VALIDACION"))
+                        .andExpect(jsonPath("$.resultadoId").isNumber())
+                        .andReturn();
+        String cuerpoPrimero = primero.getResponse().getContentAsString();
+        var repetido =
+                ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+        assertThat(repetido.getResponse().getContentAsString()).isEqualTo(cuerpoPrimero);
+        assertThat(contar("resultado where id_evaluacion=" + id)).isEqualTo(1);
+        assertThat(
+                        contar(
+                                "evento_auditoria where entidad_id="
+                                        + id
+                                        + " and accion='FINALIZAR_EVALUACION'"))
+                .isEqualTo(1);
+    }
+
+    @Test
+    void e8NoFinalizaConSubpruebasPendientesNiCreaResultado() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        rolPrueba = "SUJETO";
+        permisosPrueba = Set.of("EVALUACION_FINALIZAR");
+        ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codigo").value("SUBPRUEBAS_PENDIENTES"));
+        assertThat(contar("resultado where id_evaluacion=" + id)).isZero();
+        assertThat(
+                        jdbc.queryForObject(
+                                "select estado from evaluacion where id_evaluacion=?",
+                                String.class,
+                                id))
+                .isEqualTo("EN_CURSO");
+    }
+
+    @Test
+    void e8SinPermisoOAsignacionNoModificaLaEvaluacion() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                .andExpect(status().isForbidden());
+        rolPrueba = "SUJETO";
+        permisosPrueba = Set.of("EVALUACION_FINALIZAR");
+        jdbc.update("delete from cuenta_sujeto_asignado where id_cuenta=?", cuentaId);
+        ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                .andExpect(status().isForbidden());
+        assertThat(contar("resultado where id_evaluacion=" + id)).isZero();
+        assertThat(
+                        jdbc.queryForObject(
+                                "select estado from evaluacion where id_evaluacion=?",
+                                String.class,
+                                id))
+                .isEqualTo("EN_CURSO");
+    }
+
+    @Test
+    void e8CierraActivaVencidaSinBloquearFinalizacion() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        jdbc.update(
+                "update evaluacion set fecha_inicio=statement_timestamp()-interval '2 hours' where id_evaluacion=?",
+                id);
+        jdbc.update(
+                "update evaluacion_subprueba set estado='CERRADA',fecha_inicio=statement_timestamp()-interval '1 hour',fecha_fin_limite=statement_timestamp()-interval '30 minutes',fecha_cierre=statement_timestamp()-interval '30 minutes' where id_evaluacion=?",
+                id);
+        jdbc.update(
+                "update evaluacion_subprueba set estado='ACTIVA',fecha_cierre=null where id_evaluacion=? and codigo='VOC1'",
+                id);
+        rolPrueba = "SUJETO";
+        permisosPrueba = Set.of("EVALUACION_FINALIZAR", "RECUPERAR_INTENTO");
+        ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("FINALIZADA"));
+        assertThat(
+                        jdbc.queryForObject(
+                                "select fecha_cierre=fecha_fin_limite from evaluacion_subprueba where id_evaluacion=? and codigo='VOC1'",
+                                Boolean.class,
+                                id))
+                .isTrue();
     }
 
     // ---------- Datos ficticios ----------

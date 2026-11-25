@@ -33,4 +33,15 @@ public class AutorizacionEvaluacionProvisionalAdapter implements AutorizacionEva
     public void exigirPermisoLeerPeriodos() {
         // Pendiente de GEN-06.
     }
+
+    // GEN-48-N1
+    @Override
+    public void exigirPermisoCrearSujeto() {
+        // Pendiente de GEN-06.
+    }
+
+    @Override
+    public void exigirPermisoBuscarSujetos() {
+        // Pendiente de GEN-06.
+    }
 }

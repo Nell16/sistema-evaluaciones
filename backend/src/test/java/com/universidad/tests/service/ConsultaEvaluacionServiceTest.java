@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.universidad.tests.application.service.CierreSubpruebasService;
 import com.universidad.tests.application.service.ConsultaEvaluacionService;
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
 import com.universidad.tests.domain.model.EstadoEvaluacion;
@@ -26,7 +27,10 @@ class ConsultaEvaluacionServiceTest {
 
     private final EvaluacionRepository repositorio = mock(EvaluacionRepository.class);
     private final ConsultaEvaluacionService servicio =
-            new ConsultaEvaluacionService(repositorio, Clock.fixed(AHORA, ZoneOffset.UTC));
+            new ConsultaEvaluacionService(
+                    repositorio,
+                    mock(CierreSubpruebasService.class),
+                    Clock.fixed(AHORA, ZoneOffset.UTC));
 
     private EvaluacionSubprueba subprueba(
             String codigo, int orden, EstadoSubprueba estado, Instant inicio, Instant fin) {

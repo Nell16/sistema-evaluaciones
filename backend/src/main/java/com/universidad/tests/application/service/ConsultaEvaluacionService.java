@@ -15,19 +15,26 @@ public class ConsultaEvaluacionService {
 
     private final EvaluacionRepository evaluacionRepository;
     private final Clock reloj;
+    private final CierreSubpruebasService cierre;
 
     @Autowired
-    public ConsultaEvaluacionService(EvaluacionRepository evaluacionRepository) {
-        this(evaluacionRepository, Clock.systemUTC());
+    public ConsultaEvaluacionService(
+            EvaluacionRepository evaluacionRepository, CierreSubpruebasService cierre) {
+        this(evaluacionRepository, cierre, Clock.systemUTC());
     }
 
     // Reloj inyectable para probar el tiempo restante
-    public ConsultaEvaluacionService(EvaluacionRepository evaluacionRepository, Clock reloj) {
+    public ConsultaEvaluacionService(
+            EvaluacionRepository evaluacionRepository,
+            CierreSubpruebasService cierre,
+            Clock reloj) {
         this.evaluacionRepository = evaluacionRepository;
+        this.cierre = cierre;
         this.reloj = reloj;
     }
 
     public EvaluacionResponse consultar(Long idEvaluacion) {
+        cierre.cerrarVencidas(idEvaluacion);
         Evaluacion evaluacion =
                 evaluacionRepository
                         .buscarPorId(idEvaluacion)

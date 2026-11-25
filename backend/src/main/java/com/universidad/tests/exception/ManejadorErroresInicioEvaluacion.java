@@ -4,11 +4,13 @@ import com.universidad.tests.controller.InicioEvaluacionController;
 import com.universidad.tests.controller.PeriodoController;
 import com.universidad.tests.controller.SujetoController;
 import com.universidad.tests.domain.exception.ErrorNegocioException;
+import com.universidad.tests.domain.exception.ErroresEvaluacion;
 import com.universidad.tests.domain.exception.TipoErrorNegocio;
 import com.universidad.tests.dto.response.ErrorResponse;
 import com.universidad.tests.dto.response.ErrorResponse.DetalleCampo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -16,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -164,6 +167,20 @@ public class ManejadorErroresInicioEvaluacion {
                 "No tiene permiso para realizar esta acción.",
                 request,
                 List.of());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> integridad(
+            DataIntegrityViolationException e, HttpServletRequest request) {
+        for (Throwable causa = e; causa != null; causa = causa.getCause()) {
+            if (causa instanceof SQLException sql
+                    && "23505".equals(sql.getSQLState())
+                    && sql.getMessage() != null
+                    && sql.getMessage().contains("uq_evaluacion_en_curso")) {
+                return negocio(ErroresEvaluacion.evaluacionEnCurso(), request);
+            }
+        }
+        return inesperado(e, request);
     }
 
     @ExceptionHandler(Exception.class)

@@ -31,7 +31,7 @@ class ConfiguracionVersionadaServiceTest {
         when(subpruebas.buscarPorCodigo(1L, "R1")).thenReturn(Optional.of(subprueba));
         when(configuraciones.buscarPorVersionYSubprueba(11L, 3L)).thenReturn(Optional.of(anterior));
         when(configuraciones.listarPorVersion(11L)).thenReturn(List.of(anterior));
-        when(edicion.guardarConfiguracion(any()))
+        when(edicion.guardarConfiguracionSubprueba(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         ConfiguracionVersionadaService servicio =
                 new ConfiguracionVersionadaService(

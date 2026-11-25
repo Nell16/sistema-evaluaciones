@@ -50,7 +50,7 @@ public class ConfiguracionVersionadaService {
             throw new IllegalArgumentException("La version y el codigo son obligatorios");
         }
         TipoRespuesta tipoRespuesta = TipoRespuesta.valueOf(tipoRespuestaTexto);
-        autorizacion.exigirPermisoEditarContenido(idVersion);
+        autorizacion.exigirPermisoConfigurarSubprueba(idVersion);
         VersionFormulario version =
                 versiones
                         .buscarPorId(idVersion)
@@ -94,6 +94,6 @@ public class ConfiguracionVersionadaService {
                         practicaJson,
                         maximoEntradas,
                         opciones);
-        return edicion.guardarConfiguracion(nueva);
+        return edicion.guardarConfiguracionSubprueba(nueva);
     }
 }

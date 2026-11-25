@@ -10,6 +10,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.universidad.tests.application.service.AutorizacionService;
+import com.universidad.tests.application.service.IdentidadSesion;
+import com.universidad.tests.application.service.RegistroAuditoria;
 import com.universidad.tests.application.usecase.IniciarEvaluacionComando;
 import com.universidad.tests.application.usecase.IniciarEvaluacionUseCase;
 import com.universidad.tests.application.usecase.bfa.ReglaInicioBfa;
@@ -61,6 +64,8 @@ class IniciarEvaluacionUseCaseTest {
     private static final long PERIODO = 3L;
 
     @Mock private AutorizacionEvaluacionPort autorizacion;
+    @Mock private AutorizacionService sesiones;
+    @Mock private RegistroAuditoria auditoria;
     @Mock private TestRepository testRepository;
     @Mock private VersionFormularioRepository versionRepository;
     @Mock private ConfiguracionSubpruebaRepository configuracionRepository;
@@ -74,9 +79,12 @@ class IniciarEvaluacionUseCaseTest {
 
     @BeforeEach
     void preparar() {
+        when(sesiones.exigirSesion()).thenReturn(new IdentidadSesion(1L, 1L, "SUJETO", null));
         useCase =
                 new IniciarEvaluacionUseCase(
                         autorizacion,
+                        sesiones,
+                        auditoria,
                         testRepository,
                         versionRepository,
                         configuracionRepository,

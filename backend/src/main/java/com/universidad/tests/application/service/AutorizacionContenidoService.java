@@ -1,5 +1,10 @@
 package com.universidad.tests.application.service;
 
+import static com.universidad.tests.domain.model.MatrizPermisos.CONFIGURAR_BFA;
+import static com.universidad.tests.domain.model.MatrizPermisos.CONTENIDO_EDITAR;
+import static com.universidad.tests.domain.model.MatrizPermisos.INSTRUCCIONES_EDITAR;
+import static com.universidad.tests.domain.model.MatrizPermisos.OPCIONES_EDITAR;
+
 import com.universidad.tests.domain.port.AutorizacionContenidoPort;
 import org.springframework.stereotype.Service;
 
@@ -9,10 +14,6 @@ import org.springframework.stereotype.Service;
 // Retirar y consultar contenido restringido no tienen permiso documentado: siguen denegados.
 @Service
 public class AutorizacionContenidoService implements AutorizacionContenidoPort {
-
-    static final String CONFIGURAR_BFA = "CONFIGURAR_BFA";
-    static final String CONTENIDO_EDITAR = "CONTENIDO_EDITAR";
-    static final String OPCIONES_EDITAR = "OPCIONES_EDITAR";
 
     private final AutorizacionService autorizacion;
 
@@ -33,6 +34,12 @@ public class AutorizacionContenidoService implements AutorizacionContenidoPort {
     @Override
     public void exigirPermisoEditarOpciones(Long idVersionFormulario) {
         autorizacion.exigirPermiso(OPCIONES_EDITAR);
+    }
+
+    @Override
+    public void exigirPermisoConfigurarSubprueba(Long idVersionFormulario) {
+        autorizacion.exigirPermiso(CONFIGURAR_BFA);
+        autorizacion.exigirPermiso(INSTRUCCIONES_EDITAR);
     }
 
     @Override

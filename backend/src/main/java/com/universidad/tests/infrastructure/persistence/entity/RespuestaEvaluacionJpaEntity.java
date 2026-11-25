@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.Objects;
 
 @Entity
 @Table(name = "respuesta_evaluacion")
@@ -57,6 +58,14 @@ public class RespuestaEvaluacionJpaEntity {
         this.valorTexto = valorTexto;
         this.ordenEntrada = ordenEntrada;
         this.fechaRegistro = fechaRegistro;
+    }
+
+    public void actualizar(Long opcion, String texto, Instant registro) {
+        if (!Objects.equals(idOpcion, opcion) || !Objects.equals(valorTexto, texto)) {
+            idOpcion = opcion;
+            valorTexto = texto;
+            fechaRegistro = registro;
+        }
     }
 
     public Long getIdRespuestaEvaluacion() {

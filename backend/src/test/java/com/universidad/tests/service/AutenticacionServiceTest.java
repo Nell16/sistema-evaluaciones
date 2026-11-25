@@ -54,7 +54,8 @@ class AutenticacionServiceTest {
 
         assertThat(sesion.token()).isNotBlank();
         assertThat(sesion.rolActivo()).isEqualTo("SUJETO");
-        assertThat(sesion.permisos()).isEmpty();
+        assertThat(sesion.permisos())
+                .containsExactly("PERIODO_LEER", "RECUPERAR_INTENTO", "SUJETO_LEER");
         assertThat(sesion.expiraEn()).isNull();
         assertThat(sesiones.guardadas).hasSize(1);
         Sesion guardada = sesiones.guardadas.get(0);
@@ -134,7 +135,8 @@ class AutenticacionServiceTest {
 
         assertThat(identidad.idCuenta()).isEqualTo(cuenta.getIdCuenta());
         assertThat(identidad.rolActivo()).isEqualTo("COORDINADOR");
-        assertThat(identidad.permisos()).isEmpty();
+        assertThat(identidad.permisos()).contains("CONFIGURAR_BFA", "PERIODO_CREAR");
+        assertThat(identidad.permisos()).doesNotContain("REVISAR_FLUIDEZ", "RECALCULAR_BFA");
     }
 
     @Test

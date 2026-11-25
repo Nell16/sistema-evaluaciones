@@ -1,0 +1,41 @@
+.weill-form {
+  display: grid;
+  gap: 16px;
+  max-width: 480px;
+  margin-top: 20px;
+}
+
+.weill-field {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.weill-field input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--test-secondary);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.weill-grupo {
+  margin: 0;
+  color: var(--test-secondary);
+}
+
+.weill-recurso {
+  display: flex;
+  min-height: 160px;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border: 2px dashed var(--test-line);
+  color: var(--test-secondary);
+  text-align: center;
+}
+
+.weill-form .primary-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

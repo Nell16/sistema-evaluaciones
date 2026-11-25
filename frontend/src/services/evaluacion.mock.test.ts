@@ -103,6 +103,54 @@ describe('mock de evaluación (DOC-05)', () => {
     });
   });
 
+  describe('E8 finalizar', () => {
+    const despuesDelLimite = () => new Date('2026-10-31T10:00:00Z');
+    const antesDelLimite = () => new Date('2026-10-31T09:10:00Z');
+
+    it('cierra la ACTIVA vencida con cerradaEn = finLimite y deja el resultado en validación', async () => {
+      const c = crearClienteMock({ retardoMs: 0, ahora: despuesDelLimite });
+      const cierre = await c.finalizarEvaluacion(17);
+      expect(cierre).toMatchObject({
+        estado: 'FINALIZADA',
+        fechaFin: '2026-10-31T10:00:00.000Z',
+        subpruebaActiva: null,
+        estadoResultado: 'PENDIENTE_VALIDACION',
+      });
+      expect(cierre.resultadoId).toEqual(expect.any(Number));
+      expect(cierre.subpruebas).toEqual([
+        { codigo: 'VOC1', estado: 'CERRADA', cerradaEn: '2026-10-31T09:05:00Z' },
+        { codigo: 'CV', estado: 'CERRADA', cerradaEn: '2026-10-31T09:20:00Z' },
+      ]);
+      await expect(c.obtenerEvaluacion(17)).resolves.toEqual(cierre);
+    });
+
+    it('repetirla devuelve el mismo cierre sin otro cálculo', async () => {
+      const c = crearClienteMock({ retardoMs: 0, ahora: despuesDelLimite });
+      const primero = await c.finalizarEvaluacion(17);
+      await expect(c.finalizarEvaluacion(17)).resolves.toEqual(primero);
+    });
+
+    it('responde 409 SUBPRUEBAS_PENDIENTES si hay PENDIENTE o ACTIVA sin vencer', async () => {
+      await expect(cliente().finalizarEvaluacion(15)).rejects.toMatchObject({
+        status: 409,
+        error: { codigo: 'SUBPRUEBAS_PENDIENTES' },
+      });
+      const c = crearClienteMock({ retardoMs: 0, ahora: antesDelLimite });
+      await expect(c.finalizarEvaluacion(17)).rejects.toMatchObject({
+        status: 409,
+        error: { codigo: 'SUBPRUEBAS_PENDIENTES' },
+      });
+    });
+
+    it('responde 404 y 403 como el resto de endpoints', async () => {
+      await expect(cliente().finalizarEvaluacion(77)).rejects.toMatchObject({
+        status: 404,
+        error: { codigo: 'EVALUACION_NO_ENCONTRADA' },
+      });
+      await expect(cliente().finalizarEvaluacion(403)).rejects.toMatchObject({ status: 403 });
+    });
+  });
+
   it('el ID 503 simula un fallo de conexión como fetch (TypeError)', async () => {
     await expect(cliente().obtenerSujeto(503)).rejects.toBeInstanceOf(TypeError);
   });

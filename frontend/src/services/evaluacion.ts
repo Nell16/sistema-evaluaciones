@@ -31,4 +31,11 @@ export const servicioEvaluacion: ClienteEvaluacion = {
 
   /** E4 — estado actual para retomar sin reiniciar el reloj. */
   obtenerEvaluacion: (evaluacionId) => http<EvaluacionResponse>(`/evaluaciones/${evaluacionId}`),
+
+  /**
+   * E8 — cierra la evaluación (FINALIZADA) y deja el resultado en cálculo. Sin cuerpo;
+   * repetirla devuelve el cierre existente. 409 SUBPRUEBAS_PENDIENTES si falta alguna.
+   */
+  finalizarEvaluacion: (evaluacionId) =>
+    http<EvaluacionResponse>(`/evaluaciones/${evaluacionId}/finalizar`, { method: 'POST' }),
 };

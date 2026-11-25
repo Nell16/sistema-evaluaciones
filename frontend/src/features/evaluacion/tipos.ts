@@ -96,6 +96,8 @@ export interface SubpruebaActiva {
 export interface EstadoSubpruebaResponse {
   codigo: string;
   estado: EstadoSubprueba;
+  /** Instante de cierre; para cierre por vencimiento coincide con finLimite (E8). */
+  cerradaEn?: string | null;
 }
 
 export interface EvaluacionResponse {
@@ -110,6 +112,10 @@ export interface EvaluacionResponse {
   fechaFin: string | null;
   subpruebaActiva: SubpruebaActiva | null;
   subpruebas: EstadoSubpruebaResponse[];
+  /** Lo devuelve E8 al finalizar. */
+  resultadoId?: number | null;
+  /** Lo devuelve E8 al finalizar (ej. PENDIENTE_VALIDACION o CALCULANDO). */
+  estadoResultado?: string | null;
 }
 
 // ---------- Errores (Documento general §5.2.2) ----------
@@ -127,6 +133,7 @@ export type CodigoErrorEvaluacion =
   | 'LETRA_NO_ASIGNADA'
   | 'VERSION_INCOMPATIBLE'
   | 'SUBPRUEBA_NO_INCLUIDA'
+  | 'SUBPRUEBAS_PENDIENTES'
   | 'ERROR_INTERNO';
 
 /** Categoría visual del error; decide el tono y la acción sugerida en pantalla. */
@@ -154,6 +161,7 @@ export interface ClienteEvaluacion {
   obtenerSujeto(sujetoId: number): Promise<SujetoResponse>;
   iniciarEvaluacion(solicitud: IniciarEvaluacionRequest): Promise<EvaluacionResponse>;
   obtenerEvaluacion(evaluacionId: number): Promise<EvaluacionResponse>;
+  finalizarEvaluacion(evaluacionId: number): Promise<EvaluacionResponse>;
 }
 
 /** Puerto del catálogo (E1 y E2): lo implementan el servicio real y el mock. */

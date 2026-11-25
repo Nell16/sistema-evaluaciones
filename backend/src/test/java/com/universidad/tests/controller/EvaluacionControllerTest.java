@@ -11,15 +11,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.universidad.tests.application.service.AutenticacionService;
 import com.universidad.tests.application.service.ConsultaEvaluacionService;
+import com.universidad.tests.application.service.FinalizarEvaluacionService;
 import com.universidad.tests.application.service.MotorSubpruebasService;
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
+import com.universidad.tests.domain.exception.EvaluacionNoFinalizadaException;
 import com.universidad.tests.domain.exception.MotorSubpruebasException;
 import com.universidad.tests.domain.exception.MotorSubpruebasException.Codigo;
 import com.universidad.tests.domain.exception.NoAutenticadoException;
 import com.universidad.tests.domain.exception.SinPermisoException;
+import com.universidad.tests.domain.exception.SubpruebasPendientesException;
 import com.universidad.tests.dto.response.AvanceSubpruebaResponse;
 import com.universidad.tests.dto.response.EvaluacionResponse;
 import com.universidad.tests.dto.response.PreguntasSubpruebaResponse;
+import com.universidad.tests.dto.response.ResultadoResponse;
 import com.universidad.tests.dto.response.SubpruebaActivaResponse;
 import java.time.Instant;
 import java.util.List;
@@ -40,6 +44,8 @@ class EvaluacionControllerTest {
     @MockitoBean private ConsultaEvaluacionService consultaService;
 
     @MockitoBean private MotorSubpruebasService motor;
+
+    @MockitoBean private FinalizarEvaluacionService finalizarService;
 
     @MockitoBean private AutenticacionService autenticacion;
 
@@ -210,5 +216,98 @@ class EvaluacionControllerTest {
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.codigo").value("EVALUACION_NO_ENCONTRADA"))
                 .andExpect(jsonPath("$.ruta").value("/api/v1/evaluaciones/99"));
+    }
+
+    @Test
+    void e8FinalizaEvaluacionYDevuelveResultadoPendienteValidacion() throws Exception {
+        Instant fin = Instant.parse("2026-11-25T12:00:00Z");
+        when(finalizarService.finalizar(15L))
+                .thenReturn(
+                        new EvaluacionResponse(
+                                15L,
+                                1L,
+                                25L,
+                                3L,
+                                10L,
+                                "FINALIZADA",
+                                Instant.parse("2026-11-25T11:00:00Z"),
+                                fin,
+                                null,
+                                List.of(
+                                        new EvaluacionResponse.SubpruebaEstado(
+                                                "VOC1", "CERRADA", fin)),
+                                101L,
+                                "PENDIENTE_VALIDACION"));
+
+        mvc.perform(post("/api/v1/evaluaciones/15/finalizar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(15))
+                .andExpect(jsonPath("$.estado").value("FINALIZADA"))
+                .andExpect(jsonPath("$.resultadoId").value(101))
+                .andExpect(jsonPath("$.estadoResultado").value("PENDIENTE_VALIDACION"))
+                .andExpect(jsonPath("$.fechaFin").value(fin.toString()));
+    }
+
+    @Test
+    void e8Responde409CuandoHaySubpruebasPendientes() throws Exception {
+        when(finalizarService.finalizar(15L)).thenThrow(new SubpruebasPendientesException());
+
+        mvc.perform(post("/api/v1/evaluaciones/15/finalizar"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codigo").value("SUBPRUEBAS_PENDIENTES"));
+    }
+
+    @Test
+    void e9DevuelveResultadosCalculadosDeEvaluacionFinalizada() throws Exception {
+        when(finalizarService.consultarResultados(15L))
+                .thenReturn(
+                        new ResultadoResponse(
+                                15L,
+                                101L,
+                                "PENDIENTE_VALIDACION",
+                                10L,
+                                101L,
+                                1,
+                                "1.0",
+                                null,
+                                null,
+                                List.of(
+                                        new ResultadoResponse.FactorResponse(
+                                                "VOCT",
+                                                25,
+                                                "CALCULADO",
+                                                null,
+                                                null,
+                                                "SIN_BAREMO_VALIDADO",
+                                                null),
+                                        new ResultadoResponse.FactorResponse(
+                                                "CV",
+                                                null,
+                                                "NO_CALCULABLE",
+                                                null,
+                                                null,
+                                                "NO_APLICA",
+                                                "FALTA_PUNTUACION_CV"))));
+
+        mvc.perform(get("/api/v1/evaluaciones/15/resultados"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.evaluacionId").value(15))
+                .andExpect(jsonPath("$.resultadoId").value(101))
+                .andExpect(jsonPath("$.estadoResultado").value("PENDIENTE_VALIDACION"))
+                .andExpect(jsonPath("$.factores[0].codigo").value("VOCT"))
+                .andExpect(jsonPath("$.factores[0].puntuacionDirecta").value(25))
+                .andExpect(jsonPath("$.factores[0].estadoCalculo").value("CALCULADO"))
+                .andExpect(jsonPath("$.factores[1].codigo").value("CV"))
+                .andExpect(jsonPath("$.factores[1].estadoCalculo").value("NO_CALCULABLE"));
+    }
+
+    @Test
+    void e9Responde409CuandoEvaluacionNoEstaFinalizada() throws Exception {
+        when(finalizarService.consultarResultados(15L))
+                .thenThrow(new EvaluacionNoFinalizadaException(15L));
+
+        mvc.perform(get("/api/v1/evaluaciones/15/resultados"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codigo").value("EVALUACION_NO_FINALIZADA"));
     }
 }

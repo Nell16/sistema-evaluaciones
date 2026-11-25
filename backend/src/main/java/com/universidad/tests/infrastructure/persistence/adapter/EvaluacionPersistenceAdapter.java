@@ -97,6 +97,20 @@ public class EvaluacionPersistenceAdapter implements EvaluacionRepository {
         return aDominio(guardada, subpruebas);
     }
 
+    @Override
+    @Transactional
+    public void finalizarEvaluacion(Long idEvaluacion, java.time.Instant fechaFin) {
+        EvaluacionJpaEntity evaluacion =
+                evaluacionJpa
+                        .findById(idEvaluacion)
+                        .orElseThrow(
+                                () ->
+                                        new com.universidad.tests.domain.exception
+                                                .EvaluacionNoEncontradaException(idEvaluacion));
+        evaluacion.finalizar(fechaFin);
+        evaluacionJpa.saveAndFlush(evaluacion);
+    }
+
     private EvaluacionSubpruebaJpaEntity aEntidad(Long idEvaluacion, EvaluacionSubprueba s) {
         return new EvaluacionSubpruebaJpaEntity(
                 idEvaluacion,

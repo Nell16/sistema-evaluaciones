@@ -9,10 +9,13 @@ import com.universidad.tests.domain.port.HashContrasenasPort;
 import com.universidad.tests.domain.repository.CuentaRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.MapPropertySource;
 
 // GEN-34-BE: cuentas ficticias por rol solo con el perfil demo
 class CuentasDemoRunnerTest {
@@ -66,6 +69,38 @@ class CuentasDemoRunnerTest {
 
         assertThat(perfil).isNotNull();
         assertThat(perfil.value()).containsExactly("demo");
+    }
+
+    @Test
+    void springNoRegistraElRunnerSinPerfilDemo() {
+        try (AnnotationConfigApplicationContext contexto = new AnnotationConfigApplicationContext()) {
+            contexto.register(CuentasDemoRunner.class);
+            contexto.refresh();
+
+            assertThat(contexto.getBeansOfType(CuentasDemoRunner.class)).isEmpty();
+        }
+    }
+
+    @Test
+    void springConPerfilDemoInyectaLaConfiguracionYCreaLasCuentasUnaSolaVez() {
+        CuentasEnMemoria cuentas = new CuentasEnMemoria();
+        try (AnnotationConfigApplicationContext contexto = new AnnotationConfigApplicationContext()) {
+            contexto.getEnvironment().setActiveProfiles("demo");
+            contexto.getEnvironment()
+                    .getPropertySources()
+                    .addFirst(new MapPropertySource("prueba-demo", Map.of("DEMO_PASSWORD", CONTRASENA)));
+            contexto.registerBean(CuentaRepository.class, () -> cuentas);
+            contexto.registerBean(HashContrasenasPort.class, HashFalso::new);
+            contexto.register(CuentasDemoRunner.class);
+            contexto.refresh();
+
+            CuentasDemoRunner runner = contexto.getBean(CuentasDemoRunner.class);
+            runner.run(null);
+            List<Cuenta> originales = List.copyOf(cuentas.guardadas);
+            runner.run(null);
+
+            assertThat(cuentas.guardadas).hasSize(5).containsExactlyElementsOf(originales);
+        }
     }
 
     private static final class HashFalso implements HashContrasenasPort {

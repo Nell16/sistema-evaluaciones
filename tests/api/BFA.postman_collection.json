@@ -1,0 +1,189 @@
+{
+  "info": {
+    "_postman_id": "3f6c2a8e-7b41-4d2e-9c55-30a1e0b5f030",
+    "name": "BFA — API publicada (Sprint 03)",
+    "description": "Colección base del Sprint 03 contra la API publicada en el VPS. Se usa con el entorno publico (main, puerto 8091) o release (puerto 8092). Cada carpeta la completa su tarea: Acceso → TEST-31, Evaluación → TEST-32, Resultados → TEST-33, Administración y Gestión → TEST-34. Contrato: docs/api/openapi.yaml. Nunca se guardan contraseñas ni tokens en la colección.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Acceso",
+      "description": "E13–E17 (registro, sesión y recuperación). Casos de TEST-31. Aquí está la solicitud E14 que guarda {{token}}.",
+      "item": [
+        {
+          "name": "TEST-30 Salud del servicio (/actuator/health)",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Solo comprueba que la API publicada responde. No valida funcionalidad de negocio (tests/api/README.md)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('cuerpo JSON con status UP', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('object');",
+                  "    pm.expect(body.status).to.eql('UP');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E14 Abrir sesión y guardar el token",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correo}}\",\n  \"contrasena\": \"{{contrasena}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/sesion",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "sesion"
+              ]
+            },
+            "description": "E14 (POST /api/v1/auth/sesion, sin token). Usa {{correo}} y {{contrasena}} del entorno: la contraseña va solo en el «current value» de tu entorno local, nunca en el «initial value» ni en el repositorio. Si responde 200 guarda {{token}} en el entorno para las demás solicitudes. Se valida en TEST-31."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const sesion = pm.response.json();",
+                  "    pm.test('E14 devuelve token y expiraEn', () => {",
+                  "        pm.expect(sesion.token).to.be.a('string').and.not.be.empty;",
+                  "        pm.expect(sesion).to.have.property('expiraEn');",
+                  "    });",
+                  "    // Solo se guarda en el valor actual del entorno; no se exporta.",
+                  "    pm.environment.set('token', sesion.token);",
+                  "} else {",
+                  "    pm.environment.unset('token');",
+                  "    pm.test('E14 no abrió sesión (código ' + pm.response.code + ')', () => {",
+                  "        pm.expect([400, 401, 500]).to.include(pm.response.code);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Catálogo",
+      "description": "E1 y E2. Comprobación base de TEST-30: sin token, E1 responde 401.",
+      "item": [
+        {
+          "name": "E1 sin token responde 401",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/tests",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tests"
+              ]
+            },
+            "description": "E1 (GET /api/v1/tests) sin Authorization. El contrato exige bearerAuth: sin sesión válida responde 401 NO_AUTENTICADO con el formato común de error."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 401 sin token', () => pm.response.to.have.status(401));",
+                  "pm.test('cuerpo con el formato común de error y código NO_AUTENTICADO', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.include.keys('timestamp', 'status', 'codigo', 'mensaje', 'ruta');",
+                  "    pm.expect(body.status).to.eql(401);",
+                  "    pm.expect(body.codigo).to.eql('NO_AUTENTICADO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Evaluación",
+      "description": "E3–E8 y E24. Casos de TEST-32.",
+      "item": []
+    },
+    {
+      "name": "Resultados",
+      "description": "E9–E12 y Fluidez Verbal. Casos de TEST-33.",
+      "item": []
+    },
+    {
+      "name": "Administración",
+      "description": "E25–E31 (versiones, configuraciones, preguntas, claves, baremos y publicación). Casos de TEST-34.",
+      "item": []
+    },
+    {
+      "name": "Gestión",
+      "description": "E18–E21 y E23 (sujetos y períodos). Casos de TEST-34.",
+      "item": []
+    }
+  ]
+}

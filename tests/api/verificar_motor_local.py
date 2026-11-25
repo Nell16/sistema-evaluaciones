@@ -6,7 +6,7 @@ assert os.environ.get('BFA_BD_AISLADA')=='SI', 'Use solo una base PostgreSQL loc
 assert os.environ.get('DB_HOST','127.0.0.1') in ['127.0.0.1','localhost'], 'Solo loopback'
 assert os.environ.get('POSTGRES_PORT','55432')=='55432', 'Se reserva el puerto aislado 55432'
 Path('backend/target').mkdir(exist_ok=True)
-e={**os.environ,'DB_HOST':'127.0.0.1','POSTGRES_PORT':'55432','POSTGRES_USER':os.environ.get('POSTGRES_USER','evaluaciones'),'POSTGRES_PASSWORD':os.environ.get('POSTGRES_PASSWORD',''),'SERVER_PORT':'18080'}
+e={**os.environ,'DB_HOST':'127.0.0.1','POSTGRES_PORT':'55432','POSTGRES_USER':os.environ.get('POSTGRES_USER','evaluaciones'),'POSTGRES_PASSWORD':os.environ.get('POSTGRES_PASSWORD',''),'SERVER_PORT':'18080','SERVER_ADDRESS':'127.0.0.1','MOTOR_TEMPORIZADOR_HABILITADO':'false'}
 log=open('backend/target/motor-api-local.log','w');app=subprocess.Popen(['java','-jar','backend/target/sistema-evaluaciones-backend-0.1.0-SNAPSHOT.jar'],env=e,stdout=log,stderr=log)
 http=urllib.request.build_opener(urllib.request.ProxyHandler({}));base='http://127.0.0.1:18080'
 def req(m,p,data=None,token=None):

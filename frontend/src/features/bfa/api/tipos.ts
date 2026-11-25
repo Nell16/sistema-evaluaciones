@@ -51,6 +51,8 @@ export interface IniciarEvaluacionRequest {
 export interface SubpruebaEstado {
   codigo: string;
   estado: EstadoSubprueba;
+  /** E8: instante de cierre; por vencimiento coincide con finLimite. */
+  cerradaEn?: string | null;
 }
 
 /** E3 (201) y E4 (200). */
@@ -67,9 +69,9 @@ export interface EvaluacionResponse {
   subpruebaActiva: { codigo: string; finLimite: string; segundosRestantes: number } | null;
   /** Solo las subpruebas incluidas, en el orden oficial de aplicación. */
   subpruebas: SubpruebaEstado[];
-  /** E8 */
-  resultadoId?: number;
-  estadoResultado?: string;
+  /** E8 (nullable en el contrato). */
+  resultadoId?: number | null;
+  estadoResultado?: string | null;
 }
 
 /** E5 */

@@ -150,8 +150,11 @@ export const evaluacionesIniciales = (): EvaluacionResponse[] => [
       { codigo: 'R1', estado: 'CERRADA' },
     ],
   },
+];
+
+/** Solo para E8: falta CV, ACTIVA con el tiempo ya vencido. Fuera de la lista compartida (E22). */
+const evaluacionParaFinalizar = (): EvaluacionResponse[] => [
   {
-    // Lista para E8: solo falta CV, ACTIVA con el tiempo ya vencido.
     id: 17,
     testId: 1,
     versionFormularioId: VERSION_PUBLICADA,
@@ -218,7 +221,7 @@ export function crearClienteMock({
   ahora = () => new Date(),
 }: OpcionesMock = {}): ClienteEvaluacion {
   const evaluaciones = new Map<number, EvaluacionResponse>(
-    evaluacionesIniciales().map((e) => [e.id, e]),
+    [...evaluacionesIniciales(), ...evaluacionParaFinalizar()].map((e) => [e.id, e]),
   );
   let siguienteId = 100;
   let siguienteResultadoId = 500;

@@ -429,6 +429,28 @@ describe('casos de GEN-03 y GEN-04 sobre la interfaz', () => {
     expect(estado.fase === 'finalizada' && estado.fechaFin).toBeTruthy();
   });
 
+  it('GEN-38-FE: si E8 responde 409 SUBPRUEBAS_PENDIENTES, recarga con E4 en vez de fallar', async () => {
+    const { api, id } = await evaluacionNueva({}, ['VOC1']);
+    const c = await cargado(api, id);
+    await entrar(c);
+    await vencer(c, 300);
+    c.continuar(); // transición → lista para finalizar
+    vi.spyOn(api, 'finalizarEvaluacion').mockRejectedValueOnce(
+      new ApiError(409, {
+        timestamp: 't',
+        status: 409,
+        codigo: 'SUBPRUEBAS_PENDIENTES',
+        mensaje: 'Hay subpruebas sin cerrar.',
+        ruta: `/api/v1/evaluaciones/${id}/finalizar`,
+      }),
+    );
+    const recargar = vi.spyOn(api, 'obtenerEvaluacion');
+    c.continuar();
+    await dejarResolver();
+    expect(recargar).toHaveBeenCalledWith(id);
+    expect(c.obtenerEstado()).toMatchObject({ fase: 'listaParaFinalizar', finalizando: false });
+  });
+
   it('TC-GEN-04-009: un doble clic en finalizar envía una sola solicitud', async () => {
     const { api, id } = await evaluacionNueva({}, ['VOC1']);
     const c = await cargado(api, id);

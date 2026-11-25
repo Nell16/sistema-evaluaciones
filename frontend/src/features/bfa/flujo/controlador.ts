@@ -594,6 +594,16 @@ export class ControladorBfa {
     try {
       await this.resolver(await this.api.finalizarEvaluacion(this.evaluacionId));
     } catch (e) {
+      // E8 responde 409 SUBPRUEBAS_PENDIENTES si queda una subprueba PENDIENTE o ACTIVA sin
+      // vencer: se recarga con E4 y el flujo continúa con ella en lugar de mostrar un error.
+      if (e instanceof ApiError && e.error?.codigo === 'SUBPRUEBAS_PENDIENTES') {
+        try {
+          await this.resolver(await this.api.obtenerEvaluacion(this.evaluacionId));
+        } catch (recarga) {
+          this.fallar(recarga);
+        }
+        return;
+      }
       this.fallar(e);
     }
   }

@@ -73,7 +73,8 @@ class CuentasDemoRunnerTest {
 
     @Test
     void springNoRegistraElRunnerSinPerfilDemo() {
-        try (AnnotationConfigApplicationContext contexto = new AnnotationConfigApplicationContext()) {
+        try (AnnotationConfigApplicationContext contexto =
+                new AnnotationConfigApplicationContext()) {
             contexto.register(CuentasDemoRunner.class);
             contexto.refresh();
 
@@ -84,11 +85,14 @@ class CuentasDemoRunnerTest {
     @Test
     void springConPerfilDemoInyectaLaConfiguracionYCreaLasCuentasUnaSolaVez() {
         CuentasEnMemoria cuentas = new CuentasEnMemoria();
-        try (AnnotationConfigApplicationContext contexto = new AnnotationConfigApplicationContext()) {
+        try (AnnotationConfigApplicationContext contexto =
+                new AnnotationConfigApplicationContext()) {
             contexto.getEnvironment().setActiveProfiles("demo");
             contexto.getEnvironment()
                     .getPropertySources()
-                    .addFirst(new MapPropertySource("prueba-demo", Map.of("DEMO_PASSWORD", CONTRASENA)));
+                    .addFirst(
+                            new MapPropertySource(
+                                    "prueba-demo", Map.of("DEMO_PASSWORD", CONTRASENA)));
             contexto.registerBean(CuentaRepository.class, () -> cuentas);
             contexto.registerBean(HashContrasenasPort.class, HashFalso::new);
             contexto.register(CuentasDemoRunner.class);

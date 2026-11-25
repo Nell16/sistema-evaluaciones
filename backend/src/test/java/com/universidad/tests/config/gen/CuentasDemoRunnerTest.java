@@ -37,8 +37,7 @@ class CuentasDemoRunnerTest {
         assertThat(cuentas.guardadas.stream().flatMap(c -> c.getRoles().stream()))
                 .containsExactlyInAnyOrder(Rol.values());
         assertThat(cuentas.guardadas).allMatch(Cuenta::estaActiva);
-        assertThat(cuentas.guardadas)
-                .allMatch(c -> !c.getResumenContrasena().contains(CONTRASENA));
+        assertThat(cuentas.guardadas).allMatch(c -> !c.getResumenContrasena().contains(CONTRASENA));
     }
 
     @Test

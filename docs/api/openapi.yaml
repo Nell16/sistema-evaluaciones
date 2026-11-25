@@ -53,7 +53,8 @@ paths:
       description: >-
         Devuelve el test y las configuraciones de la edición publicada identificada, en orden de
         aplicación, sin preguntas ni claves. numeroPreguntas es el conteo de reactivos reales (FV tiene
-        0); maximoEntradas vale 75 en FV y nulo en selección. CU-BFA-P02.
+        0); maximoEntradas vale 75 en FV y nulo en selección. La edición identificada es la publicada
+        más reciente del test. CU-BFA-P02.
       parameters:
         - $ref: '#/components/parameters/TestId'
       responses:
@@ -65,7 +66,7 @@ paths:
         '401': { $ref: '#/components/responses/NoAutenticado' }
         '403': { $ref: '#/components/responses/SinPermiso' }
         '404':
-          description: TEST_NO_ENCONTRADO — el test no existe.
+          description: TEST_NO_ENCONTRADO — el test no existe, está inactivo o no tiene edición publicada.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -774,6 +775,11 @@ paths:
       description: Crea una VersionFormulario en BORRADOR a partir de la última PUBLICADA. CU-GEN-05. Permiso CONFIGURAR_BFA.
       parameters:
         - $ref: '#/components/parameters/TestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CrearVersionRequest' }
       responses:
         '201':
           description: Versión creada.
@@ -781,10 +787,16 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/VersionFormularioResponse' }
               example: { id: 11, testId: 1, estado: BORRADOR }
+        '400': { $ref: '#/components/responses/SolicitudInvalida' }
         '401': { $ref: '#/components/responses/NoAutenticado' }
         '403': { $ref: '#/components/responses/SinPermiso' }
         '404':
           description: TEST_NO_ENCONTRADO.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          description: Ya existe ese código de versión para el test.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -883,6 +895,11 @@ paths:
         '400': { $ref: '#/components/responses/SolicitudInvalida' }
         '401': { $ref: '#/components/responses/NoAutenticado' }
         '403': { $ref: '#/components/responses/SinPermiso' }
+        '404':
+          description: RECURSO_NO_ENCONTRADO — versión o pregunta inexistente en esa versión.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409':
           description: VERSION_NO_EDITABLE — la versión no está en BORRADOR.
           content:
@@ -1069,7 +1086,7 @@ components:
         id: { type: integer, format: int64, example: 1 }
         codigo: { type: string, example: BFA }
         nombre: { type: string, example: Batería Factorial de Aptitudes }
-        numeroSubpruebas: { type: integer, example: 13 }
+        numeroSubpruebas: { type: integer, description: Subpruebas registradas para el test., example: 13 }
 
     TestDetalleResponse:
       type: object
@@ -1088,11 +1105,11 @@ components:
         codigo: { type: string, example: VOC1 }
         nombre: { type: string, example: Vocabulario - Forma A }
         orden: { type: integer, example: 1 }
-        factor: { type: string, example: VOC1 }
-        tiempoLimiteSegundos: { type: integer, example: 300 }
+        factor: { type: string, nullable: true, description: 'Factor al que aporta la subprueba (Documento BFA §5.3); varias subpruebas pueden compartirlo, p. ej. N1-A y N1-B aportan a N1. Nulo si aún no se cargó.', example: VOC1 }
+        tiempoLimiteSegundos: { type: integer, nullable: true, example: 300 }
         tipoRespuesta: { type: string, enum: [SELECCION, TEXTO_LIBRE], example: SELECCION }
-        opciones: { type: integer, nullable: true, example: 5 }
-        numeroPreguntas: { type: integer, example: 37 }
+        opciones: { type: integer, nullable: true, description: Opciones de cada pregunta. Nulo en texto libre o si las preguntas cargadas no tienen todas el mismo número., example: 5 }
+        numeroPreguntas: { type: integer, description: Preguntas cargadas en la configuración (sin práctica)., example: 37 }
         maximoEntradas: { type: integer, nullable: true, example: null }
         tienePractica: { type: boolean, example: true }
 
@@ -1306,8 +1323,8 @@ components:
       properties:
         correo: { type: string, format: email, example: ana@uam.edu.ni }
         contrasena: { type: string, format: password }
-        nombres: { type: string, example: Ana }
-        apellidos: { type: string, example: Ruiz }
+        nombres: { maxLength: 120, type: string, example: Ana }
+        apellidos: { maxLength: 120, type: string, example: Ruiz }
         rol: { type: string, description: 'Roles: Sujeto, Académico, Coordinador, Psicólogo y Decano.', example: SUJETO }
 
     CuentaResponse:
@@ -1347,7 +1364,7 @@ components:
       required: [token, nuevaContrasena]
       properties:
         token: { type: string }
-        nuevaContrasena: { type: string, format: password }
+        nuevaContrasena: { type: string, format: password, minLength: 12 }
 
     SujetoRequest:
       type: object
@@ -1418,6 +1435,14 @@ components:
         testId: { type: integer, format: int64, example: 1 }
         estado: { type: string, enum: [BORRADOR, PUBLICADA, RETIRADA], example: BORRADOR }
 
+    CrearVersionRequest:
+      type: object
+      required: [codigoVersion, fuenteRef]
+      properties:
+        codigoVersion: { type: string, example: 'v2' }
+        descripcion: { type: string, nullable: true }
+        fuenteRef: { type: string, description: Referencia a la fuente autorizada. }
+
     ConfiguracionSubpruebaRequest:
       type: object
       properties:
@@ -1454,7 +1479,22 @@ components:
       properties:
         opciones:
           type: array
-          items: { $ref: '#/components/schemas/OpcionRespuesta' }
+          minItems: 1
+          items: { $ref: '#/components/schemas/OpcionVersionadaRequest' }
+
+    OpcionVersionadaRequest:
+      type: object
+      required: [letra]
+      anyOf:
+        - required: [texto]
+          properties: { texto: { type: string, minLength: 1 } }
+        - required: [recursoRef]
+          properties: { recursoRef: { type: string, minLength: 1 } }
+      properties:
+        letra: { type: string, minLength: 1, maxLength: 40, example: A }
+        orden: { type: integer, minimum: 1, description: Posición en la lista si se omite., example: 1 }
+        texto: { type: string, nullable: true }
+        recursoRef: { type: string, nullable: true }
 
     ClaveRequest:
       type: object

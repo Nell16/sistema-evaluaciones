@@ -1,4 +1,4 @@
-# Casos de prueba GEN-07 — formularios y preguntas versionados (v2)
+# Casos de prueba GEN-07 — formularios y preguntas versionados (v3)
 
 ## Identificación
 
@@ -6,9 +6,9 @@
 - **Tarea de Desarrollo:** [GEN-07-BE](https://app.clickup.com/t/86bcw9yvz) (PR #23, Max Martínez)
 - **Historia:** [GEN-07](https://app.clickup.com/t/86bcx2z61)
 - **Tester:** José Ariel Zeledón
-- **Versión y fecha:** v2 · 2026-11-14
+- **Versión y fecha:** v3 · 2026-11-19
 - **PR y SHA probados:** #23 · head `53f1229` (`pull/23/merge` `84ba292` sobre `main` `15a7479`). Primera ejecución: head `69c7312` (`pull/23/merge` `bb03b31`).
-- **Resultado:** 35 PASÓ · 13 BLOQUEADO. El defecto de TC-GEN-07-031 (BUG-04) quedó corregido y el PR #23 tiene `testing-ok` desde el 2026-11-14 para el SHA `53f1229`.
+- **Resultado:** 35 PASÓ · 14 BLOQUEADO. El defecto de TC-GEN-07-031 (BUG-04) quedó corregido y el PR #23 tiene `testing-ok` desde el 2026-11-14 para el SHA `53f1229`.
 
 ## Historial de cambios
 
@@ -16,10 +16,11 @@
 | --- | --- | --- |
 | v1 | 2026-11-09 | Diseño de 48 casos y primera ejecución sobre el PR #23: 31 casos de base de datos, 4 de revisión de código y del CI (más `mvn verify` en local), y 13 bloqueados (evaluación con versión y API E25–E31). |
 | v2 | 2026-11-14 | Reprueba sobre el PR #23 después de la corrección de BUG-04 (`53f1229`): TC-GEN-07-001 a 035 pasan. TC-GEN-07-031 ahora espera cualquier rechazo (en v1 decía «igual que en TC-003», pero el criterio pide el rechazo y no un mensaje) y agrega los pasos de RETIRADA y BORRADOR. Respuestas a C-1 y C-2. DOC-04 pasó a `completed`. |
+| v3 | 2026-11-19 | Respuestas de DOC-05 a C-3 y C-4. TC-GEN-07-039 fija `422 VERSION_INCOMPATIBLE` y agrega el `testId` inexistente (`404 TEST_NO_ENCONTRADO`). TC-GEN-07-040 fija el contenido de la versión nueva. Nuevo TC-GEN-07-049 (test sin versión publicada). Sin ejecución nueva: E25–E31 siguen sin estar en `main` (PR #62 en borrador). |
 
 ## Fuentes y estado
 
-| Fuente | Estado (v1: 2026-11-09 · v2: 2026-11-14) | Uso en este documento |
+| Fuente | Estado (v1: 2026-11-09 · v2: 2026-11-14 · v3: 2026-11-19) | Uso en este documento |
 | --- | --- | --- |
 | Criterios de aceptación de GEN-07-BE y GEN-07-TEST (ClickUp) | Publicados en las tareas | Base de todos los casos |
 | Documento general §4: ENT-COM-05, 07, 08, 12 y 13 y criterios CA-01 a CA-10 del modelo | **Aprobado** ([DOC-03](https://app.clickup.com/t/86bctt9bt) `completed`) | Restricciones de versiones, configuraciones, preguntas y opciones |
@@ -28,7 +29,8 @@
 | Documento BFA §2: RNF-BFA-GEN-05 y RNF-BFA-GEN-09 | **Aprobado** ([DOC-02](https://app.clickup.com/t/86bctt9b8) `completed`) | Seguridad y versionado |
 | Documento general §3: §3.1 y CU-GEN-05 a CU-GEN-07 | [DOC-04](https://app.clickup.com/t/86bctt9cm) `in review` al diseñar la v1; `completed` desde el 2026-11-10 | Valores marcados como **provisionales (DOC-04)** en la v1. El 2026-11-14 se comprobó que el texto citado sigue igual en la versión aprobada. |
 | [DOC-07](https://app.clickup.com/t/86bctt9dn) — Calidad documental | `in progress` | Dependencia de GEN-07-TEST en ClickUp |
-| `docs/api/openapi.yaml` | En `main` sin rutas; E25–E31 se publican en el PR #37 (GEN-00-API), sin fusionar | Referencia |
+| Respuesta de DOC-05 a C-3 y C-4 ([comentario de Iván Chavarría en DOC-05](https://app.clickup.com/t/86bctt9cy?comment=1800450000002846), 2026-11-10) | Respuesta del equipo dueño del contrato aprobado. Indica que la regla de E25 se agrega al Documento general. | TC-GEN-07-039, 040 y 049 |
+| `docs/api/openapi.yaml` | En `main` desde el 2026-11-10 (PR #37). E25 dice «a partir de la última PUBLICADA», pero todavía no recoge la aclaración de C-3. | Referencia |
 
 Los resultados esperados que provienen de documentos aprobados no llevan marca. Los que dependían de DOC-04 se marcaron como **provisional (DOC-04)** en la v1; se deja la marca para saber de dónde salen, pero DOC-04 ya está aprobado.
 
@@ -40,7 +42,7 @@ El PR implementa la **capa de persistencia y los servicios** del contenido versi
 
 - Los criterios de versionado se prueban **directamente sobre la base de datos** con la migración del PR (TC-GEN-07-001 a 031), más revisión de código y del CI (TC-GEN-07-032 a 035).
 - «Una evaluación conserva su versión» depende de E3 (GEN-02-BE): **BLOQUEADO** (TC-GEN-07-036 a 039).
-- Los casos de Postman contra E25–E31 quedan diseñados y **BLOQUEADOS** (TC-GEN-07-040 a 048). No se crea una colección en `tests/api/` porque no hay rutas implementadas (`tests/api/README.md`).
+- Los casos de Postman contra E25–E31 quedan diseñados y **BLOQUEADOS** (TC-GEN-07-040 a 049). No se crea una colección en `tests/api/` porque no hay rutas implementadas en `main` (`tests/api/README.md`). E25–E31 están en el PR #62 (GEN-07-BE), en borrador desde el 2026-11-19; se ejecutan cuando esté listo para revisión.
 
 ## Matriz de cobertura
 
@@ -50,7 +52,7 @@ El PR implementa la **capa de persistencia y los servicios** del contenido versi
 | --- | --- | --- |
 | Una versión publicada no se modifica: un cambio crea otra versión. | TC-GEN-07-005 a 015, 019, 023, 035 | PASÓ |
 | Una evaluación conserva la versión con la que se creó. | TC-GEN-07-036 | BLOQUEADO |
-| Esquemas, códigos HTTP, campos y errores cumplen el contrato aprobado. | TC-GEN-07-040 a 048 | BLOQUEADO |
+| Esquemas, códigos HTTP, campos y errores cumplen el contrato aprobado. | TC-GEN-07-040 a 049 | BLOQUEADO |
 | Cada criterio de las subtareas del grupo tiene al menos un caso `TC-`. | Esta matriz | Cumplido |
 | Cada PR del grupo tiene `testing-ok` o sus fallos comentados antes de la fusión. | «Registro de ejecución» y comentarios en el PR #23 | `testing-ok` (2026-11-14, SHA `53f1229`) |
 
@@ -82,8 +84,8 @@ Se dejan en la tarea [GEN-07-TEST](https://app.clickup.com/t/86bcx2z6c). Mientra
 | --- | --- | --- | --- | --- |
 | C-1 | GEN-07-TEST pide probar con Postman y verificar el contrato HTTP, pero el PR #23 no tiene endpoints. ¿Qué tarea implementa E25–E31? ¿Se acepta el `testing-ok` del PR #23 con esos casos bloqueados? | Scrum de Testing e Integración | TC-GEN-07-040 a 048 | **Respondida** (Integración, 2026-11-10): E25–E31 también son de GEN-07-BE y todavía no están implementados; esos casos no pueden pasar mientras no existan. El orden que definió Integración el 2026-11-12 (PR #41) es fusionar el #23 tras la reprueba de BUG-04, así que el `testing-ok` cubre lo que el PR implementa y los 13 casos siguen bloqueados. |
 | C-2 | «La evaluación conserva su versión» necesita E3 (GEN-02-BE). ¿Se verifica en GEN-02-TEST y en TEST-01-EJEC una vez fusionados ambos? | Scrum de Testing | TC-GEN-07-036 a 039 | **Respondida** (Integración, 2026-11-10): sí, se verifica en GEN-02-TEST y TEST-01-EJEC cuando GEN-02-BE y GEN-07-BE estén fusionados. |
-| C-3 | E25 crea la versión «a partir de la última PUBLICADA». ¿Debe copiar su contenido? `crearBorrador` crea un borrador vacío. | Documentación (DOC-05) | TC-GEN-07-040 | Abierta (Integración la pasó a DOC-05 el 2026-11-10) |
-| C-4 | En E3, ¿qué código se devuelve si el `testId` recibido no coincide con el test de `versionFormularioId`: `422 VERSION_INCOMPATIBLE`, `404 TEST_NO_ENCONTRADO` u otro? | Documentación (DOC-05) | TC-GEN-07-039 | Abierta (Integración la pasó a DOC-05 el 2026-11-10) |
+| C-3 | E25 crea la versión «a partir de la última PUBLICADA». ¿Debe copiar su contenido? `crearBorrador` crea un borrador vacío. | Documentación (DOC-05) | TC-GEN-07-040, 049 | **Respondida** (DOC-05, 2026-11-10): sí. E25 copia de la última versión PUBLICADA las configuraciones de subprueba, las preguntas y las opciones al nuevo BORRADOR. La clave de corrección no se copia: se carga y aprueba en cada versión con E29. Si el test no tiene ninguna versión publicada, E25 crea el borrador vacío. |
+| C-4 | En E3, ¿qué código se devuelve si el `testId` recibido no coincide con el test de `versionFormularioId`: `422 VERSION_INCOMPATIBLE`, `404 TEST_NO_ENCONTRADO` u otro? | Documentación (DOC-05) | TC-GEN-07-039 | **Respondida** (DOC-05, 2026-11-10): `422 VERSION_INCOMPATIBLE`. `404 TEST_NO_ENCONTRADO` es solo cuando ese `testId` no existe. |
 
 ## Datos de prueba (ficticios)
 
@@ -92,7 +94,7 @@ Todos los datos son inventados: no hay ítems reales de pruebas psicológicas ni
 | Dato | Contenido | Usado en |
 | --- | --- | --- |
 | TEST-FICTICIO (id 1) | Subpruebas SP-A y SP-B | Todos |
-| TEST-OTRO (id 2) | Subprueba SP-X | TC-GEN-07-020, 021 |
+| TEST-OTRO (id 2) | Subprueba SP-X, sin ninguna versión PUBLICADA | TC-GEN-07-020, 021, 039, 049 |
 | V1 (id 100) | SP-A SELECCION 300 s con 2 preguntas y 2 opciones cada una; SP-B TEXTO_LIBRE 240 s | TC-GEN-07-004 a 019 |
 | V2 (id 101) | SP-A SELECCION 360 s con 1 pregunta corregida y 3 opciones | TC-GEN-07-001, 015, 016, 023 |
 | V-VACIA (id 102) | BORRADOR sin configuraciones | TC-GEN-07-003 |
@@ -346,7 +348,7 @@ Todos los datos son inventados: no hay ítems reales de pruebas psicológicas ni
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e | Estado |
 | --- | --- | --- | --- | --- | --- | --- |
-| TC-GEN-07-039 | GEN-07-BE: "Se impide utilizar configuraciones o preguntas incompatibles con la versión seleccionada."<br>E3: "422 VERSION_INCOMPATIBLE"; §5.4.1: "testId, si se recibe, debe coincidir". | V1 de TEST-FICTICIO | 1. Llamar a E3 con `versionFormularioId` de V1 y `testId` de TEST-OTRO. | Se rechaza y no se crea la evaluación. El contrato lista `422 VERSION_INCOMPATIBLE`, pero no fija qué código corresponde a un `testId` que no coincide (consulta C-4). | Manual (Postman) | **BLOQUEADO** |
+| TC-GEN-07-039 | GEN-07-BE: "Se impide utilizar configuraciones o preguntas incompatibles con la versión seleccionada."<br>E3: "422 VERSION_INCOMPATIBLE"; §5.4.1: "testId, si se recibe, debe coincidir".<br>Respuesta a C-4 (DOC-05). | V1 de TEST-FICTICIO | 1. Llamar a E3 con `versionFormularioId` de V1 y `testId` de TEST-OTRO.<br>2. Llamar a E3 con `versionFormularioId` de V1 y un `testId` que no existe (999999). | Paso 1: `422 VERSION_INCOMPATIBLE`. Paso 2: `404 TEST_NO_ENCONTRADO`. En los dos, cuerpo de error común y no se crea la evaluación. | Manual (Postman) | **BLOQUEADO** |
 
 
 ## Casos bloqueados — API E25–E31 (Postman)
@@ -357,7 +359,7 @@ Contrato aprobado del Documento general §5.2.4. En todo error se verifica adem�
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e | Estado |
 | --- | --- | --- | --- | --- | --- | --- |
-| TC-GEN-07-040 | GEN-07-TEST: "Esquemas, códigos HTTP, campos y errores cumplen el contrato aprobado."<br>GEN-07-TEST: "Una versión publicada no se modifica: un cambio crea otra versión." | TEST-FICTICIO con una versión PUBLICADA; cuenta ficticia con CONFIGURAR_BFA | 1. `POST {{base_url}}/tests/{testId}/versiones`. | `201` con `{ "id", "testId", "estado": "BORRADOR" }`. El contenido de la nueva versión depende de la consulta C-3. | Manual (Postman) | **BLOQUEADO** |
+| TC-GEN-07-040 | GEN-07-TEST: "Esquemas, códigos HTTP, campos y errores cumplen el contrato aprobado."<br>GEN-07-TEST: "Una versión publicada no se modifica: un cambio crea otra versión."<br>Respuesta a C-3 (DOC-05). | TEST-FICTICIO con V1 PUBLICADA (contenido y clave ficticios); cuenta ficticia con CONFIGURAR_BFA | 1. `POST {{base_url}}/tests/{testId}/versiones`.<br>2. Comparar en la base de datos el contenido de la versión nueva con el de V1. | Paso 1: `201` con `{ "id", "testId", "estado": "BORRADOR" }`. Paso 2: la versión nueva tiene las mismas configuraciones de subprueba, preguntas y opciones que V1, pero no tiene clave de corrección. V1 sigue PUBLICADA y sin cambios. | Manual (Postman y SQL) | **BLOQUEADO** |
 
 ### TC-GEN-07-041 — Crear una versión de un test inexistente (E25)
 
@@ -407,6 +409,12 @@ Contrato aprobado del Documento general §5.2.4. En todo error se verifica adem�
 | --- | --- | --- | --- | --- | --- | --- |
 | TC-GEN-07-048 | GEN-07-TEST: "Esquemas, códigos HTTP, campos y errores cumplen el contrato aprobado." | Versión en BORRADOR | 1. `PUT …/configuraciones/{codigo}` con JSON inválido y luego sin `tipoRespuesta`. | `400 SOLICITUD_INVALIDA` con `detalles` por campo. | Manual (Postman) | **BLOQUEADO** |
 
+### TC-GEN-07-049 — Crear una versión de un test sin versión publicada (E25)
+
+| ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e | Estado |
+| --- | --- | --- | --- | --- | --- | --- |
+| TC-GEN-07-049 | GEN-07-TEST: "Esquemas, códigos HTTP, campos y errores cumplen el contrato aprobado."<br>Respuesta a C-3 (DOC-05): "Si el test no tiene ninguna versión publicada, E25 crea el borrador vacío." | TEST-OTRO sin ninguna versión PUBLICADA; cuenta ficticia con CONFIGURAR_BFA | 1. `POST {{base_url}}/tests/{testId}/versiones` con el id de TEST-OTRO.<br>2. Revisar en la base de datos el contenido de la versión nueva. | Paso 1: `201` con `{ "id", "testId", "estado": "BORRADOR" }`. Paso 2: la versión no tiene configuraciones, preguntas ni opciones. | Manual (Postman y SQL) | **BLOQUEADO** |
+
 
 ## Defecto encontrado (corregido)
 
@@ -436,6 +444,7 @@ Contrato aprobado del Documento general §5.2.4. En todo error se verifica adem�
 | 2026-11-09 | #23 / `69c7312` (`pull/23/merge` `bb03b31`) | José Ariel Zeledón | Base de datos: 30 PASÓ, 1 FALLÓ (TC-GEN-07-031). Código y CI: 4 PASÓ. Bloqueados: 13. | [Script](../evidencias/GEN-07/GEN-07-casos-bd.sql) · [salida](../evidencias/GEN-07/GEN-07-ejecucion-bd-2026-11-09.txt) · [CI 42687147493](https://github.com/Nell16/sistema-evaluaciones/actions/runs/42687147493) · defecto TC-GEN-07-031 |
 | 2026-11-09 | #23 / `pull/23/merge` `bb03b31` | José Ariel Zeledón | `mvn verify` local (PostgreSQL 18.6, JDK 27): 24/24 pruebas, `BUILD SUCCESS` (TC-GEN-07-032). | [salida resumida](../evidencias/GEN-07/GEN-07-mvn-verify-local-2026-11-09.txt) |
 | 2026-11-14 | #23 / `53f1229` (`pull/23/merge` `84ba292`) | José Ariel Zeledón | Reprueba tras BUG-04. Base de datos: TC-GEN-07-001 a 031 PASÓ. Código y CI: TC-GEN-07-032 a 035 PASÓ (sin cambios en `backend/src/main` desde `69c7312`; CI 25/25). Bloqueados: 13. `testing-ok` puesto en el PR #23. | [Script v2](../evidencias/GEN-07/GEN-07-casos-bd.sql) · [salida](../evidencias/GEN-07/GEN-07-ejecucion-bd-2026-11-14.txt) · [CI 43468541738](https://github.com/Nell16/sistema-evaluaciones/actions/runs/43468541738) · BUG-04 cerrado |
+| 2026-11-19 | — | José Ariel Zeledón | Sin ejecución. Se actualizan TC-GEN-07-039 y 040 con las respuestas a C-3 y C-4 y se agrega TC-GEN-07-049. Los 14 casos de E3 y E25–E31 siguen bloqueados: no están en `main` y el PR #62 está en borrador. | [Respuesta de DOC-05](https://app.clickup.com/t/86bctt9cy?comment=1800450000002846) |
 
 ### Revisión final
 

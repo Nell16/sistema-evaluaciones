@@ -109,6 +109,8 @@ public class SubpruebaPersistenceAdapter implements SubpruebaRepository {
                     subprueba.getCodigo(), subprueba.getNombre(), subprueba.getDescripcion());
         }
 
+        entidad.asignarFactor(subprueba.getFactor());
+
         SubpruebaJpaEntity guardada = subpruebaJpaRepository.saveAndFlush(entidad);
 
         return aDominio(guardada);
@@ -121,6 +123,7 @@ public class SubpruebaPersistenceAdapter implements SubpruebaRepository {
                 entidad.getIdTest(),
                 entidad.getCodigo(),
                 entidad.getNombre(),
-                entidad.getDescripcion());
+                entidad.getDescripcion(),
+                entidad.getFactor());
     }
 }

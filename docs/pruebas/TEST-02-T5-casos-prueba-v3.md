@@ -1,12 +1,12 @@
-# Casos de prueba TEST-02-T5 — recuperación y concurrencia del módulo BFA (v1)
+# Casos de prueba TEST-02-T5 — recuperación y concurrencia del módulo BFA (v3)
 
 ## Identificación
 
 - **Tarea de Testing:** [TEST-02-T5](https://app.clickup.com/t/86bcw9z5c)
 - **Tarea padre:** [TEST-02 — probar de forma integrada el módulo BFA](https://app.clickup.com/t/86bcvajaj)
-- **Se ejecuta en:** [TEST-02-EJEC](https://app.clickup.com/t/86bcvajau) (José Francisco López), sobre el entorno `main`
+- **Se ejecuta en:** [TEST-02-EJEC](https://app.clickup.com/t/86bcvajau) (Rodrigo Romero), sobre el entorno `main`
 - **Tester:** José Ariel Zeledón
-- **Versión y fecha:** v1 · 2026-11-09
+- **Versión y fecha:** v3 · 2026-11-23
 - **Estado del documento:** diseño de escenarios. No hay PR propio que probar: todos los casos quedan **BLOQUEADOS** hasta que el flujo BFA (E3 a E8) esté fusionado en `main`.
 
 ## Historial de cambios
@@ -14,19 +14,23 @@
 | Versión | Fecha | Cambios |
 | --- | --- | --- |
 | v1 | 2026-11-09 | Diseño de 16 escenarios de desconexión, recuperación, idempotencia y concurrencia controlada. Consultas C-1 a C-4. |
+| v2 | 2026-11-19 | Respuesta de DOC-05 a C-2: TC-TEST-02-T5-09 fija la respuesta del inicio repetido. C-4 respondida en parte: TC-TEST-02-T5-04 agrega la comprobación del cierre al finalizar con E8. Se actualizan el estado de DOC-04 y DOC-08, el responsable de TEST-02-EJEC y los bloqueos. Sin ejecución. |
+| v3 | 2026-11-23 | Respuestas de DOC-05 a C-3 y C-4. TC-TEST-02-T5-08 fija `409 EVALUACION_EN_CURSO` en el E3 repetido. TC-TEST-02-T5-04 y 14 fijan que E4 muestra la subprueba vencida como CERRADA con `cerradaEn` igual a `finLimite`, sin esperar a E8. Solo queda abierta C-1. Sin ejecución. |
 
 ## Fuentes y estado
 
-| Fuente | Estado al 2026-11-09 | Uso en este documento |
+| Fuente | Estado (v1: 2026-11-09 · v2: 2026-11-19 · v3: 2026-11-23) | Uso en este documento |
 | --- | --- | --- |
 | Criterios de aceptación de TEST-02-T5 (ClickUp) | Publicados en la tarea | Base de todos los casos |
 | Documento BFA §2: RNF-BFA-GEN-01, 04, 05 y 06; RF-BFA-GEN-06; RNF-FV-02 (requisitos específicos de Fluidez Verbal) | **Aprobado** ([DOC-02](https://app.clickup.com/t/86bctt9b8) `completed`) | Plazos, persistencia, aislamiento y umbral de guardado |
 | Documento BFA §5: contratos E3 a E8 y ajustes §5.4.1 · Documento general §5.2 (E22, formato de error) | **Aprobado** ([DOC-05](https://app.clickup.com/t/86bctt9cy) `completed`) | Códigos HTTP, idempotencia de E7 y E8 |
 | Documento general §4.6: CA-02 (recuperación y aislamiento) y CA-10 (alcance) | **Aprobado** ([DOC-03](https://app.clickup.com/t/86bctt9bt) `completed`) | Recuperación sin reiniciar tiempos |
 | Documento general §5.1.7 (motor común: servidor como autoridad del tiempo, registro idempotente) | **Aprobado** ([DOC-06](https://app.clickup.com/t/86bctt9db) `completed`) | Reglas del motor común |
-| Documento general §3.3 y CU-GEN-12, CU-GEN-13, CU-GEN-19 · Documento BFA §3: CU-BFA-P03 y CU-BFA-P04 · RF-GEN del anexo §8.1 | [DOC-04](https://app.clickup.com/t/86bctt9cm) `in review` | Valores **provisionales (DOC-04)**, marcados en cada caso |
+| Documento general §3.3 y CU-GEN-12, CU-GEN-13, CU-GEN-19 · Documento BFA §3: CU-BFA-P03 y CU-BFA-P04 · RF-GEN del anexo §8.1 | [DOC-04](https://app.clickup.com/t/86bctt9cm) `in review` al diseñar la v1; `completed` desde el 2026-11-10 | Valores marcados como **provisionales (DOC-04)** en la v1. Las marcas se mantienen hasta comparar el texto citado con la versión aprobada. |
 | [DOC-07](https://app.clickup.com/t/86bctt9dn) — Calidad documental | `in progress` | Dependencia de TEST-02-T5 en ClickUp |
-| [DOC-08](https://app.clickup.com/t/86bcvaj7m) — Material ficticio BFA | `Open`, sin responsable | Dependencia de TEST-02-T5: contenido ficticio de las subpruebas |
+| [DOC-08](https://app.clickup.com/t/86bcvaj7m) — Material ficticio BFA | `Open` (responsables: Geovanny Ruiz y José Francisco López) | Dependencia de TEST-02-T5: contenido ficticio de las subpruebas |
+| Respuestas de DOC-05 a las consultas de GEN-03 y GEN-04 ([comentario de Iván Chavarría en DOC-05](https://app.clickup.com/t/86bctt9cy?comment=1800450000021721), 2026-11-18) | Respuesta del equipo dueño del contrato aprobado. Indica que se reflejan en el Documento BFA §5.3. | C-2 y C-4 (TC-TEST-02-T5-04 y 09) |
+| Respuesta de DOC-05 a C-3 y C-4 de TEST-02-T5 ([comentario de Iván Chavarría en DOC-05](https://app.clickup.com/t/86bctt9cy?comment=1800450000034525), 2026-11-21) | Respuesta del equipo dueño del contrato aprobado. Indica que quedó en el Documento BFA (Reglas de E4). | C-3 y C-4 (TC-TEST-02-T5-04, 08 y 14) |
 | Plan operativo de Testing (`docs/pruebas/PLAN-OPERATIVO-TESTING.md`) | Vigente | Alcance: «no lanzar carga contra servidor compartido sin autorización» |
 
 Los resultados esperados que provienen de documentos aprobados no llevan marca. Los que dependen de DOC-04 se marcan como **provisional (DOC-04)**.
@@ -77,9 +81,9 @@ Se dejan en la tarea [TEST-02-T5](https://app.clickup.com/t/86bcw9z5c). Mientras
 | ID | Consulta | Para | Casos afectados | Estado |
 | --- | --- | --- | --- | --- |
 | C-1 | RNF-BFA-GEN-01, 04 y 06 no fijan números. Los únicos umbrales documentados son RNF-FV-02 (guardado < 500 ms; «el requisito previo menciona 100 evaluados simultáneos») y el cambio entre sumas < 100 ms. ¿Cuántos evaluados simultáneos es el umbral aprobado? ¿En qué entorno se autoriza la carga controlada? | Documentación (DOC-02) y Scrum de Testing | TC-TEST-02-T5-15 | Abierta |
-| C-2 | Si E5 se repite para la misma subprueba que ya está ACTIVA (doble clic), ¿responde `409 HAY_SUBPRUEBA_ACTIVA` o devuelve la misma subprueba activa? El contrato solo lista los 409. | Documentación (DOC-05) | TC-TEST-02-T5-09 | Abierta |
-| C-3 | CU-BFA-P03 dice «reintento técnico no crea otra aplicación». Si E3 se repite con los mismos datos, ¿responde `409 EVALUACION_EN_CURSO` o devuelve la misma evaluación? | Documentación (DOC-05) | TC-TEST-02-T5-08 | Abierta |
-| C-4 | Si nadie consulta durante la desconexión, ¿quién registra el cierre por vencimiento: un proceso del servidor o la primera consulta (E4) al reconectar? CU-BFA-P04 dice «procesa el mismo cierre idempotente». Es la misma duda que C-1 de GEN-04. | Documentación (DOC-04) | TC-TEST-02-T5-04, 14 | Abierta |
+| C-2 | Si E5 se repite para la misma subprueba que ya está ACTIVA (doble clic), ¿responde `409 HAY_SUBPRUEBA_ACTIVA` o devuelve la misma subprueba activa? El contrato solo lista los 409. | Documentación (DOC-05) | TC-TEST-02-T5-09 | **Respondida** (DOC-05, 2026-11-18, en la consulta C-4 de GEN-03): «200 con el mismo inicio y finLimite (idempotente). 409 HAY_SUBPRUEBA_ACTIVA solo si hay otra subprueba distinta ACTIVA.» |
+| C-3 | CU-BFA-P03 dice «reintento técnico no crea otra aplicación». Si E3 se repite con los mismos datos, ¿responde `409 EVALUACION_EN_CURSO` o devuelve la misma evaluación? | Documentación (DOC-05) | TC-TEST-02-T5-08 | **Respondida** (DOC-05, 2026-11-21): «E3 repetido con los mismos datos responde 409 EVALUACION_EN_CURSO, como ya dice E3; para retomar la evaluación se usa E4.» |
+| C-4 | Si nadie consulta durante la desconexión, ¿quién registra el cierre por vencimiento: un proceso del servidor o la primera consulta (E4) al reconectar? CU-BFA-P04 dice «procesa el mismo cierre idempotente». Es la misma duda que C-1 de GEN-04. | Documentación (DOC-04) | TC-TEST-02-T5-04, 14 | **Respondida** (DOC-05). 2026-11-18, en la consulta C-1 de GEN-04: «E8 registra el cierre vencido (idempotente, con finLimite como fecha de cierre) y luego finaliza: 200.» 2026-11-21: «Si finLimite ya venció, E4 muestra la subprueba CERRADA con cerradaEn = finLimite aunque todavía no se haya llamado E8; es el mismo valor que registraría E8.» |
 
 ## Datos de prueba (ficticios)
 
@@ -137,7 +141,7 @@ done; wait
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e | Estado |
 | --- | --- | --- | --- | --- | --- | --- |
-| TC-TEST-02-T5-04 | TEST-02-T5: "No se alteran plazos ni se duplican intentos o respuestas."<br>RNF-BFA-GEN-01<br>E7: "409 TIEMPO_AGOTADO: llegó después de finLimite."<br>CU-BFA-P04 (provisional DOC-04) | EV-T5-04 con VOC1 ACTIVA y 2 respuestas confirmadas | 1. Anotar `finLimite` con E4.<br>2. Desconectar el cliente y esperar hasta pasar `finLimite`.<br>3. Reconectar y llamar a E4.<br>4. Enviar E7 con una respuesta nueva. | Paso 3: VOC1 `CERRADA`; las 2 respuestas se conservan; el cierre no se repite. Quién registra el cierre depende de C-4. Paso 4: `409 TIEMPO_AGOTADO` (o `SUBPRUEBA_NO_ACTIVA` si ya está cerrada) y la respuesta nueva no se guarda. | Manual (navegador y Postman) | **BLOQUEADO** |
+| TC-TEST-02-T5-04 | TEST-02-T5: "No se alteran plazos ni se duplican intentos o respuestas."<br>RNF-BFA-GEN-01<br>E7: "409 TIEMPO_AGOTADO: llegó después de finLimite."<br>CU-BFA-P04 (provisional DOC-04)<br>Respuesta a C-4 (DOC-05) | EV-T5-04 con VOC1 ACTIVA y 2 respuestas confirmadas | 1. Anotar `finLimite` con E4.<br>2. Desconectar el cliente y esperar hasta pasar `finLimite`.<br>3. Reconectar y llamar a E4.<br>4. Enviar E7 con una respuesta nueva.<br>5. Llamar a E8 y después a E4. | Paso 3: VOC1 `CERRADA` con `cerradaEn` igual al `finLimite` del paso 1, aunque todavía no se llamó E8; las 2 respuestas se conservan. Paso 4: `409 TIEMPO_AGOTADO` (o `SUBPRUEBA_NO_ACTIVA` si ya está cerrada) y la respuesta nueva no se guarda. Paso 5: E8 responde `200`; VOC1 sigue `CERRADA` una sola vez, con el mismo `cerradaEn` del paso 3. | Manual (navegador y Postman) | **BLOQUEADO** |
 
 ### TC-TEST-02-T5-05 — Retomar desde otro navegador u otra sesión
 
@@ -163,13 +167,13 @@ done; wait
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e | Estado |
 | --- | --- | --- | --- | --- | --- | --- |
-| TC-TEST-02-T5-08 | TEST-02-T5: "No se alteran plazos ni se duplican intentos o respuestas."<br>E3: "409 EVALUACION_EN_CURSO"<br>CU-BFA-P03 (provisional DOC-04) | SUJ-T5-A sin evaluación abierta en PER-T5 | 1. Enviar E3 con los mismos datos dos veces seguidas.<br>2. Enviar E3 otras dos veces en paralelo (con otro Sujeto ficticio sin evaluación).<br>3. E22 de cada Sujeto con `estado=EN_CURSO`. | Paso 3: una sola evaluación EN_CURSO por Sujeto. La respuesta del segundo envío (`409 EVALUACION_EN_CURSO` o la misma evaluación) depende de C-3. Nunca `500`. | Manual (Postman y curl) | **BLOQUEADO** |
+| TC-TEST-02-T5-08 | TEST-02-T5: "No se alteran plazos ni se duplican intentos o respuestas."<br>E3: "409 EVALUACION_EN_CURSO"<br>CU-BFA-P03 (provisional DOC-04)<br>Respuesta a C-3 (DOC-05) | SUJ-T5-A sin evaluación abierta en PER-T5 | 1. Enviar E3 con los mismos datos dos veces seguidas.<br>2. Enviar E3 otras dos veces en paralelo (con otro Sujeto ficticio sin evaluación).<br>3. E22 de cada Sujeto con `estado=EN_CURSO`. | Pasos 1 y 2: el primer envío de cada Sujeto crea la evaluación y el otro responde `409 EVALUACION_EN_CURSO`. Paso 3: una sola evaluación EN_CURSO por Sujeto. Nunca `500`. | Manual (Postman y curl) | **BLOQUEADO** |
 
 ### TC-TEST-02-T5-09 — Doble inicio de la misma subprueba
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e | Estado |
 | --- | --- | --- | --- | --- | --- | --- |
-| TC-TEST-02-T5-09 | TEST-02-T5: "No se alteran plazos ni se duplican intentos o respuestas."<br>RNF-BFA-GEN-01 | EV-T5-09 con VOC1 PENDIENTE | 1. Enviar E5 de VOC1 dos veces en paralelo.<br>2. Esperar 10 s y enviar E5 de VOC1 otra vez.<br>3. Llamar a E4. | Un solo inicio: el `finLimite` del paso 3 es el del primer inicio y no se movió en el paso 2. La respuesta a los envíos repetidos depende de C-2. Nunca `500`. | Manual (curl y Postman) | **BLOQUEADO** |
+| TC-TEST-02-T5-09 | TEST-02-T5: "No se alteran plazos ni se duplican intentos o respuestas."<br>RNF-BFA-GEN-01<br>Respuesta a C-2 (DOC-05) | EV-T5-09 con VOC1 PENDIENTE | 1. Enviar E5 de VOC1 dos veces en paralelo.<br>2. Esperar 10 s y enviar E5 de VOC1 otra vez.<br>3. Llamar a E4. | Pasos 1 y 2: todos los envíos responden `200` con el mismo inicio y el mismo `finLimite`; ninguno responde `409 HAY_SUBPRUEBA_ACTIVA`. Paso 3: un solo inicio; el `finLimite` es el del primer inicio y no se movió en el paso 2. Nunca `500`. | Manual (curl y Postman) | **BLOQUEADO** |
 
 ### TC-TEST-02-T5-10 — Repetir la finalización después de reconectar
 
@@ -201,7 +205,7 @@ done; wait
 
 | ID | CA cubierto | Datos y precondiciones | Pasos | Resultado esperado | Manual o e2e | Estado |
 | --- | --- | --- | --- | --- | --- | --- |
-| TC-TEST-02-T5-14 | TEST-02-T5: "No se alteran plazos ni se duplican intentos o respuestas."<br>RNF-BFA-GEN-01<br>E7: "409 TIEMPO_AGOTADO"<br>CU-GEN-13 A2 (provisional DOC-04) | EV-T5-14 con VOC1 ACTIVA y `finLimite` conocido | 1. Enviar E7 unos 2 s antes de `finLimite`.<br>2. Enviar E7 unos 2 s después de `finLimite`.<br>3. Llamar a E4 y E6. | Paso 1: `200`. Paso 2: `409 TIEMPO_AGOTADO`. Paso 3: VOC1 `CERRADA` una sola vez; solo se conserva la respuesta del paso 1. | Manual (Postman) | **BLOQUEADO** |
+| TC-TEST-02-T5-14 | TEST-02-T5: "No se alteran plazos ni se duplican intentos o respuestas."<br>RNF-BFA-GEN-01<br>E7: "409 TIEMPO_AGOTADO"<br>CU-GEN-13 A2 (provisional DOC-04)<br>Respuesta a C-4 (DOC-05) | EV-T5-14 con VOC1 ACTIVA y `finLimite` conocido | 1. Enviar E7 unos 2 s antes de `finLimite`.<br>2. Enviar E7 unos 2 s después de `finLimite`.<br>3. Llamar a E4 y E6. | Paso 1: `200`. Paso 2: `409 TIEMPO_AGOTADO`. Paso 3: VOC1 `CERRADA` una sola vez, con `cerradaEn` igual a `finLimite`; solo se conserva la respuesta del paso 1. | Manual (Postman) | **BLOQUEADO** |
 
 ### TC-TEST-02-T5-15 — Carga controlada con varios evaluados
 
@@ -221,8 +225,8 @@ done; wait
 
 | Bloqueo | Responsable | Próximo paso |
 | --- | --- | --- |
-| E3 a E8 del flujo BFA no están fusionados en `main` (hoy `main` solo tiene la estructura y casos de prueba) | Desarrollo e Integración (GEN-02 a GEN-04, BFA-BE) | Ejecutar en TEST-02-EJEC cuando estén fusionados |
-| DOC-07 en revisión y DOC-08 sin responsable | Documentación | Contenido ficticio de las subpruebas |
+| E3 a E8 del flujo BFA no están fusionados en `main`. Al 2026-11-23, según el orden que fijó Desarrollo en el #41: primero el #51, después las piezas del #41 (modelo `Evaluacion` y E4 a E7) y luego E3 (GEN-02-BE, se rehace desde `main`) y E8 (sobre el modelo del #41) | Desarrollo e Integración (GEN-02 a GEN-04, BFA-BE) | Ejecutar en TEST-02-EJEC cuando estén fusionados |
+| DOC-07 `in progress` y DOC-08 `Open` | Documentación | Contenido ficticio de las subpruebas |
 | Umbral de concurrencia y entorno de carga sin definir | Documentación y Scrum de Testing | Consulta C-1 |
 
 ## Registro de ejecución
@@ -230,6 +234,8 @@ done; wait
 | Fecha | Entorno / versión | Tester | Resultado | Evidencia / bug |
 | --- | --- | --- | --- | --- |
 | — | — | — | Sin ejecutar: 15 BLOQUEADO, 1 NO APLICA | — |
+| 2026-11-19 | — | José Ariel Zeledón | Sin ejecución (v2). Se actualizan TC-TEST-02-T5-04 y 09 con las respuestas a C-2 y C-4. Siguen 15 BLOQUEADO y 1 NO APLICA. | [Respuesta de DOC-05](https://app.clickup.com/t/86bctt9cy?comment=1800450000021721) |
+| 2026-11-23 | — | José Ariel Zeledón | Sin ejecución (v3). Se actualizan TC-TEST-02-T5-04, 08 y 14 con las respuestas a C-3 y C-4. Siguen 15 BLOQUEADO y 1 NO APLICA. | [Respuesta de DOC-05](https://app.clickup.com/t/86bctt9cy?comment=1800450000034525) |
 
 ### Revisión final
 

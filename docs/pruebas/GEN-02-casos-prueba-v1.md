@@ -149,7 +149,7 @@ Son los del mock `services/evaluacion.mock.ts`, que siguen los ejemplos de DOC-0
 | --- | --- | --- | --- |
 | TC-GEN-02-025 | GEN-02-BE: "Cumplir E3 y E4; crear y recuperar evaluaciones desde la base de datos." · "Rechazar datos o configuraciones inválidas…" · "Ejecutar correctamente las pruebas automatizadas." | PR de GEN-02-BE. Se probará con Postman en `pull/<n>/merge`: los mismos escenarios de 004 a 017 contra E3, y la colección en `tests/api/`. | **BLOQUEADO** |
 | TC-GEN-02-026 | GEN-02-TEST: "Iniciar o retomar no duplica intentos ni reinicia los tiempos oficiales." · CU-BFA-P04 | PR de GEN-02-BE: E4 repetido y tras recargar devuelve el mismo `id` y el mismo `finLimite` sin crear otra evaluación (E22). | **BLOQUEADO** |
-| TC-GEN-02-027 | GEN-07-BE: "Las evaluaciones mantienen asociada la versión utilizada al momento de su creación." | GEN-02-BE. Se ejecutan los casos ya diseñados TC-GEN-07-036 a 039 (José Ariel Zeledón, `docs/pruebas/GEN-07-casos-prueba-v2.md`), sin repetir el retest de BUG-04. | **BLOQUEADO** |
+| TC-GEN-02-027 | GEN-07-BE: "Las evaluaciones mantienen asociada la versión utilizada al momento de su creación." | GEN-02-BE. Se ejecutan los casos ya diseñados TC-GEN-07-036 a 039 (José Ariel Zeledón, `docs/pruebas/GEN-07-casos-prueba-v3.md`), sin repetir el retest de BUG-04. | **BLOQUEADO** |
 | TC-GEN-02-028 | GEN-02-FE: "El usuario autorizado…" · §5.2.1: 401 `NO_AUTENTICADO` y 403 `SIN_PERMISO` reales | GEN-06 (autenticación y permisos) y GEN-02-BE. | **BLOQUEADO** |
 
 ## Casos — Pruebas automáticas

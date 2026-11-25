@@ -15,6 +15,8 @@ public interface PreguntaJpaRepository extends JpaRepository<PreguntaJpaEntity, 
             findByConfiguracionSubprueba_IdConfiguracionSubpruebaAndNumeroVisible(
                     Long idConfiguracionSubprueba, String numeroVisible);
 
+    long countByConfiguracionSubprueba_IdConfiguracionSubprueba(Long idConfiguracionSubprueba);
+
     boolean existsByConfiguracionSubprueba_IdConfiguracionSubpruebaAndNumeroVisible(
             Long idConfiguracionSubprueba, String numeroVisible);
 }

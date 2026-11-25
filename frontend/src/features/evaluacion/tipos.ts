@@ -170,6 +170,12 @@ export interface ClienteCatalogo {
   obtenerTest(testId: number): Promise<TestDetalleResponse>;
 }
 
+/** Puerto del catálogo (E1 y E2): lo implementan el servicio real y el mock. */
+export interface ClienteCatalogo {
+  listarTests(): Promise<TestResumenResponse[]>;
+  obtenerTest(testId: number): Promise<TestDetalleResponse>;
+}
+
 // ---------- Estado de una petición en la interfaz ----------
 
 /**

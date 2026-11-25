@@ -7,6 +7,8 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -14,6 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.universidad.tests.application.service.AutenticacionService;
+import com.universidad.tests.application.service.IdentidadSesion;
 import com.universidad.tests.domain.model.EstadoVersionFormulario;
 import com.universidad.tests.domain.model.TipoRespuesta;
 import com.universidad.tests.infrastructure.persistence.entity.ConfiguracionSubpruebaJpaEntity;
@@ -43,8 +47,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.RequestBuilder;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -56,7 +63,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class EvaluacionApiIntegrationTest {
 
+    // Token ficticio; la validacion real se prueba en AutenticacionServiceTest
+    private static final String BEARER = "Bearer token-ficticio";
+
     @Autowired private MockMvc mockMvc;
+
+    @MockitoBean private AutenticacionService autenticacion;
     @Autowired private ObjectMapper json;
     @Autowired private JdbcTemplate jdbc;
     @PersistenceContext private EntityManager entityManager;
@@ -88,7 +100,7 @@ class EvaluacionApiIntegrationTest {
     @Test
     void creaUnaEvaluacionCompletaAsociadaAlSujetoPeriodoYVersion() throws Exception {
         MvcResult resultado =
-                mockMvc.perform(iniciar(cuerpo(null, null)))
+                ejecutar(iniciar(cuerpo(null, null)))
                         .andExpect(status().isCreated())
                         .andExpect(
                                 header().string(
@@ -129,7 +141,7 @@ class EvaluacionApiIntegrationTest {
     @Test
     void aplicacionParcialGuardaSoloLasSubpruebasElegidasEnOrdenOficial() throws Exception {
         MvcResult resultado =
-                mockMvc.perform(iniciar(cuerpo(List.of("CV", "VOC1"), null)))
+                ejecutar(iniciar(cuerpo(List.of("CV", "VOC1"), null)))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.subpruebas[*].codigo", contains("VOC1", "CV")))
                         .andReturn();
@@ -140,9 +152,9 @@ class EvaluacionApiIntegrationTest {
 
     @Test
     void noDuplicaLaEvaluacionAbiertaDelMismoSujetoTestYPeriodo() throws Exception {
-        mockMvc.perform(iniciar(cuerpo(null, null))).andExpect(status().isCreated());
+        ejecutar(iniciar(cuerpo(null, null))).andExpect(status().isCreated());
 
-        mockMvc.perform(iniciar(cuerpo(null, null)))
+        ejecutar(iniciar(cuerpo(null, null)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.codigo").value("EVALUACION_EN_CURSO"))
                 .andExpect(jsonPath("$.ruta").value("/api/v1/evaluaciones"));
@@ -152,10 +164,7 @@ class EvaluacionApiIntegrationTest {
 
     @Test
     void rechazaDatosInvalidosConElFormatoComunDeError() throws Exception {
-        mockMvc.perform(
-                        post("/api/v1/evaluaciones")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{}"))
+        ejecutar(post("/api/v1/evaluaciones").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.codigo").value("SOLICITUD_INVALIDA"))
                 .andExpect(jsonPath("$.status").value(400))
@@ -163,7 +172,7 @@ class EvaluacionApiIntegrationTest {
                 .andExpect(jsonPath("$.detalles[*].campo", hasItem("periodoId")))
                 .andExpect(jsonPath("$.detalles[*].campo", hasItem("versionFormularioId")));
 
-        mockMvc.perform(
+        ejecutar(
                         post("/api/v1/evaluaciones")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"sujetoId\": \"abc\"}"))
@@ -177,23 +186,23 @@ class EvaluacionApiIntegrationTest {
     void rechazaReferenciasInexistentesONoValidas() throws Exception {
         Map<String, Object> sinSujeto = cuerpo(null, null);
         sinSujeto.put("sujetoId", 999_999_999L);
-        mockMvc.perform(iniciar(sinSujeto))
+        ejecutar(iniciar(sinSujeto))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.codigo").value("SUJETO_NO_ENCONTRADO"));
 
         Map<String, Object> sinPeriodo = cuerpo(null, null);
         sinPeriodo.put("periodoId", 999_999_999L);
-        mockMvc.perform(iniciar(sinPeriodo))
+        ejecutar(iniciar(sinPeriodo))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.codigo").value("PERIODO_NO_ENCONTRADO"));
 
-        mockMvc.perform(iniciar(cuerpo(List.of("VOC1", "NO_EXISTE"), null)))
+        ejecutar(iniciar(cuerpo(List.of("VOC1", "NO_EXISTE"), null)))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.codigo").value("SUBPRUEBA_NO_INCLUIDA"));
 
         Map<String, Object> periodoCerrado = cuerpo(null, null);
         periodoCerrado.put("periodoId", crearPeriodo(false));
-        mockMvc.perform(iniciar(periodoCerrado))
+        ejecutar(iniciar(periodoCerrado))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.codigo").value("PERIODO_NO_DISPONIBLE"));
 
@@ -202,14 +211,14 @@ class EvaluacionApiIntegrationTest {
                         new VersionFormularioJpaEntity(test, "borrador", null, "FUENTE-PRUEBA"));
         Map<String, Object> noPublicada = cuerpo(null, null);
         noPublicada.put("versionFormularioId", borrador.getIdVersionFormulario());
-        mockMvc.perform(iniciar(noPublicada))
+        ejecutar(iniciar(noPublicada))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.codigo").value("VERSION_NO_PUBLICADA"));
 
         TestJpaEntity otroTest = crearTest("OTRO_" + corto());
         Map<String, Object> deOtroTest = cuerpo(null, null);
         deOtroTest.put("testId", otroTest.getIdTest());
-        mockMvc.perform(iniciar(deOtroTest))
+        ejecutar(iniciar(deOtroTest))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.codigo").value("VERSION_INCOMPATIBLE"));
 
@@ -235,7 +244,7 @@ class EvaluacionApiIntegrationTest {
         sinLetra.put("sujetoId", sujetoId);
         sinLetra.put("periodoId", periodoId);
 
-        mockMvc.perform(iniciar(sinLetra))
+        ejecutar(iniciar(sinLetra))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.codigo").value("LETRA_NO_ASIGNADA"));
         assertThat(contar("evaluacion where id_sujeto = " + sujetoId)).isZero();
@@ -243,7 +252,7 @@ class EvaluacionApiIntegrationTest {
         Map<String, Object> conLetra = new LinkedHashMap<>(sinLetra);
         conLetra.put("fluidez", Map.of("letraInicial", "m"));
         MvcResult resultado =
-                mockMvc.perform(iniciar(conLetra))
+                ejecutar(iniciar(conLetra))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.subpruebas[*].codigo", contains("VOC1", "FV")))
                         .andReturn();
@@ -261,7 +270,7 @@ class EvaluacionApiIntegrationTest {
 
     @Test
     void detalleDelTestDeGen01EntregaLaVersionQueUsaE3() throws Exception {
-        mockMvc.perform(get("/api/v1/tests/{id}", test.getIdTest()))
+        ejecutar(get("/api/v1/tests/{id}", test.getIdTest()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.codigo").value(test.getCodigo()))
                 .andExpect(
@@ -271,30 +280,30 @@ class EvaluacionApiIntegrationTest {
                 .andExpect(jsonPath("$.subpruebas[0].tipoRespuesta").value("SELECCION"))
                 .andExpect(jsonPath("$.subpruebas[0].numeroPreguntas").value(0));
 
-        mockMvc.perform(get("/api/v1/tests/{id}", 999_999_999L))
+        ejecutar(get("/api/v1/tests/{id}", 999_999_999L))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.codigo").value("TEST_NO_ENCONTRADO"));
     }
 
     @Test
     void consultaElSujetoYLosPeriodosDisponibles() throws Exception {
-        mockMvc.perform(get("/api/v1/sujetos/{id}", sujetoId))
+        ejecutar(get("/api/v1/sujetos/{id}", sujetoId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombres").value("Ana"))
                 .andExpect(jsonPath("$.apellidos").value("Ruiz"));
 
-        mockMvc.perform(get("/api/v1/sujetos/{id}", 999_999_999L))
+        ejecutar(get("/api/v1/sujetos/{id}", 999_999_999L))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.codigo").value("SUJETO_NO_ENCONTRADO"));
 
         Long cerrado = crearPeriodo(false);
-        mockMvc.perform(get("/api/v1/periodos").param("disponible", "true"))
+        ejecutar(get("/api/v1/periodos").param("disponible", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].id", hasItem(periodoId.intValue())))
                 .andExpect(jsonPath("$[*].id", not(hasItem(cerrado.intValue()))))
                 .andExpect(jsonPath("$[?(@.disponible == false)]", hasSize(0)));
 
-        mockMvc.perform(get("/api/v1/periodos"))
+        ejecutar(get("/api/v1/periodos"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].id", hasItem(cerrado.intValue())));
     }
@@ -303,7 +312,7 @@ class EvaluacionApiIntegrationTest {
 
     @Test
     void laBaseDeDatosImpideDosEvaluacionesAbiertasIgualesAunqueLleguenALaVez() throws Exception {
-        mockMvc.perform(iniciar(cuerpo(null, null))).andExpect(status().isCreated());
+        ejecutar(iniciar(cuerpo(null, null))).andExpect(status().isCreated());
         entityManager.flush();
 
         assertThatThrownBy(
@@ -320,6 +329,20 @@ class EvaluacionApiIntegrationTest {
     }
 
     // ---------- Datos ficticios ----------
+
+    private ResultActions ejecutar(RequestBuilder solicitud) throws Exception {
+        when(autenticacion.validar(anyString())).thenReturn(java.util.Optional.empty());
+        when(autenticacion.validar("token-ficticio"))
+                .thenReturn(
+                        java.util.Optional.of(
+                                new IdentidadSesion(1L, 1L, "SUJETO", java.util.Set.of())));
+        return mockMvc.perform(
+                context -> {
+                    var peticion = solicitud.buildRequest(context);
+                    peticion.addHeader("Authorization", BEARER);
+                    return peticion;
+                });
+    }
 
     private org.springframework.test.web.servlet.RequestBuilder iniciar(Map<String, Object> cuerpo)
             throws Exception {

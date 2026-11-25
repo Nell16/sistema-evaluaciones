@@ -4,13 +4,15 @@ import com.universidad.tests.domain.port.AutorizacionContenidoPort;
 import org.springframework.stereotype.Service;
 
 // GEN-06-BE: reemplaza a AutorizacionContenidoDenegadaAdapter con los permisos del contrato
-// (docs/api/openapi.yaml): E25 y E31 piden CONFIGURAR_BFA; E27 pide CONTENIDO_EDITAR.
+// (docs/api/openapi.yaml): E25 y E31 piden CONFIGURAR_BFA; E27 pide CONTENIDO_EDITAR;
+// E28 y E29 piden OPCIONES_EDITAR.
 // Retirar y consultar contenido restringido no tienen permiso documentado: siguen denegados.
 @Service
 public class AutorizacionContenidoService implements AutorizacionContenidoPort {
 
     static final String CONFIGURAR_BFA = "CONFIGURAR_BFA";
     static final String CONTENIDO_EDITAR = "CONTENIDO_EDITAR";
+    static final String OPCIONES_EDITAR = "OPCIONES_EDITAR";
 
     private final AutorizacionService autorizacion;
 
@@ -26,6 +28,11 @@ public class AutorizacionContenidoService implements AutorizacionContenidoPort {
     @Override
     public void exigirPermisoEditarContenido(Long idVersionFormulario) {
         autorizacion.exigirPermiso(CONTENIDO_EDITAR);
+    }
+
+    @Override
+    public void exigirPermisoEditarOpciones(Long idVersionFormulario) {
+        autorizacion.exigirPermiso(OPCIONES_EDITAR);
     }
 
     @Override

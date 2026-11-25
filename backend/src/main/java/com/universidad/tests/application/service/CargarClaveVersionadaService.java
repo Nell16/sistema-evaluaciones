@@ -54,7 +54,7 @@ public class CargarClaveVersionadaService {
         if (idVersion == null || idVersion <= 0 || datos == null || datos.isEmpty()) {
             throw new IllegalArgumentException("La version y las entradas son obligatorias");
         }
-        autorizacion.exigirPermisoEditarContenido(idVersion);
+        autorizacion.exigirPermisoEditarOpciones(idVersion);
         VersionFormulario version =
                 versiones
                         .buscarPorId(idVersion)

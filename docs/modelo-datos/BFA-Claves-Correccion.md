@@ -2,7 +2,7 @@
 
 ## Alcance
 
-La migración `V202611121500__bfa_claves_versionadas.sql`, recuperada del PR #50 para
+La migración `V202611241102__bfa_claves_versionadas.sql`, recuperada del PR #50 para
 BFA-BE-32, agrega `version_clave_bfa` y `entrada_clave_bfa`. Este tema documenta
 exclusivamente las claves de preguntas de selección. Fluidez Verbal usa respuestas
 de texto libre y no genera entradas de clave cerrada.
@@ -27,6 +27,5 @@ de texto libre y no genera entradas de clave cerrada.
 
 El modelo de dominio proviene del PR #60; las dos tablas y sus adaptadores de
 persistencia provienen del PR #50. Las pruebas usan únicamente contenido
-ficticio. La autorización del endpoint utiliza el permiso de edición de
-contenido existente; hasta integrar seguridad, el adaptador predeterminado
-deniega la operación.
+ficticio. E29 exige el permiso `OPCIONES_EDITAR` mediante la autorización por
+sesión Bearer del módulo común.

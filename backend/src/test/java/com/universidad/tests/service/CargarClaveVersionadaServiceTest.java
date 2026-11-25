@@ -159,7 +159,7 @@ class CargarClaveVersionadaServiceTest {
     void respetaDenegacionDePermisos() {
         org.mockito.Mockito.doThrow(new SecurityException("sin permiso"))
                 .when(autorizacion)
-                .exigirPermisoEditarContenido(5L);
+                .exigirPermisoEditarOpciones(5L);
         assertThrows(
                 SecurityException.class,
                 () -> servicio.cargar(5L, List.of(new DatoClave(10L, "B"))));

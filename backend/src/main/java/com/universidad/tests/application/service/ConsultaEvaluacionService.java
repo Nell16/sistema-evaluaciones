@@ -2,6 +2,7 @@ package com.universidad.tests.application.service;
 
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
 import com.universidad.tests.domain.model.Evaluacion;
+import com.universidad.tests.domain.port.AutorizacionEvaluacionPort;
 import com.universidad.tests.domain.repository.EvaluacionRepository;
 import com.universidad.tests.dto.response.EvaluacionResponse;
 import java.time.Clock;
@@ -15,14 +16,20 @@ public class ConsultaEvaluacionService {
 
     private final EvaluacionRepository evaluacionRepository;
     private final Clock reloj;
+    private final AutorizacionEvaluacionPort autorizacion;
 
     @Autowired
-    public ConsultaEvaluacionService(EvaluacionRepository evaluacionRepository) {
-        this(evaluacionRepository, Clock.systemUTC());
+    public ConsultaEvaluacionService(
+            EvaluacionRepository evaluacionRepository, AutorizacionEvaluacionPort autorizacion) {
+        this(evaluacionRepository, autorizacion, Clock.systemUTC());
     }
 
     // Reloj inyectable para probar el tiempo restante
-    public ConsultaEvaluacionService(EvaluacionRepository evaluacionRepository, Clock reloj) {
+    public ConsultaEvaluacionService(
+            EvaluacionRepository evaluacionRepository,
+            AutorizacionEvaluacionPort autorizacion,
+            Clock reloj) {
+        this.autorizacion = autorizacion;
         this.evaluacionRepository = evaluacionRepository;
         this.reloj = reloj;
     }
@@ -32,6 +39,8 @@ public class ConsultaEvaluacionService {
                 evaluacionRepository
                         .buscarPorId(idEvaluacion)
                         .orElseThrow(() -> new EvaluacionNoEncontradaException(idEvaluacion));
+        autorizacion.exigirPermisoConsultarEvaluacion(
+                evaluacion.idEvaluacion(), evaluacion.idSujeto());
         Instant ahora = reloj.instant();
 
         return new EvaluacionResponse(

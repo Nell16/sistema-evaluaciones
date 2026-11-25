@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,8 +19,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.universidad.tests.application.service.AutenticacionService;
 import com.universidad.tests.application.service.IdentidadSesion;
+import com.universidad.tests.domain.exception.SinPermisoException;
 import com.universidad.tests.domain.model.EstadoVersionFormulario;
 import com.universidad.tests.domain.model.TipoRespuesta;
+import com.universidad.tests.domain.port.AutorizacionEvaluacionPort;
 import com.universidad.tests.infrastructure.persistence.entity.ConfiguracionSubpruebaJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.PeriodoJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.SubpruebaJpaEntity;
@@ -38,6 +41,7 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +52,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
@@ -69,6 +74,7 @@ class EvaluacionApiIntegrationTest {
     @Autowired private MockMvc mockMvc;
 
     @MockitoBean private AutenticacionService autenticacion;
+    @MockitoSpyBean private AutorizacionEvaluacionPort autorizacionEvaluacion;
     @Autowired private ObjectMapper json;
     @Autowired private JdbcTemplate jdbc;
     @PersistenceContext private EntityManager entityManager;
@@ -85,6 +91,10 @@ class EvaluacionApiIntegrationTest {
     private Map<String, ConfiguracionSubpruebaJpaEntity> configuraciones;
     private Long sujetoId;
     private Long periodoId;
+    private Long cuentaId;
+    private String rolPrueba = "COORDINADOR";
+    private Set<String> permisosPrueba =
+            Set.of("OPERACION_AUTORIZAR", "RECUPERAR_INTENTO", "SUJETO_LEER", "PERIODO_LEER");
 
     @BeforeEach
     void prepararCatalogo() {
@@ -93,6 +103,18 @@ class EvaluacionApiIntegrationTest {
         configuraciones = configuracionesDe(version);
         sujetoId = crearSujeto("Ana", "Ruiz");
         periodoId = crearPeriodo(true);
+        cuentaId =
+                jdbc.queryForObject(
+                        "insert into cuenta(correo,resumen_contrasena,nombres,apellidos,estado) values (?,?,?,?,'ACTIVA') returning id_cuenta",
+                        Long.class,
+                        "alcance-" + java.util.UUID.randomUUID() + "@ejemplo.test",
+                        "hash-ficticio-sin-credencial",
+                        "Persona",
+                        "Ficticia");
+        jdbc.update(
+                "insert into cuenta_sujeto_asignado(id_cuenta,id_sujeto) values (?,?)",
+                cuentaId,
+                sujetoId);
     }
 
     // ---------- E3: crear ----------
@@ -187,8 +209,8 @@ class EvaluacionApiIntegrationTest {
         Map<String, Object> sinSujeto = cuerpo(null, null);
         sinSujeto.put("sujetoId", 999_999_999L);
         ejecutar(iniciar(sinSujeto))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.codigo").value("SUJETO_NO_ENCONTRADO"));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("SIN_PERMISO"));
 
         Map<String, Object> sinPeriodo = cuerpo(null, null);
         sinPeriodo.put("periodoId", 999_999_999L);
@@ -266,6 +288,69 @@ class EvaluacionApiIntegrationTest {
         assertThat(letra).isEqualTo("M");
     }
 
+    @Test
+    void e3Devuelve403CuandoElPuertoDeniegaLaCreacion() throws Exception {
+        doThrow(new SinPermisoException())
+                .when(autorizacionEvaluacion)
+                .exigirPermisoIniciarEvaluacion(sujetoId);
+
+        ejecutar(iniciar(cuerpo(null, null)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("SIN_PERMISO"));
+
+        assertThat(contar("evaluacion where id_sujeto = " + sujetoId)).isZero();
+    }
+
+    @Test
+    void e3RechazaLaCreacionSinToken() throws Exception {
+        mockMvc.perform(iniciar(cuerpo(null, null)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("WWW-Authenticate", "Bearer"))
+                .andExpect(jsonPath("$.codigo").value("NO_AUTENTICADO"));
+
+        assertThat(contar("evaluacion where id_sujeto = " + sujetoId)).isZero();
+    }
+
+    // ---------- E4: consultar ----------
+
+    @Test
+    void e4ConsultaLaEvaluacionPersistidaPorE3() throws Exception {
+        MvcResult creada =
+                ejecutar(iniciar(cuerpo(null, null))).andExpect(status().isCreated()).andReturn();
+        long id = idDe(creada);
+        String ruta = "/api/v1/evaluaciones/" + id;
+        assertThat(creada.getResponse().getHeader("Location")).isEqualTo(ruta);
+        entityManager.flush();
+        entityManager.clear();
+
+        ejecutar(get(ruta))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.testId").value(test.getIdTest()))
+                .andExpect(
+                        jsonPath("$.versionFormularioId").value(version.getIdVersionFormulario()))
+                .andExpect(jsonPath("$.sujetoId").value(sujetoId))
+                .andExpect(jsonPath("$.periodoId").value(periodoId))
+                .andExpect(jsonPath("$.estado").value("EN_CURSO"))
+                .andExpect(jsonPath("$.subpruebaActiva").value(nullValue()))
+                .andExpect(jsonPath("$.subpruebas[*].codigo", contains("VOC1", "VOC2", "CV")))
+                .andExpect(
+                        jsonPath(
+                                "$.subpruebas[*].estado",
+                                contains("PENDIENTE", "PENDIENTE", "PENDIENTE")));
+    }
+
+    @Test
+    void e4RechazaLaConsultaSinToken() throws Exception {
+        MvcResult creada =
+                ejecutar(iniciar(cuerpo(null, null))).andExpect(status().isCreated()).andReturn();
+
+        mockMvc.perform(get("/api/v1/evaluaciones/{id}", idDe(creada)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("WWW-Authenticate", "Bearer"))
+                .andExpect(jsonPath("$.codigo").value("NO_AUTENTICADO"));
+    }
+
     // ---------- E2, E19 y E21 ----------
 
     @Test
@@ -293,8 +378,8 @@ class EvaluacionApiIntegrationTest {
                 .andExpect(jsonPath("$.apellidos").value("Ruiz"));
 
         ejecutar(get("/api/v1/sujetos/{id}", 999_999_999L))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.codigo").value("SUJETO_NO_ENCONTRADO"));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("SIN_PERMISO"));
 
         Long cerrado = crearPeriodo(false);
         ejecutar(get("/api/v1/periodos").param("disponible", "true"))
@@ -328,6 +413,56 @@ class EvaluacionApiIntegrationTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
+    @Test
+    void e3DeniegaSesionSinPermisoRealYNoEscribe() throws Exception {
+        permisosPrueba = Set.of();
+        ejecutar(iniciar(cuerpo(null, null)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("SIN_PERMISO"));
+        assertThat(contar("evaluacion where id_sujeto = " + sujetoId)).isZero();
+    }
+
+    @Test
+    void e3DeniegaPermisoSinAsignacionYNoEscribe() throws Exception {
+        jdbc.update("delete from cuenta_sujeto_asignado where id_cuenta=?", cuentaId);
+        ejecutar(iniciar(cuerpo(null, null))).andExpect(status().isForbidden());
+        assertThat(contar("evaluacion where id_sujeto = " + sujetoId)).isZero();
+    }
+
+    @Test
+    void e4NoExponeDatosCuandoSeRetiraLaAsignacion() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        jdbc.update("delete from cuenta_sujeto_asignado where id_cuenta=?", cuentaId);
+        ejecutar(get("/api/v1/evaluaciones/" + id))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.id").doesNotExist());
+    }
+
+    @Test
+    void e4DeniegaAunqueConserveAsignacionSiFaltaPermiso() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        permisosPrueba = Set.of("SUJETO_LEER");
+        ejecutar(get("/api/v1/evaluaciones/" + id)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void decanoAsignadoSoloRecibeIdentificacionInstitucional() throws Exception {
+        rolPrueba = "DECANO";
+        permisosPrueba = Set.of("SUJETO_LEER");
+        ejecutar(get("/api/v1/sujetos/" + sujetoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombres").doesNotExist())
+                .andExpect(jsonPath("$.apellidos").doesNotExist());
+    }
+
     // ---------- Datos ficticios ----------
 
     private ResultActions ejecutar(RequestBuilder solicitud) throws Exception {
@@ -335,7 +470,7 @@ class EvaluacionApiIntegrationTest {
         when(autenticacion.validar("token-ficticio"))
                 .thenReturn(
                         java.util.Optional.of(
-                                new IdentidadSesion(1L, 1L, "SUJETO", java.util.Set.of())));
+                                new IdentidadSesion(cuentaId, 1L, rolPrueba, permisosPrueba)));
         return mockMvc.perform(
                 context -> {
                     var peticion = solicitud.buildRequest(context);

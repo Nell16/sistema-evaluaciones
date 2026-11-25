@@ -11,10 +11,14 @@ import com.universidad.tests.domain.port.HashContrasenasPort;
 import com.universidad.tests.domain.port.TokensSesionPort;
 import com.universidad.tests.domain.repository.CuentaRepository;
 import com.universidad.tests.domain.repository.SesionRepository;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +32,8 @@ public class AutenticacionService {
     private final HashContrasenasPort hashContrasenas;
     private final TokensSesionPort tokens;
     private final MatrizPermisos matrizPermisos;
+    private final Clock reloj;
+    private final Duration duracionSesion;
 
     // Resumen de una contrasena aleatoria: se verifica contra el cuando el correo no existe
     // para que la respuesta tarde lo mismo y no revele si la cuenta existe
@@ -38,14 +44,24 @@ public class AutenticacionService {
             CuentaRepository cuentaRepository,
             SesionRepository sesionRepository,
             HashContrasenasPort hashContrasenas,
-            TokensSesionPort tokens) {
-
+            TokensSesionPort tokens,
+            @Value("${seguridad.sesion.duracion:PT2H}") String duracion) {
         this(
                 cuentaRepository,
                 sesionRepository,
                 hashContrasenas,
                 tokens,
-                MatrizPermisos.aprobada());
+                MatrizPermisos.aprobada(),
+                Clock.systemUTC(),
+                Duration.parse(duracion));
+    }
+
+    public AutenticacionService(
+            CuentaRepository cuentas,
+            SesionRepository sesiones,
+            HashContrasenasPort hash,
+            TokensSesionPort tokens) {
+        this(cuentas, sesiones, hash, tokens, MatrizPermisos.aprobada());
     }
 
     AutenticacionService(
@@ -55,6 +71,29 @@ public class AutenticacionService {
             TokensSesionPort tokens,
             MatrizPermisos matrizPermisos) {
 
+        this(
+                cuentaRepository,
+                sesionRepository,
+                hashContrasenas,
+                tokens,
+                matrizPermisos,
+                Clock.systemUTC(),
+                Duration.ofHours(2));
+    }
+
+    AutenticacionService(
+            CuentaRepository cuentaRepository,
+            SesionRepository sesionRepository,
+            HashContrasenasPort hashContrasenas,
+            TokensSesionPort tokens,
+            MatrizPermisos matrizPermisos,
+            Clock reloj,
+            Duration duracionSesion) {
+        if (duracionSesion == null || duracionSesion.isNegative() || duracionSesion.isZero()) {
+            throw new IllegalArgumentException("La duracion de sesion debe ser positiva");
+        }
+        this.reloj = reloj;
+        this.duracionSesion = duracionSesion;
         this.cuentaRepository = cuentaRepository;
         this.sesionRepository = sesionRepository;
         this.hashContrasenas = hashContrasenas;
@@ -84,19 +123,21 @@ public class AutenticacionService {
         Rol rolActivo = rolActivoDe(cuenta);
         String token = tokens.generar();
 
+        Instant abiertaEn = reloj.instant().truncatedTo(ChronoUnit.MICROS);
+        Instant expiraEn = abiertaEn.plus(duracionSesion);
         sesionRepository.guardar(
                 new Sesion(
                         null,
                         cuenta.getIdCuenta(),
                         tokens.resumirSiValido(token),
                         rolActivo,
-                        Instant.now(),
-                        null,
+                        abiertaEn,
+                        expiraEn,
                         null));
 
         return new SesionAbierta(
                 token,
-                null,
+                expiraEn,
                 rolActivo.name(),
                 matrizPermisos.permisosDe(rolActivo).stream().sorted().toList());
     }
@@ -110,7 +151,7 @@ public class AutenticacionService {
             return Optional.empty();
         }
 
-        Instant ahora = Instant.now();
+        Instant ahora = reloj.instant();
         return sesionRepository
                 .buscarPorResumenToken(resumen)
                 .filter(sesion -> sesion.estaVigente(ahora))
@@ -123,7 +164,7 @@ public class AutenticacionService {
     public void cerrarSesion(String token) {
 
         String resumen = tokens.resumirSiValido(token);
-        if (resumen == null || !sesionRepository.cerrar(resumen, Instant.now())) {
+        if (resumen == null || !sesionRepository.cerrar(resumen, reloj.instant())) {
             throw new NoAutenticadoException();
         }
     }

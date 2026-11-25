@@ -26,7 +26,10 @@ class ConsultaEvaluacionServiceTest {
 
     private final EvaluacionRepository repositorio = mock(EvaluacionRepository.class);
     private final ConsultaEvaluacionService servicio =
-            new ConsultaEvaluacionService(repositorio, Clock.fixed(AHORA, ZoneOffset.UTC));
+            new ConsultaEvaluacionService(
+                    repositorio,
+                    mock(com.universidad.tests.domain.port.AutorizacionEvaluacionPort.class),
+                    Clock.fixed(AHORA, ZoneOffset.UTC));
 
     private EvaluacionSubprueba subprueba(
             String codigo, int orden, EstadoSubprueba estado, Instant inicio, Instant fin) {

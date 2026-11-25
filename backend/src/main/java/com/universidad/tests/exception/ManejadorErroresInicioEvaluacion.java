@@ -5,6 +5,7 @@ import com.universidad.tests.controller.PeriodoController;
 import com.universidad.tests.controller.SujetoController;
 import com.universidad.tests.domain.exception.ErrorNegocioException;
 import com.universidad.tests.domain.exception.ErroresEvaluacion;
+import com.universidad.tests.domain.exception.SinPermisoException;
 import com.universidad.tests.domain.exception.TipoErrorNegocio;
 import com.universidad.tests.dto.response.ErrorResponse;
 import com.universidad.tests.dto.response.ErrorResponse.DetalleCampo;
@@ -158,9 +159,8 @@ public class ManejadorErroresInicioEvaluacion {
                 List.of());
     }
 
-    @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<ErrorResponse> sinPermiso(
-            SecurityException e, HttpServletRequest request) {
+    @ExceptionHandler({SecurityException.class, SinPermisoException.class})
+    public ResponseEntity<ErrorResponse> sinPermiso(Exception e, HttpServletRequest request) {
         return responder(
                 HttpStatus.FORBIDDEN,
                 "SIN_PERMISO",

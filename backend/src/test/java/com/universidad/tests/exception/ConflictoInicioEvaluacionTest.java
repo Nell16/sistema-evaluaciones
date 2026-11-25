@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.time.Clock;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -74,6 +75,7 @@ class ConflictoInicioEvaluacionTest {
     }
 
     @RestController
+    @Profile("prueba-conflicto-http")
     @RequestMapping("/api/v1/evaluaciones")
     public static class InicioQueFalla extends InicioEvaluacionController {
         private final DataIntegrityViolationException error;

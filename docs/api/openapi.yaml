@@ -1307,8 +1307,8 @@ components:
       properties:
         correo: { type: string, format: email, example: ana@uam.edu.ni }
         contrasena: { type: string, format: password }
-        nombres: { type: string, example: Ana }
-        apellidos: { type: string, example: Ruiz }
+        nombres: { maxLength: 120, type: string, example: Ana }
+        apellidos: { maxLength: 120, type: string, example: Ruiz }
         rol: { type: string, description: 'Roles: Sujeto, Académico, Coordinador, Psicólogo y Decano.', example: SUJETO }
 
     CuentaResponse:
@@ -1348,7 +1348,7 @@ components:
       required: [token, nuevaContrasena]
       properties:
         token: { type: string }
-        nuevaContrasena: { type: string, format: password }
+        nuevaContrasena: { type: string, format: password, minLength: 12 }
 
     SujetoRequest:
       type: object

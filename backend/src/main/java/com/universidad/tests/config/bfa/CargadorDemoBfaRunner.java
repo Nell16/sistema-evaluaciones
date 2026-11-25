@@ -49,7 +49,7 @@ public class CargadorDemoBfaRunner implements ApplicationRunner {
             LOG.warn("No se pudo cargar la clave demo del BFA; el arranque continua", e);
         }
         try {
-            cargadorBaremo.cargarBaremo();
+            cargadorBaremo.cargarBaremo(version.getIdVersionFormulario());
         } catch (RuntimeException e) {
             LOG.warn("No se pudo cargar el baremo demo del BFA; el arranque continua", e);
         }

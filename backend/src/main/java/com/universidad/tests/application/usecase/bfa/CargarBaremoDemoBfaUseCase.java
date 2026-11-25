@@ -1,9 +1,11 @@
 package com.universidad.tests.application.usecase.bfa;
 
+import com.universidad.tests.domain.model.AprobacionBaremoBFA;
 import com.universidad.tests.domain.model.BaremoBFA;
 import com.universidad.tests.domain.model.EstadoCeldaBaremo;
 import com.universidad.tests.domain.model.RangoBaremoBFA;
 import com.universidad.tests.domain.model.bfa.SubpruebaBfa;
+import com.universidad.tests.domain.repository.AsignacionBaremoBFARepository;
 import com.universidad.tests.domain.repository.BaremoBFARepository;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -14,9 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Carga el baremo FICTICIO de la demo del BFA (BFA-BE-39): un juego de rangos inventados por cada
- * familia (factor). Los rangos y percentiles NO son normas reales y estan marcados como ficticios.
- * Escribe directo en el repositorio: el servicio de carga exige un permiso que en el arranque no
- * existe.
+ * familia (factor), y lo deja aprobado para la version demo. Los rangos y percentiles NO son normas
+ * reales y estan marcados como ficticios. Sin la asignacion aprobada la conversion a percentil no
+ * encuentra baremo. Escribe directo en los repositorios: los servicios de carga y aprobacion exigen
+ * un permiso que en el arranque no existe.
  */
 @Service
 public class CargarBaremoDemoBfaUseCase {
@@ -32,27 +35,48 @@ public class CargarBaremoDemoBfaUseCase {
     static final int PUNTAJE_MAXIMO_FV = 75;
     static final int MAXIMO_RANGOS_POR_FAMILIA = 5;
 
-    private final BaremoBFARepository baremoRepository;
+    /** Version de reglas con la que se asigna el baremo demo a la version del formulario. */
+    public static final String VERSION_REGLAS_DEMO = "DEMO-1";
 
-    public CargarBaremoDemoBfaUseCase(BaremoBFARepository baremoRepository) {
+    static final String EVIDENCIA_APROBACION_DEMO =
+            "Aprobacion automatica de datos ficticios de demostracion (no es una norma real)";
+
+    private final BaremoBFARepository baremoRepository;
+    private final AsignacionBaremoBFARepository asignacionRepository;
+
+    public CargarBaremoDemoBfaUseCase(
+            BaremoBFARepository baremoRepository,
+            AsignacionBaremoBFARepository asignacionRepository) {
         this.baremoRepository = baremoRepository;
+        this.asignacionRepository = asignacionRepository;
     }
 
-    /** Devuelve true si creo el baremo y false si ya existia (no lo toca). */
+    /**
+     * Crea el baremo ficticio y lo asigna y aprueba para la version de formulario indicada, todo en
+     * una sola transaccion. Devuelve true si lo creo y false si ya existia (no lo toca).
+     */
     @Transactional
-    public boolean cargarBaremo() {
+    public boolean cargarBaremo(Long idVersionFormulario) {
         if (baremoRepository.existePorNombreYVersion(NOMBRE_BAREMO_DEMO, VERSION_BAREMO_DEMO)) {
             return false;
         }
-        baremoRepository.guardar(
-                new BaremoBFA(
-                        null,
-                        NOMBRE_BAREMO_DEMO,
-                        VERSION_BAREMO_DEMO,
-                        ANIO_NORMA_DEMO,
-                        POBLACION_DEMO,
-                        FUENTE_BAREMO_DEMO,
-                        rangosDemo()));
+        BaremoBFA baremo =
+                baremoRepository.guardar(
+                        new BaremoBFA(
+                                null,
+                                NOMBRE_BAREMO_DEMO,
+                                VERSION_BAREMO_DEMO,
+                                ANIO_NORMA_DEMO,
+                                POBLACION_DEMO,
+                                FUENTE_BAREMO_DEMO,
+                                rangosDemo()));
+        AprobacionBaremoBFA aprobacion =
+                AprobacionBaremoBFA.borrador().aprobar(EVIDENCIA_APROBACION_DEMO);
+        asignacionRepository.registrarAprobacion(
+                baremo.idBaremo(),
+                idVersionFormulario,
+                VERSION_REGLAS_DEMO,
+                aprobacion.evidencia());
         return true;
     }
 

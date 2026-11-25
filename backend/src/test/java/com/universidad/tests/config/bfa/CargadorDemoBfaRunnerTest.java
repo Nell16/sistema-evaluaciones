@@ -81,12 +81,12 @@ class CargadorDemoBfaRunnerTest {
         int cargas;
 
         BaremoFalso(boolean falla) {
-            super(null);
+            super(null, null);
             this.falla = falla;
         }
 
         @Override
-        public boolean cargarBaremo() {
+        public boolean cargarBaremo(Long idVersionFormulario) {
             cargas++;
             if (falla) {
                 throw new IllegalStateException("fallo de baremo simulado");

@@ -4,14 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.universidad.tests.domain.model.AprobacionBaremoBFA;
 import com.universidad.tests.domain.model.BaremoBFA;
 import com.universidad.tests.domain.model.EstadoCeldaBaremo;
 import com.universidad.tests.domain.model.RangoBaremoBFA;
+import com.universidad.tests.domain.repository.AsignacionBaremoBFARepository;
 import com.universidad.tests.domain.repository.BaremoBFARepository;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +24,11 @@ class CargarBaremoDemoBfaUseCaseTest {
     /** Repositorio en memoria: guarda los baremos y asigna ids. */
     private static final class BaremosEnMemoria implements BaremoBFARepository {
         final List<BaremoBFA> datos = new ArrayList<>();
+
+        @Override
+        public boolean existePorId(Long idBaremo) {
+            return datos.stream().anyMatch(b -> b.idBaremo().equals(idBaremo));
+        }
 
         @Override
         public boolean existePorNombreYVersion(String nombre, String version) {
@@ -44,18 +52,56 @@ class CargarBaremoDemoBfaUseCaseTest {
         }
     }
 
+    /** Asignaciones en memoria: guarda cada aprobacion registrada. */
+    private static final class AsignacionesEnMemoria implements AsignacionBaremoBFARepository {
+        record Clave(long idBaremo, long idVersionFormulario, String versionReglas) {}
+
+        final Map<Clave, AprobacionBaremoBFA> datos = new java.util.LinkedHashMap<>();
+
+        @Override
+        public void registrarAprobacion(
+                long idBaremo,
+                long idVersionFormulario,
+                String versionReglas,
+                String evidenciaAprobacion) {
+            datos.put(
+                    new Clave(idBaremo, idVersionFormulario, versionReglas),
+                    AprobacionBaremoBFA.borrador().aprobar(evidenciaAprobacion));
+        }
+
+        @Override
+        public Optional<AprobacionBaremoBFA> buscar(
+                long idBaremo, long idVersionFormulario, String versionReglas) {
+            return Optional.ofNullable(
+                    datos.get(new Clave(idBaremo, idVersionFormulario, versionReglas)));
+        }
+
+        @Override
+        public void actualizarEstado(
+                long idBaremo,
+                long idVersionFormulario,
+                String versionReglas,
+                AprobacionBaremoBFA aprobacion) {
+            datos.put(new Clave(idBaremo, idVersionFormulario, versionReglas), aprobacion);
+        }
+    }
+
+    private static final long ID_VERSION = 7L;
+
     private BaremosEnMemoria baremos;
+    private AsignacionesEnMemoria asignaciones;
     private CargarBaremoDemoBfaUseCase cargador;
 
     @BeforeEach
     void setUp() {
         baremos = new BaremosEnMemoria();
-        cargador = new CargarBaremoDemoBfaUseCase(baremos);
+        asignaciones = new AsignacionesEnMemoria();
+        cargador = new CargarBaremoDemoBfaUseCase(baremos, asignaciones);
     }
 
     @Test
     void creaUnBaremoFicticioConUnJuegoDeRangosPorFamilia() {
-        assertTrue(cargador.cargarBaremo());
+        assertTrue(cargador.cargarBaremo(ID_VERSION));
 
         assertEquals(1, baremos.datos.size());
         BaremoBFA baremo = baremos.datos.get(0);
@@ -67,7 +113,7 @@ class CargarBaremoDemoBfaUseCaseTest {
 
     @Test
     void todosLosRangosEstanMarcadosComoFicticios() {
-        cargador.cargarBaremo();
+        cargador.cargarBaremo(ID_VERSION);
 
         for (RangoBaremoBFA r : baremos.datos.get(0).rangos()) {
             assertEquals("FICTICIO", r.valorOriginal());
@@ -78,7 +124,7 @@ class CargarBaremoDemoBfaUseCaseTest {
 
     @Test
     void losRangosDeCadaFamiliaCubrenDe0AlMaximoSinSolaparseNiHuecos() {
-        cargador.cargarBaremo();
+        cargador.cargarBaremo(ID_VERSION);
 
         Map<String, List<RangoBaremoBFA>> porFamilia =
                 baremos.datos.get(0).rangos().stream()
@@ -102,7 +148,7 @@ class CargarBaremoDemoBfaUseCaseTest {
 
     @Test
     void losPercentilesEstanEntre1Y99YNoSeRepitenPorFamilia() {
-        cargador.cargarBaremo();
+        cargador.cargarBaremo(ID_VERSION);
 
         Map<String, List<RangoBaremoBFA>> porFamilia =
                 baremos.datos.get(0).rangos().stream()
@@ -128,10 +174,35 @@ class CargarBaremoDemoBfaUseCaseTest {
     }
 
     @Test
-    void cargarDosVecesNoDuplicaElBaremo() {
-        assertTrue(cargador.cargarBaremo());
+    void elBaremoQuedaAprobadoParaLaVersionDelFormularioConLasReglasDemo() {
+        cargador.cargarBaremo(ID_VERSION);
 
-        assertFalse(cargador.cargarBaremo());
+        long idBaremo = baremos.datos.get(0).idBaremo();
+        AprobacionBaremoBFA aprobacion =
+                asignaciones
+                        .buscar(
+                                idBaremo,
+                                ID_VERSION,
+                                CargarBaremoDemoBfaUseCase.VERSION_REGLAS_DEMO)
+                        .orElseThrow();
+        assertTrue(aprobacion.estaAprobado());
+        assertTrue(aprobacion.evidencia().contains("ficticios"));
+    }
+
+    @Test
+    void siElBaremoYaExisteNoSeVuelveAAsignar() {
+        cargador.cargarBaremo(ID_VERSION);
+
+        cargador.cargarBaremo(ID_VERSION);
+
+        assertEquals(1, asignaciones.datos.size());
+    }
+
+    @Test
+    void cargarDosVecesNoDuplicaElBaremo() {
+        assertTrue(cargador.cargarBaremo(ID_VERSION));
+
+        assertFalse(cargador.cargarBaremo(ID_VERSION));
 
         assertEquals(1, baremos.datos.size());
     }

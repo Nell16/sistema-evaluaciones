@@ -2,6 +2,7 @@ package com.universidad.tests.config.bfa;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.universidad.tests.application.usecase.bfa.CargarBaremoDemoBfaUseCase;
 import com.universidad.tests.application.usecase.bfa.CargarCatalogoDemoBfaUseCase;
 import com.universidad.tests.application.usecase.bfa.CargarClaveDemoBfaUseCase;
 import com.universidad.tests.domain.model.EstadoVersionFormulario;
@@ -74,6 +75,41 @@ class CargadorDemoBfaRunnerTest {
         }
     }
 
+    /** Cargador de baremo de prueba: cuenta llamadas y falla si se le pide. */
+    private static final class BaremoFalso extends CargarBaremoDemoBfaUseCase {
+        private final boolean falla;
+        int cargas;
+
+        BaremoFalso(boolean falla) {
+            super(null);
+            this.falla = falla;
+        }
+
+        @Override
+        public boolean cargarBaremo() {
+            cargas++;
+            if (falla) {
+                throw new IllegalStateException("fallo de baremo simulado");
+            }
+            return true;
+        }
+    }
+
+    private static BaremoFalso baremoFalso(boolean falla) {
+        return new BaremoFalso(falla);
+    }
+
+    @Test
+    void siFallaElBaremoSeguimosAPublicarSinDetenerElArranque() {
+        CargadorFalso cargador = new CargadorFalso(false, false);
+        BaremoFalso baremo = baremoFalso(true);
+
+        new CargadorDemoBfaRunner(cargador, claveFalsa(false), baremo).run(null);
+
+        assertEquals(1, baremo.cargas);
+        assertEquals(1, cargador.publicaciones);
+    }
+
     private static ClaveFalsa claveFalsa(boolean falla) {
         return new ClaveFalsa(falla);
     }
@@ -83,7 +119,7 @@ class CargadorDemoBfaRunnerTest {
         CargadorFalso cargador = new CargadorFalso(false, false);
         ClaveFalsa clave = claveFalsa(true);
 
-        new CargadorDemoBfaRunner(cargador, clave).run(null);
+        new CargadorDemoBfaRunner(cargador, clave, baremoFalso(false)).run(null);
 
         assertEquals(1, clave.cargas);
         assertEquals(1, cargador.publicaciones);
@@ -93,7 +129,7 @@ class CargadorDemoBfaRunnerTest {
     void cargaYPublicaCuandoTodoSaleBien() {
         CargadorFalso cargador = new CargadorFalso(false, false);
 
-        new CargadorDemoBfaRunner(cargador, claveFalsa(false)).run(null);
+        new CargadorDemoBfaRunner(cargador, claveFalsa(false), baremoFalso(false)).run(null);
 
         assertEquals(1, cargador.cargas);
         assertEquals(1, cargador.publicaciones);
@@ -103,7 +139,7 @@ class CargadorDemoBfaRunnerTest {
     void siFallaLaCargaNoPropagaNiIntentaPublicar() {
         CargadorFalso cargador = new CargadorFalso(true, false);
 
-        new CargadorDemoBfaRunner(cargador, claveFalsa(false)).run(null);
+        new CargadorDemoBfaRunner(cargador, claveFalsa(false), baremoFalso(false)).run(null);
 
         assertEquals(1, cargador.cargas);
         assertEquals(0, cargador.publicaciones);
@@ -113,7 +149,7 @@ class CargadorDemoBfaRunnerTest {
     void siFallaLaPublicacionNoPropagaYElArranqueContinua() {
         CargadorFalso cargador = new CargadorFalso(false, true);
 
-        new CargadorDemoBfaRunner(cargador, claveFalsa(false)).run(null);
+        new CargadorDemoBfaRunner(cargador, claveFalsa(false), baremoFalso(false)).run(null);
 
         assertEquals(1, cargador.publicaciones);
     }

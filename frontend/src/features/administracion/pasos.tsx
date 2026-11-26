@@ -281,6 +281,7 @@ export function PasoPreguntas({
   const [numero, setNumero] = useState('1');
   const [orden, setOrden] = useState('1');
   const [enunciado, setEnunciado] = useState('Pregunta ficticia de ejemplo');
+  const [recursoRef, setRecursoRef] = useState('');
   const [errores, setErrores] = useState<ReturnType<typeof validarPregunta>>([]);
   const { estado, enviar } = useEnvio();
   if (subpruebas.length === 0) return SIN_SUBPRUEBAS;
@@ -291,6 +292,7 @@ export function PasoPreguntas({
       numeroVisible: Number(numero),
       ordenPresentacion: Number(orden),
       enunciado,
+      ...(recursoRef.trim() && { recursoRef: recursoRef.trim() }),
     };
     const encontrados = validarPregunta(solicitud);
     setErrores(encontrados);
@@ -303,6 +305,7 @@ export function PasoPreguntas({
       ]);
       setNumero(String(solicitud.numeroVisible + 1));
       setOrden(String(solicitud.ordenPresentacion + 1));
+      setRecursoRef('');
       return `Pregunta creada con id ${creada.id}. Defina sus opciones abajo.`;
     });
   };
@@ -342,6 +345,16 @@ export function PasoPreguntas({
               rows={2}
               value={enunciado}
               onChange={(e) => setEnunciado(e.target.value)}
+            />
+          )}
+        </Campo>
+        <Campo etiqueta="Referencia de la imagen (opcional)">
+          {(id) => (
+            <input
+              id={id}
+              className="ev-input"
+              value={recursoRef}
+              onChange={(e) => setRecursoRef(e.target.value)}
             />
           )}
         </Campo>

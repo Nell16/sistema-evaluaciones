@@ -10,8 +10,10 @@ import com.universidad.tests.domain.model.EvaluacionSubprueba;
 import com.universidad.tests.domain.model.TipoRespuesta;
 import com.universidad.tests.domain.repository.EvaluacionRepository;
 import com.universidad.tests.infrastructure.persistence.entity.ConfiguracionSubpruebaJpaEntity;
+import com.universidad.tests.infrastructure.persistence.entity.PeriodoJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.RespuestaEvaluacionJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.SubpruebaJpaEntity;
+import com.universidad.tests.infrastructure.persistence.entity.SujetoJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.TestJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.VersionFormularioJpaEntity;
 import jakarta.persistence.EntityManager;
@@ -37,6 +39,8 @@ class EvaluacionPersistenciaIntegrationTest {
     private Long idTest;
     private Long idVersion;
     private Long idConfiguracion;
+    private Long idSujeto;
+    private Long idPeriodo;
 
     private void prepararCatalogo() {
         TestJpaEntity test =
@@ -51,10 +55,20 @@ class EvaluacionPersistenciaIntegrationTest {
                 new ConfiguracionSubpruebaJpaEntity(
                         version, subprueba, 1, 300, TipoRespuesta.SELECCION, "INSTR", null, null);
         entityManager.persist(config);
+
+        SujetoJpaEntity sujeto =
+                new SujetoJpaEntity("COD_" + UUID.randomUUID(), "Juan", "Perez", null);
+        entityManager.persist(sujeto);
+        PeriodoJpaEntity periodo =
+                new PeriodoJpaEntity("PER_" + UUID.randomUUID(), "Periodo 2026", null, null, true);
+        entityManager.persist(periodo);
+
         entityManager.flush();
         idTest = test.getIdTest();
         idVersion = version.getIdVersionFormulario();
         idConfiguracion = config.getIdConfiguracionSubprueba();
+        idSujeto = sujeto.getIdSujeto();
+        idPeriodo = periodo.getIdPeriodo();
     }
 
     private EvaluacionSubprueba subprueba(String codigo, int orden, EstadoSubprueba estado) {
@@ -83,8 +97,8 @@ class EvaluacionPersistenciaIntegrationTest {
     private Evaluacion evaluacion(List<EvaluacionSubprueba> subpruebas) {
         return new Evaluacion(
                 null,
-                25L,
-                3L,
+                idSujeto,
+                idPeriodo,
                 idTest,
                 idVersion,
                 EstadoEvaluacion.EN_CURSO,
@@ -107,7 +121,7 @@ class EvaluacionPersistenciaIntegrationTest {
 
         Evaluacion leida = evaluacionRepository.buscarPorId(guardada.idEvaluacion()).orElseThrow();
 
-        assertThat(leida.idSujeto()).isEqualTo(25L);
+        assertThat(leida.idSujeto()).isEqualTo(idSujeto);
         assertThat(leida.estado()).isEqualTo(EstadoEvaluacion.EN_CURSO);
         assertThat(leida.subpruebas())
                 .extracting(EvaluacionSubprueba::codigo)

@@ -22,11 +22,21 @@ public class EvaluacionController {
     private final ConsultaEvaluacionService consultaService;
 
     private final MotorSubpruebasService motor;
+    private final com.universidad.tests.application.service.FinalizacionEvaluacionService
+            finalizacion;
 
     public EvaluacionController(
-            ConsultaEvaluacionService consultaService, MotorSubpruebasService motor) {
+            ConsultaEvaluacionService consultaService,
+            MotorSubpruebasService motor,
+            com.universidad.tests.application.service.FinalizacionEvaluacionService finalizacion) {
         this.motor = motor;
+        this.finalizacion = finalizacion;
         this.consultaService = consultaService;
+    }
+
+    @PostMapping("/{evaluacionId}/finalizar")
+    public EvaluacionResponse finalizar(@PathVariable Long evaluacionId) {
+        return finalizacion.finalizar(evaluacionId);
     }
 
     // E4

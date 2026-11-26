@@ -9,6 +9,7 @@ import com.universidad.tests.application.service.AutorizacionService;
 import com.universidad.tests.application.service.ContextoSesion;
 import com.universidad.tests.application.service.IdentidadSesion;
 import com.universidad.tests.application.service.MotorSubpruebasService;
+import com.universidad.tests.application.service.RegistroAuditoria;
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
 import com.universidad.tests.domain.exception.MotorSubpruebasException;
 import com.universidad.tests.domain.exception.MotorSubpruebasException.Codigo;
@@ -42,8 +43,11 @@ class MotorSubpruebasServiceTest {
             mock(RespuestaEvaluacionRepository.class);
     private final AutorizacionMotorSubpruebasPort autorizacion =
             mock(AutorizacionMotorSubpruebasPort.class);
+    private final AutorizacionService sesiones = mock(AutorizacionService.class);
+    private final RegistroAuditoria auditoria = mock(RegistroAuditoria.class);
 
     private MotorSubpruebasService motor(Instant ahora) {
+        when(sesiones.exigirSesion()).thenReturn(new IdentidadSesion(7L, 1L, "SUJETO", Set.of()));
         return new MotorSubpruebasService(
                 evaluaciones,
                 configuraciones,
@@ -51,6 +55,8 @@ class MotorSubpruebasServiceTest {
                 opciones,
                 respuestas,
                 autorizacion,
+                sesiones,
+                auditoria,
                 Clock.fixed(ahora, ZoneOffset.UTC));
     }
 
@@ -65,6 +71,8 @@ class MotorSubpruebasServiceTest {
                         respuestas,
                         new AutorizacionMotorSubpruebasService(
                                 new AutorizacionService(), Optional.empty()),
+                        new AutorizacionService(),
+                        auditoria,
                         Clock.fixed(INICIO, ZoneOffset.UTC));
         assertThatThrownBy(() -> motor.iniciar(1L, "SUB"))
                 .isInstanceOf(NoAutenticadoException.class);

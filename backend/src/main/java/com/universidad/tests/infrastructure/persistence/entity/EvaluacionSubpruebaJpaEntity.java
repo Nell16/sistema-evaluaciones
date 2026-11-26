@@ -156,6 +156,10 @@ public class EvaluacionSubpruebaJpaEntity {
         fechaFinLimite = limite;
     }
 
+    public void setLetraInicial(String letraInicial) {
+        this.letraInicial = letraInicial;
+    }
+
     public String getLetraInicial() {
         return letraInicial;
     }

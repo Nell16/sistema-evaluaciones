@@ -1,4 +1,4 @@
-package com.universidad.tests.mapper;
+package com.universidad.tests.application.service;
 
 import com.universidad.tests.domain.model.EvaluacionSubprueba;
 import com.universidad.tests.domain.model.OpcionRespuesta;

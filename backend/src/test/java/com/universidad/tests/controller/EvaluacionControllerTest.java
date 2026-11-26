@@ -41,6 +41,9 @@ class EvaluacionControllerTest {
 
     @MockitoBean private MotorSubpruebasService motor;
 
+    @MockitoBean
+    private com.universidad.tests.application.service.FinalizacionEvaluacionService finalizacion;
+
     @MockitoBean private AutenticacionService autenticacion;
 
     private static final String SUBPRUEBA = "/api/v1/evaluaciones/15/subpruebas/SUB";

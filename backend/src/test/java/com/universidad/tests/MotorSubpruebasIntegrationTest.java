@@ -2,6 +2,7 @@ package com.universidad.tests;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -9,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.universidad.tests.application.service.AutorizacionService;
+import com.universidad.tests.application.service.IdentidadSesion;
 import com.universidad.tests.application.service.MotorSubpruebasService;
 import com.universidad.tests.domain.exception.MotorSubpruebasException;
 import com.universidad.tests.domain.exception.MotorSubpruebasException.Codigo;
@@ -24,13 +27,17 @@ import com.universidad.tests.dto.request.RegistrarRespuestasRequest.Palabra;
 import com.universidad.tests.dto.request.RegistrarRespuestasRequest.Seleccion;
 import com.universidad.tests.infrastructure.persistence.entity.ConfiguracionSubpruebaJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.OpcionRespuestaJpaEntity;
+import com.universidad.tests.infrastructure.persistence.entity.PeriodoJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.PreguntaJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.SubpruebaJpaEntity;
+import com.universidad.tests.infrastructure.persistence.entity.SujetoJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.TestJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.VersionFormularioJpaEntity;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -44,6 +51,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -61,23 +69,45 @@ class MotorSubpruebasIntegrationTest {
     @Autowired private MockMvc mvc;
     @Autowired private ObjectMapper json;
     @MockitoBean private AutorizacionMotorSubpruebasPort autorizacion;
+    @MockitoBean private AutorizacionService sesiones;
 
     private Long idTest;
     private Long idEvaluacion;
     private Long primera;
     private Long segunda;
     private Long otraVersion;
+    private Long idCuenta;
 
     @BeforeEach
     void preparar() {
         transacciones.executeWithoutResult(
                 estado -> {
+                    idCuenta =
+                            jdbc.queryForObject(
+                                    """
+                                    insert into cuenta (correo, resumen_contrasena, nombres, apellidos, estado)
+                                    values (?, 'resumen-ficticio', 'Cuenta', 'Ficticia', 'ACTIVA')
+                                    returning id_cuenta
+                                    """,
+                                    Long.class,
+                                    "motor-" + UUID.randomUUID() + "@example.test");
+                    var sujeto = new SujetoJpaEntity(null, "Sujeto", "Ficticio", null);
+                    var periodo =
+                            new PeriodoJpaEntity(
+                                    UUID.randomUUID().toString(),
+                                    "Periodo ficticio",
+                                    null,
+                                    null,
+                                    true);
+                    em.persist(sujeto);
+                    em.persist(periodo);
                     var test =
                             new TestJpaEntity(
                                     "MOTOR_" + UUID.randomUUID(), "Prueba ficticia", null, true);
                     em.persist(test);
                     idTest = test.getIdTest();
-                    var seleccion = new SubpruebaJpaEntity(test, "SUB", "Selección ficticia", null);
+                    var seleccion =
+                            new SubpruebaJpaEntity(test, "SUB", "SelecciÃ³n ficticia", null);
                     var fv = new SubpruebaJpaEntity(test, "FV", "Fluidez ficticia", null);
                     em.persist(seleccion);
                     em.persist(fv);
@@ -127,8 +157,8 @@ class MotorSubpruebasIntegrationTest {
                                     .guardar(
                                             new Evaluacion(
                                                     null,
-                                                    25L,
-                                                    3L,
+                                                    sujeto.getIdSujeto(),
+                                                    periodo.getIdPeriodo(),
                                                     idTest,
                                                     version.getIdVersionFormulario(),
                                                     EstadoEvaluacion.EN_CURSO,
@@ -139,6 +169,8 @@ class MotorSubpruebasIntegrationTest {
                                                             subprueba(configFv, "FV", 2, "M"))))
                                     .idEvaluacion();
                 });
+        when(sesiones.exigirSesion())
+                .thenReturn(new IdentidadSesion(idCuenta, 1L, "SUJETO", Set.of()));
     }
 
     @AfterEach
@@ -148,6 +180,9 @@ class MotorSubpruebasIntegrationTest {
         }
         transacciones.executeWithoutResult(
                 estado -> {
+                    jdbc.update(
+                            "delete from evento_auditoria where id_evaluacion = ?", idEvaluacion);
+                    jdbc.update("delete from cuenta where id_cuenta = ?", idCuenta);
                     jdbc.update("delete from evaluacion where id_evaluacion = ?", idEvaluacion);
                     jdbc.update(
                             """
@@ -174,6 +209,45 @@ class MotorSubpruebasIntegrationTest {
                     jdbc.update("delete from subprueba where id_test = ?", idTest);
                     jdbc.update("delete from test where id_test = ?", idTest);
                 });
+    }
+
+    @Test
+    void e5AuditaLaTransicionUnaSolaVezAunqueSeReintente() throws Exception {
+        String ruta = "/api/v1/evaluaciones/" + idEvaluacion + "/subpruebas/SUB/iniciar";
+        mvc.perform(post(ruta)).andExpect(status().isOk());
+        mvc.perform(post(ruta)).andExpect(status().isOk());
+
+        Long idSubprueba =
+                jdbc.queryForObject(
+                        "select id_evaluacion_subprueba from evaluacion_subprueba"
+                                + " where id_evaluacion = ? and codigo = 'SUB'",
+                        Long.class,
+                        idEvaluacion);
+        assertThat(
+                        jdbc.queryForList(
+                                """
+                        select id_cuenta, accion, entidad_tipo, entidad_id, id_evaluacion_subprueba
+                        from evento_auditoria where id_evaluacion = ?
+                        """,
+                                idEvaluacion))
+                .containsExactly(
+                        Map.of(
+                                "id_cuenta", idCuenta,
+                                "accion", "INICIAR_SUBPRUEBA",
+                                "entidad_tipo", "EVALUACION_SUBPRUEBA",
+                                "entidad_id", idSubprueba,
+                                "id_evaluacion_subprueba", idSubprueba));
+    }
+
+    @Test
+    void e5RevierteElInicioSiFallaLaInsercionDelEvento() {
+        when(sesiones.exigirSesion())
+                .thenReturn(new IdentidadSesion(Long.MAX_VALUE, 1L, "SUJETO", Set.of()));
+
+        assertThatThrownBy(() -> motor.iniciar(idEvaluacion, "SUB"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+        assertThat(evaluaciones.buscarPorId(idEvaluacion).orElseThrow().subpruebaActiva())
+                .isEmpty();
     }
 
     @Test
@@ -431,7 +505,7 @@ class MotorSubpruebasIntegrationTest {
                             pregunta,
                             letras[i],
                             i + 1,
-                            "Opción ficticia",
+                            "OpciÃ³n ficticia",
                             "/recursos/v1/" + letras[i] + ".png"));
         }
         return pregunta.getIdPregunta();

@@ -46,7 +46,7 @@ class MotorSubpruebasSeguridadIntegrationTest {
                         "Sujeto",
                         "Ficticio",
                         EstadoCuenta.ACTIVA,
-                        Set.of(Rol.SUJETO)));
+                        Set.of(Rol.DECANO)));
         String token = autenticacion.abrirSesion(correo, contrasena.toCharArray()).token();
 
         String ruta = "/api/v1/evaluaciones/" + Long.MAX_VALUE + "/subpruebas/SUB";

@@ -2,6 +2,7 @@ package com.universidad.tests.exception;
 
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
 import com.universidad.tests.domain.exception.MotorSubpruebasException;
+import com.universidad.tests.domain.exception.SubpruebasPendientesException;
 import com.universidad.tests.domain.exception.TestNoEncontradoException;
 import com.universidad.tests.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +21,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ManejadorErroresApi {
     private static final Logger LOG = LoggerFactory.getLogger(ManejadorErroresApi.class);
+
+    @ExceptionHandler(SubpruebasPendientesException.class)
+    public ResponseEntity<ErrorResponse> subpruebasPendientes(
+            SubpruebasPendientesException ex, HttpServletRequest request) {
+        return error(HttpStatus.CONFLICT, "SUBPRUEBAS_PENDIENTES", ex.getMessage(), request);
+    }
 
     @ExceptionHandler(TestNoEncontradoException.class)
     public ResponseEntity<ErrorResponse> testNoEncontrado(
@@ -54,17 +61,17 @@ public class ManejadorErroresApi {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> cuerpoInvalido(HttpServletRequest request) {
-        return solicitudInvalida("El cuerpo de la solicitud no es válido.", request);
+        return solicitudInvalida("El cuerpo de la solicitud no es vÃ¡lido.", request);
     }
 
     @ExceptionHandler({DataAccessException.class, TransactionException.class})
     public ResponseEntity<ErrorResponse> errorPersistencia(
             RuntimeException ex, HttpServletRequest request) {
-        LOG.error("Falló una operación de persistencia: {}", ex.getClass().getSimpleName());
+        LOG.error("FallÃ³ una operaciÃ³n de persistencia: {}", ex.getClass().getSimpleName());
         return error(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "ERROR_INTERNO",
-                "No se pudo completar la operación.",
+                "No se pudo completar la operaciÃ³n.",
                 request);
     }
 
@@ -78,7 +85,7 @@ public class ManejadorErroresApi {
                                 "SOLICITUD_INVALIDA",
                                 mensaje,
                                 request.getRequestURI(),
-                                List.of(new ErrorResponse.Detalle("cuerpo", mensaje))));
+                                List.of(new ErrorResponse.DetalleCampo("cuerpo", mensaje))));
     }
 
     private ResponseEntity<ErrorResponse> error(

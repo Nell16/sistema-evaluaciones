@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import com.universidad.tests.application.service.AutorizacionService;
 import com.universidad.tests.application.service.FinalizacionEvaluacionService;
 import com.universidad.tests.application.service.IdentidadSesion;
-import com.universidad.tests.domain.exception.EvaluacionNoFinalizadaException;
 import com.universidad.tests.domain.exception.SinPermisoException;
 import com.universidad.tests.domain.model.EstadoEvaluacion;
 import com.universidad.tests.domain.model.EstadoSubprueba;
@@ -22,7 +21,6 @@ import com.universidad.tests.domain.port.AlcanceSujetoPort;
 import com.universidad.tests.domain.repository.EvaluacionRepository;
 import com.universidad.tests.domain.repository.ResultadoRepository;
 import com.universidad.tests.dto.response.EvaluacionResponse;
-import com.universidad.tests.dto.response.ResultadoResponse;
 import com.universidad.tests.infrastructure.persistence.entity.ConfiguracionSubpruebaJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.PeriodoJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.SubpruebaJpaEntity;
@@ -48,6 +46,11 @@ import org.springframework.transaction.annotation.Transactional;
 class FinalizarEvaluacionIntegrationTest {
 
     @Autowired private FinalizacionEvaluacionService finalizacionService;
+
+    @Autowired
+    private com.universidad.tests.application.usecase.resultados.ConsultarResultadosUseCase
+            consultaResultados;
+
     @Autowired private EvaluacionRepository evaluacionRepository;
     @Autowired private ResultadoRepository resultadoRepository;
     @Autowired private EntityManager entityManager;
@@ -194,8 +197,10 @@ class FinalizarEvaluacionIntegrationTest {
         Long evaluacionId = guardada.idEvaluacion();
 
         // Antes de finalizar, E9 debe fallar con 409 EVALUACION_NO_FINALIZADA
-        assertThatThrownBy(() -> finalizacionService.consultarResultados(evaluacionId))
-                .isInstanceOf(EvaluacionNoFinalizadaException.class);
+        assertThatThrownBy(() -> consultaResultados.consultar(evaluacionId))
+                .isInstanceOf(
+                        com.universidad.tests.domain.exception.resultados.ConsultaResultadoException
+                                .class);
 
         // Finalizar con puntuaciones conocidas (E8)
         Map<String, Integer> puntuacionesDirectas = Map.of("VOC1", 12, "VOC2", 18);
@@ -208,7 +213,7 @@ class FinalizarEvaluacionIntegrationTest {
         assertThat(responseE8.fechaFin()).isNotNull();
 
         // Consultar resultados (E9)
-        ResultadoResponse responseE9 = finalizacionService.consultarResultados(evaluacionId);
+        var responseE9 = consultaResultados.consultar(evaluacionId);
         assertThat(responseE9.evaluacionId()).isEqualTo(evaluacionId);
         assertThat(responseE9.estadoResultado()).isEqualTo("PENDIENTE_VALIDACION");
         assertThat(responseE9.calificacionId()).isNull();

@@ -18,8 +18,16 @@ Comprobación del 25-Nov-2026, 23:02 Nicaragua, sobre PR #143, base `bac6a2e1108
 - Fallo deliberado de auditoría en la base aislada: HTTP 500 y rollback de evaluación, resultado y cierre vencido.
 - E9 sin publicación: HTTP 200, sin revisión ni factores expuestos.
 
+## Integración con GEN-39-BE (26-nov-2026)
+
+Se incorpora el lector del PR #157 y se retira la consulta E9 anterior de FinalizacionEvaluacionService y su ruta duplicada. E9 ya no fija revision=1 ni entrega factores del contenedor como revisión publicada. Las pruebas anteriores de presentación se trasladan al módulo de consulta; la integración E8 consulta ese mismo caso de uso.
+
+El lector comprueba revisión exacta, validación, formulario, audiencia y alcance. Los tests usan datos/sesiones reales ficticias y una propuesta DDL aislada. El SQL no es una migración instalada: requiere validación y nombre del custodio, y coordinación con BFA-BE-31.
+
+Comprobación conjunta actualizada sobre main `12138f1003f06faf080a024284d5888a2bc1f042`: 443 pruebas backend sin fallos/errores. Incluye los casos de E8 y los 12 casos reales de persistencia/autenticación de E9; no acredita instalación del esquema en producción.
+
 ## Pendientes que impiden la aceptación completa
 
-Esta corrección resuelve los cuatro fallos reproducidos; no acredita toda BFA-BE-38. La consulta E9 publicada del PR #143 todavía fija `revision=1`, usa factores del contenedor y no comprueba la audiencia de una revisión exacta. Requiere integrar GEN-39-BE y el modelo/publicación de revisiones con la custodia de migraciones vigente. E8 por HTTP todavía invoca la sobrecarga sin puntuaciones: la integración de calificadores versionados debe aportar las puntuaciones reales; no se deben inventar números ni confundir el caso con mapa de prueba con ese recorrido.
+E8 por HTTP todavía invoca la sobrecarga sin puntuaciones: falta conectar los calificadores versionados a las respuestas persistidas. La sobrecarga con mapa de prueba no demuestra ese recorrido. No se deben inventar números ni asumir que familias ausentes fueron calculadas.
 
-No se ejecutaron escrituras en el VPS ni se validaron resultados publicados allí. No hay `testing-ok`, aprobación independiente ni despliegue demostrado de esta corrección. Se conserva el aporte y la asignación del autor del PR #143. No cerrar la tarea hasta resolver estos pendientes y obtener la revisión indicada.
+Quedan además la migración aprobada de revisiones y publicación E12, la prueba en la URL publicada, Testing y aceptación por el revisor indicado. No se ha escrito en el VPS ni se ha otorgado testing-ok a esta corrección. Se preservan el historial y los responsables del PR #143.

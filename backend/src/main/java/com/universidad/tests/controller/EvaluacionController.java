@@ -7,7 +7,6 @@ import com.universidad.tests.dto.request.RegistrarRespuestasRequest;
 import com.universidad.tests.dto.response.AvanceSubpruebaResponse;
 import com.universidad.tests.dto.response.EvaluacionResponse;
 import com.universidad.tests.dto.response.PreguntasSubpruebaResponse;
-import com.universidad.tests.dto.response.ResultadoResponse;
 import com.universidad.tests.dto.response.SubpruebaActivaResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,12 +37,6 @@ public class EvaluacionController {
     @PostMapping("/{evaluacionId}/finalizar")
     public EvaluacionResponse finalizar(@PathVariable Long evaluacionId) {
         return finalizacion.finalizar(evaluacionId);
-    }
-
-    // E9
-    @GetMapping("/{evaluacionId}/resultados")
-    public ResultadoResponse consultarResultados(@PathVariable Long evaluacionId) {
-        return finalizacion.consultarResultados(evaluacionId);
     }
 
     // E4

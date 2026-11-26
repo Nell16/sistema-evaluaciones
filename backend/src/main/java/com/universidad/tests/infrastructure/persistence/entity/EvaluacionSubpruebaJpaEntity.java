@@ -150,6 +150,12 @@ public class EvaluacionSubpruebaJpaEntity {
         return fechaCierre;
     }
 
+    public void iniciar(Instant inicio, Instant limite) {
+        estado = EstadoSubprueba.ACTIVA;
+        fechaInicio = inicio;
+        fechaFinLimite = limite;
+    }
+
     public void setLetraInicial(String letraInicial) {
         this.letraInicial = letraInicial;
     }

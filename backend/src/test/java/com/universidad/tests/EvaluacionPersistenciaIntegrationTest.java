@@ -185,7 +185,9 @@ class EvaluacionPersistenciaIntegrationTest {
     @Test
     void e22AplicaFiltrosYRestringeAlSujetoAunqueTengaPermiso() throws Exception {
         prepararCatalogo();
-        var propia = evaluacionRepository.guardar(evaluacion(List.of()));
+        var propia =
+                evaluacionRepository.guardar(
+                        evaluacion(List.of(subprueba("SUB", 1, EstadoSubprueba.PENDIENTE))));
         var otro = new SujetoJpaEntity("OTRO_" + UUID.randomUUID(), "Nombre", "Ficticio", null);
         entityManager.persist(otro);
         var ajena =
@@ -224,7 +226,8 @@ class EvaluacionPersistenciaIntegrationTest {
                                 .param("testId", idTest.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(propia.idEvaluacion()));
+                .andExpect(jsonPath("$[0].id").value(propia.idEvaluacion()))
+                .andExpect(jsonPath("$[0].subpruebas[0].codigo").value("SUB"));
         mvc.perform(
                         get("/api/v1/evaluaciones")
                                 .header("Authorization", "Bearer sujeto")

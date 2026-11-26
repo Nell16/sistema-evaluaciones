@@ -7,7 +7,6 @@ import com.universidad.tests.domain.model.Periodo;
 import com.universidad.tests.domain.port.AutorizacionEvaluacionPort;
 import com.universidad.tests.domain.repository.PeriodoRepository;
 import java.time.LocalDate;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,21 +18,20 @@ public class CrearPeriodoUseCase {
     private final PeriodoRepository periodoRepository;
 
     public CrearPeriodoUseCase(
-        AutorizacionEvaluacionPort autorizacion, PeriodoRepository periodoRepository) {
+            AutorizacionEvaluacionPort autorizacion, PeriodoRepository periodoRepository) {
         this.autorizacion = autorizacion;
         this.periodoRepository = periodoRepository;
     }
 
     @Transactional
-    public PeriodoVista crear(
-        String codigo, String denominacion, LocalDate inicio, LocalDate fin) {
+    public PeriodoVista crear(String codigo, String denominacion, LocalDate inicio, LocalDate fin) {
         autorizacion.exigirPermisoCrearPeriodo();
 
         if (inicio != null && fin != null && inicio.isAfter(fin)) {
             throw new ErrorNegocioException(
-                TipoErrorNegocio.REGLA_DE_NEGOCIO,
-                "PERIODO_INVALIDO",
-                "La fecha de inicio del período no puede ser posterior a la fecha de fin.");
+                    TipoErrorNegocio.REGLA_DE_NEGOCIO,
+                    "PERIODO_INVALIDO",
+                    "La fecha de inicio del período no puede ser posterior a la fecha de fin.");
         }
 
         String codigoLimpio = codigo == null ? null : codigo.trim();
@@ -41,26 +39,20 @@ public class CrearPeriodoUseCase {
 
         if (codigoLimpio != null && periodoRepository.buscarPorCodigo(codigoLimpio).isPresent()) {
             throw new ErrorNegocioException(
-                TipoErrorNegocio.CONFLICTO,
-                "PERIODO_DUPLICADO",
-                "Ya existe un período registrado con el código: " + codigoLimpio);
+                    TipoErrorNegocio.CONFLICTO,
+                    "PERIODO_DUPLICADO",
+                    "Ya existe un período registrado con el código: " + codigoLimpio);
         }
 
-        try {
-            Periodo nuevo = new Periodo(null, codigoLimpio, nombreLimpio, inicio, fin, true);
-            Periodo guardado = periodoRepository.guardar(nuevo);
-            return new PeriodoVista(
+        // Un conflicto por carrera (uq_periodo_codigo) lo traduce el manejador de errores.
+        Periodo nuevo = new Periodo(null, codigoLimpio, nombreLimpio, inicio, fin, true);
+        Periodo guardado = periodoRepository.guardar(nuevo);
+        return new PeriodoVista(
                 guardado.idPeriodo(),
                 guardado.codigo(),
                 guardado.nombre(),
                 guardado.fechaInicio(),
                 guardado.fechaFin(),
                 guardado.admiteNuevasEvaluaciones());
-        } catch (DataIntegrityViolationException ex) {
-            throw new ErrorNegocioException(
-                TipoErrorNegocio.CONFLICTO,
-                "PERIODO_DUPLICADO",
-                "Ya existe un período registrado con el código: " + codigoLimpio);
-        }
     }
 }

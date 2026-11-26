@@ -33,10 +33,10 @@ class CrearPeriodoUseCaseTest {
         LocalDate fin = LocalDate.of(2026, 12, 15);
         when(periodoRepository.buscarPorCodigo("2026-2")).thenReturn(Optional.empty());
         when(periodoRepository.guardar(any(Periodo.class)))
-            .thenReturn(new Periodo(3L, "2026-2", "Segundo semestre 2026", inicio, fin, true));
+                .thenReturn(new Periodo(3L, "2026-2", "Segundo semestre 2026", inicio, fin, true));
 
         PeriodoVista resultado =
-            crearPeriodoUseCase.crear("2026-2", "Segundo semestre 2026", inicio, fin);
+                crearPeriodoUseCase.crear("2026-2", "Segundo semestre 2026", inicio, fin);
 
         assertThat(resultado.id()).isEqualTo(3L);
         assertThat(resultado.codigo()).isEqualTo("2026-2");
@@ -50,11 +50,9 @@ class CrearPeriodoUseCaseTest {
         LocalDate fin = LocalDate.of(2026, 8, 1);
 
         assertThatThrownBy(
-            () ->
-                crearPeriodoUseCase.crear(
-                    "2026-2", "Período inválido", inicio, fin))
-            .isInstanceOf(ErrorNegocioException.class)
-            .hasFieldOrPropertyWithValue("codigo", "PERIODO_INVALIDO");
+                        () -> crearPeriodoUseCase.crear("2026-2", "Período inválido", inicio, fin))
+                .isInstanceOf(ErrorNegocioException.class)
+                .hasFieldOrPropertyWithValue("codigo", "PERIODO_INVALIDO");
     }
 
     @Test
@@ -65,10 +63,10 @@ class CrearPeriodoUseCaseTest {
         when(periodoRepository.buscarPorCodigo("2026-2")).thenReturn(Optional.of(existente));
 
         assertThatThrownBy(
-            () ->
-                crearPeriodoUseCase.crear(
-                    "2026-2", "Segundo semestre 2026", inicio, fin))
-            .isInstanceOf(ErrorNegocioException.class)
-            .hasFieldOrPropertyWithValue("codigo", "PERIODO_DUPLICADO");
+                        () ->
+                                crearPeriodoUseCase.crear(
+                                        "2026-2", "Segundo semestre 2026", inicio, fin))
+                .isInstanceOf(ErrorNegocioException.class)
+                .hasFieldOrPropertyWithValue("codigo", "PERIODO_DUPLICADO");
     }
 }

@@ -27,9 +27,9 @@ public class PeriodoController {
     private final EvaluacionMapper mapper;
 
     public PeriodoController(
-        CrearPeriodoUseCase crearPeriodo,
-        ListarPeriodosUseCase listarPeriodos,
-        EvaluacionMapper mapper) {
+            CrearPeriodoUseCase crearPeriodo,
+            ListarPeriodosUseCase listarPeriodos,
+            EvaluacionMapper mapper) {
         this.crearPeriodo = crearPeriodo;
         this.listarPeriodos = listarPeriodos;
         this.mapper = mapper;
@@ -38,19 +38,16 @@ public class PeriodoController {
     @PostMapping
     public ResponseEntity<PeriodoResponse> crear(@Valid @RequestBody PeriodoRequest request) {
         PeriodoVista creado =
-            crearPeriodo.crear(
-                request.codigo(),
-                request.denominacion(),
-                request.inicio(),
-                request.fin());
+                crearPeriodo.crear(
+                        request.codigo(), request.denominacion(), request.inicio(), request.fin());
         PeriodoResponse response = mapper.aResponse(creado);
         return ResponseEntity.created(URI.create("/api/v1/periodos/" + response.id()))
-            .body(response);
+                .body(response);
     }
 
     @GetMapping
     public List<PeriodoResponse> listar(
-        @RequestParam(name = "disponible", defaultValue = "false") boolean disponible) {
+            @RequestParam(name = "disponible", defaultValue = "false") boolean disponible) {
         return listarPeriodos.listar(disponible).stream().map(mapper::aResponse).toList();
     }
 }

@@ -40,7 +40,7 @@ public class AutorizacionEvaluacionService implements AutorizacionEvaluacionPort
         if (!alcance.estaAsignado(sesion.idCuenta(), sujeto)) throw new SinPermisoException();
     }
 
-    //GEN-48-N2
+    // GEN-48-N2
     @Override
     public void exigirPermisoCrearPeriodo() {
         autorizacion.exigirPermiso("PERIODO_CREAR");

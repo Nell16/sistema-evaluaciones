@@ -34,9 +34,9 @@ public class PeriodoPersistenceAdapter implements PeriodoRepository {
     @Transactional(readOnly = true)
     public List<Periodo> listar(boolean soloDisponibles) {
         List<PeriodoJpaEntity> entidades =
-            soloDisponibles
-                ? periodoJpaRepository.findByActivoTrueOrderByCodigoDesc()
-                : periodoJpaRepository.findAllByOrderByCodigoDesc();
+                soloDisponibles
+                        ? periodoJpaRepository.findByActivoTrueOrderByCodigoDesc()
+                        : periodoJpaRepository.findAllByOrderByCodigoDesc();
         return entidades.stream().map(this::aDominio).toList();
     }
 
@@ -44,22 +44,22 @@ public class PeriodoPersistenceAdapter implements PeriodoRepository {
     @Transactional
     public Periodo guardar(Periodo periodo) {
         PeriodoJpaEntity entidad =
-            new PeriodoJpaEntity(
-                periodo.codigo(),
-                periodo.nombre(),
-                periodo.fechaInicio(),
-                periodo.fechaFin(),
-                periodo.activo());
-        return aDominio(periodoJpaRepository.save(entidad));
+                new PeriodoJpaEntity(
+                        periodo.codigo(),
+                        periodo.nombre(),
+                        periodo.fechaInicio(),
+                        periodo.fechaFin(),
+                        periodo.activo());
+        return aDominio(periodoJpaRepository.saveAndFlush(entidad));
     }
 
     private Periodo aDominio(PeriodoJpaEntity e) {
         return new Periodo(
-            e.getIdPeriodo(),
-            e.getCodigo(),
-            e.getNombre(),
-            e.getFechaInicio(),
-            e.getFechaFin(),
-            e.isActivo());
+                e.getIdPeriodo(),
+                e.getCodigo(),
+                e.getNombre(),
+                e.getFechaInicio(),
+                e.getFechaFin(),
+                e.isActivo());
     }
 }

@@ -58,10 +58,16 @@ class AutorizacionServiceTest {
         assertDoesNotThrow(() -> contenido.exigirPermisoCrearVersion(1L));
         assertDoesNotThrow(() -> contenido.exigirPermisoPublicar(1L));
         assertThrows(SinPermisoException.class, () -> contenido.exigirPermisoEditarContenido(1L));
+        assertThrows(SinPermisoException.class, () -> contenido.exigirPermisoEditarOpciones(1L));
 
         sesionCon(Set.of("CONTENIDO_EDITAR"));
         assertDoesNotThrow(() -> contenido.exigirPermisoEditarContenido(1L));
         assertThrows(SinPermisoException.class, () -> contenido.exigirPermisoCrearVersion(1L));
+        assertThrows(SinPermisoException.class, () -> contenido.exigirPermisoEditarOpciones(1L));
+
+        sesionCon(Set.of("OPCIONES_EDITAR"));
+        assertDoesNotThrow(() -> contenido.exigirPermisoEditarOpciones(1L));
+        assertThrows(SinPermisoException.class, () -> contenido.exigirPermisoEditarContenido(1L));
     }
 
     @Test

@@ -1,16 +1,20 @@
 package com.universidad.tests.application.usecase.bfa;
 
 import com.universidad.tests.domain.model.ConfiguracionSubprueba;
+import com.universidad.tests.domain.model.EntradaClaveBFA;
 import com.universidad.tests.domain.model.OpcionRespuesta;
 import com.universidad.tests.domain.model.Pregunta;
 import com.universidad.tests.domain.model.Subprueba;
 import com.universidad.tests.domain.model.Test;
+import com.universidad.tests.domain.model.VersionClaveBFA;
 import com.universidad.tests.domain.model.VersionFormulario;
 import com.universidad.tests.domain.repository.ConfiguracionSubpruebaRepository;
+import com.universidad.tests.domain.repository.EntradaClaveBFARepository;
 import com.universidad.tests.domain.repository.OpcionRespuestaRepository;
 import com.universidad.tests.domain.repository.PreguntaRepository;
 import com.universidad.tests.domain.repository.SubpruebaRepository;
 import com.universidad.tests.domain.repository.TestRepository;
+import com.universidad.tests.domain.repository.VersionClaveBFARepository;
 import com.universidad.tests.domain.repository.VersionFormularioRepository;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -30,6 +34,8 @@ public final class ReposEnMemoria {
     public final Configuraciones configuraciones = new Configuraciones();
     public final Preguntas preguntas = new Preguntas();
     public final Opciones opciones = new Opciones();
+    public final Claves claves = new Claves();
+    public final EntradasClave entradasClave = new EntradasClave();
 
     private long siguiente(Long id) {
         return id != null ? id : secuencia.getAndIncrement();
@@ -297,6 +303,96 @@ public final class ReposEnMemoria {
                             o.getRecursoRef());
             datos.put(nueva.getIdOpcion(), nueva);
             return nueva;
+        }
+    }
+
+    public final class Claves implements VersionClaveBFARepository {
+        public final Map<Long, VersionClaveBFA> datos = new LinkedHashMap<>();
+
+        @Override
+        public Optional<VersionClaveBFA> buscarPorId(Long idClave) {
+            return Optional.ofNullable(datos.get(idClave));
+        }
+
+        @Override
+        public List<VersionClaveBFA> listarPorVersionFormulario(Long idVersionFormulario) {
+            return datos.values().stream()
+                    .filter(c -> c.getIdVersionFormulario().equals(idVersionFormulario))
+                    .toList();
+        }
+
+        @Override
+        public Optional<VersionClaveBFA> buscarPorFormularioYVersion(
+                Long idVersionFormulario, String version) {
+            return listarPorVersionFormulario(idVersionFormulario).stream()
+                    .filter(c -> c.getVersion().equals(version))
+                    .findFirst();
+        }
+
+        @Override
+        public boolean existePorFormularioYVersion(Long idVersionFormulario, String version) {
+            return buscarPorFormularioYVersion(idVersionFormulario, version).isPresent();
+        }
+
+        @Override
+        public VersionClaveBFA guardar(VersionClaveBFA c) {
+            VersionClaveBFA nueva =
+                    new VersionClaveBFA(
+                            siguiente(c.getIdClave()),
+                            c.getIdVersionFormulario(),
+                            c.getVersion(),
+                            c.getReferenciaFuente());
+            datos.put(nueva.getIdClave(), nueva);
+            return nueva;
+        }
+    }
+
+    public final class EntradasClave implements EntradaClaveBFARepository {
+        public final Map<Long, EntradaClaveBFA> datos = new LinkedHashMap<>();
+
+        @Override
+        public Optional<EntradaClaveBFA> buscarPorId(Long idEntradaClave) {
+            return Optional.ofNullable(datos.get(idEntradaClave));
+        }
+
+        @Override
+        public List<EntradaClaveBFA> listarPorClave(Long idClave) {
+            return datos.values().stream().filter(e -> e.getIdClave().equals(idClave)).toList();
+        }
+
+        @Override
+        public Optional<EntradaClaveBFA> buscarPorClaveYPregunta(Long idClave, Long idPregunta) {
+            return listarPorClave(idClave).stream()
+                    .filter(e -> e.getIdPregunta().equals(idPregunta))
+                    .findFirst();
+        }
+
+        @Override
+        public boolean existePorClaveYPregunta(Long idClave, Long idPregunta) {
+            return buscarPorClaveYPregunta(idClave, idPregunta).isPresent();
+        }
+
+        @Override
+        public long contarPorClave(Long idClave) {
+            return listarPorClave(idClave).size();
+        }
+
+        @Override
+        public EntradaClaveBFA guardar(EntradaClaveBFA e) {
+            EntradaClaveBFA nueva =
+                    new EntradaClaveBFA(
+                            siguiente(e.getIdEntradaClave()),
+                            e.getIdClave(),
+                            e.getIdPregunta(),
+                            e.getIdOpcionCorrecta());
+            datos.put(nueva.getIdEntradaClave(), nueva);
+            return nueva;
+        }
+
+        @Override
+        public void reemplazarEntradasBorrador(Long idClave, List<EntradaClaveBFA> entradas) {
+            datos.values().removeIf(e -> e.getIdClave().equals(idClave));
+            entradas.forEach(this::guardar);
         }
     }
 }

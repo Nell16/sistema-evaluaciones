@@ -1,6 +1,8 @@
 package com.universidad.tests.config.bfa;
 
+import com.universidad.tests.application.usecase.bfa.CargarBaremoDemoBfaUseCase;
 import com.universidad.tests.application.usecase.bfa.CargarCatalogoDemoBfaUseCase;
+import com.universidad.tests.application.usecase.bfa.CargarClaveDemoBfaUseCase;
 import com.universidad.tests.domain.model.VersionFormulario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +22,16 @@ public class CargadorDemoBfaRunner implements ApplicationRunner {
     private static final Logger LOG = LoggerFactory.getLogger(CargadorDemoBfaRunner.class);
 
     private final CargarCatalogoDemoBfaUseCase cargador;
+    private final CargarClaveDemoBfaUseCase cargadorClave;
+    private final CargarBaremoDemoBfaUseCase cargadorBaremo;
 
-    public CargadorDemoBfaRunner(CargarCatalogoDemoBfaUseCase cargador) {
+    public CargadorDemoBfaRunner(
+            CargarCatalogoDemoBfaUseCase cargador,
+            CargarClaveDemoBfaUseCase cargadorClave,
+            CargarBaremoDemoBfaUseCase cargadorBaremo) {
         this.cargador = cargador;
+        this.cargadorClave = cargadorClave;
+        this.cargadorBaremo = cargadorBaremo;
     }
 
     @Override
@@ -33,6 +42,16 @@ public class CargadorDemoBfaRunner implements ApplicationRunner {
         } catch (RuntimeException e) {
             LOG.warn("No se pudo cargar el contenido demo del BFA; el arranque continua", e);
             return;
+        }
+        try {
+            cargadorClave.cargarClave(version.getIdVersionFormulario());
+        } catch (RuntimeException e) {
+            LOG.warn("No se pudo cargar la clave demo del BFA; el arranque continua", e);
+        }
+        try {
+            cargadorBaremo.cargarBaremo(version.getIdVersionFormulario());
+        } catch (RuntimeException e) {
+            LOG.warn("No se pudo cargar el baremo demo del BFA; el arranque continua", e);
         }
         try {
             VersionFormulario resultado = cargador.publicar(version.getIdVersionFormulario());

@@ -5,13 +5,14 @@ import { MensajeError } from '../evaluacion/componentes/MensajeError';
 import { usePeticion } from '../evaluacion/hooks/usePeticion';
 import { Campo } from './Campo';
 import { clienteAcceso } from './cliente';
+import { aErrorAcceso } from './errores';
 import '../evaluacion/evaluacion.css';
 import './acceso.css';
 
 /** GEN-06-FE — Recuperar la contraseña: pedir el token (E16) y cambiarla con él (E17). */
 export function RecuperarPagina() {
-  const pedir = usePeticion(clienteAcceso.pedirRecuperacion);
-  const confirmar = usePeticion(clienteAcceso.confirmarRecuperacion);
+  const pedir = usePeticion(clienteAcceso.pedirRecuperacion, aErrorAcceso);
+  const confirmar = usePeticion(clienteAcceso.confirmarRecuperacion, aErrorAcceso);
   const [correo, setCorreo] = useState('');
   const [token, setToken] = useState('');
   const [nueva, setNueva] = useState('');

@@ -1,0 +1,82 @@
+TEST-32 — Rechazo sin sesión en la API pública de main
+Fecha: 2026-11-26, hora de Nicaragua.
+Newman 6.2.3 con tests/api/publico.postman_environment.json.
+Se ejecutó una copia temporal de BFA.postman_collection.json filtrada a los ocho casos «sin token → 401» de Evaluación. Conserva las aserciones de la carpeta y cada solicitud usa noauth.
+Resultado: 8 solicitudes, 16 aserciones y 0 fallos. Se validó HTTP 401 y el formato ErrorResponse con codigo NO_AUTENTICADO en E3–E8, E22 y E24.
+El Swagger público (/v3/api-docs) respondió 200 y no listó GET /api/v1/evaluaciones/{evaluacionId}/subpruebas/{codigo}/instrucciones. El 401 de E24 verifica el rechazo del filtro. La implementación sigue en https://github.com/Nell16/sistema-evaluaciones/pull/161.
+Incidencia de despliegue en Bugs: https://app.clickup.com/t/1k5fzqb0vu7.
+Pendiente: corrida pública con credenciales demo privadas y asignaciones cuenta–sujeto ficticias confirmadas. E3-07 requiere otro test en catálogo y E3-11 requiere version_borrador_id de un borrador ficticio.
+
+--- Salida de Newman ---
+
+newman
+
+BFA — API publicada (Sprint 03)
+
+❏ Evaluación / E3 Crear evaluación
+↳ E3-01 sin token → 401 NO_AUTENTICADO
+  POST http://85.239.244.233:8091/api/v1/evaluaciones [401 Unauthorized, 357B, 232ms]
+  ✓  HTTP 401
+  ✓  Formato común de error con codigo NO_AUTENTICADO
+
+❏ Evaluación / E22 Listar evaluaciones
+↳ E22-02 sin token → 401 NO_AUTENTICADO
+  GET http://85.239.244.233:8091/api/v1/evaluaciones [401 Unauthorized, 357B, 106ms]
+  ✓  HTTP 401
+  ✓  Formato común de error con codigo NO_AUTENTICADO
+
+❏ Evaluación / E4 Consultar evaluación
+↳ E4-03 sin token → 401 NO_AUTENTICADO
+  GET http://85.239.244.233:8091/api/v1/evaluaciones/999999994 [401 Unauthorized, 367B, 107ms]
+  ✓  HTTP 401
+  ✓  Formato común de error con codigo NO_AUTENTICADO
+
+❏ Evaluación / E24 Instrucciones
+↳ E24-04 sin token → 401 NO_AUTENTICADO
+  GET http://85.239.244.233:8091/api/v1/evaluaciones/999999994/subpruebas/VOC1/instrucciones [401 Unauthorized, 397B, 105ms]
+  ✓  HTTP 401
+  ✓  Formato común de error con codigo NO_AUTENTICADO
+
+❏ Evaluación / E5 Iniciar subprueba
+↳ E5-05 sin token → 401 NO_AUTENTICADO
+  POST http://85.239.244.233:8091/api/v1/evaluaciones/999999994/subpruebas/VOC1/iniciar [401 Unauthorized, 391B, 105ms]
+  ✓  HTTP 401
+  ✓  Formato común de error con codigo NO_AUTENTICADO
+
+❏ Evaluación / E6 Preguntas
+↳ E6-04 sin token → 401 NO_AUTENTICADO
+  GET http://85.239.244.233:8091/api/v1/evaluaciones/999999994/subpruebas/VOC1/preguntas [401 Unauthorized, 393B, 104ms]
+  ✓  HTTP 401
+  ✓  Formato común de error con codigo NO_AUTENTICADO
+
+❏ Evaluación / E7 Respuestas
+↳ E7-08 sin token → 401 NO_AUTENTICADO
+  PUT http://85.239.244.233:8091/api/v1/evaluaciones/999999994/subpruebas/VOC1/respuestas [401 Unauthorized, 394B, 104ms]
+  ✓  HTTP 401
+  ✓  Formato común de error con codigo NO_AUTENTICADO
+
+❏ Evaluación / E8 Finalizar
+↳ E8-03 sin token → 401 NO_AUTENTICADO
+  POST http://85.239.244.233:8091/api/v1/evaluaciones/999999994/finalizar [401 Unauthorized, 377B, 106ms]
+  ✓  HTTP 401
+  ✓  Formato común de error con codigo NO_AUTENTICADO
+
+┌─────────────────────────┬────────────────────┬────────────────────┐
+│                         │           executed │             failed │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│              iterations │                  1 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│                requests │                  8 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│            test-scripts │                  8 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│      prerequest-scripts │                  8 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│              assertions │                 16 │                  0 │
+├─────────────────────────┴────────────────────┴────────────────────┤
+│ total run duration: 1113ms                                        │
+├───────────────────────────────────────────────────────────────────┤
+│ total data received: 1.39kB (approx)                              │
+├───────────────────────────────────────────────────────────────────┤
+│ average response time: 121ms [min: 104ms, max: 232ms, s.d.: 41ms] │
+└───────────────────────────────────────────────────────────────────┘

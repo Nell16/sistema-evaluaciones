@@ -431,6 +431,72 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "PREP-06 E14 sesión de Decano demo → 200",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/auth/sesion",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "sesion"
+                  ]
+                },
+                "description": "Cuenta demo sin permisos para el flujo de evaluación. Usa el valor privado de contrasena del entorno.",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"correo\": \"decano@ejemplo.test\",\n  \"contrasena\": \"{{contrasena}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.collectionVariables.unset('token_decano_evaluacion');"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const j = pm.response.json();",
+                      "    pm.test('Sesión con rol DECANO y token', () => {",
+                      "        pm.expect(j.rolActivo).to.eql('DECANO');",
+                      "        pm.expect(j.token).to.be.a('string').and.not.be.empty;",
+                      "    });",
+                      "    if (j.rolActivo === 'DECANO' && typeof j.token === 'string' && j.token) {",
+                      "        pm.collectionVariables.set('token_decano_evaluacion', j.token);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
             }
           ]
         },
@@ -798,6 +864,39 @@
                   }
                 }
               }
+            },
+            {
+              "name": "E3-11 versión en borrador → 409 VERSION_NO_PUBLICADA",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/evaluaciones",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "evaluaciones"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"versionFormularioId\": {{version_borrador_id}},\n  \"sujetoId\": {{sujeto_id}},\n  \"periodoId\": {{periodo_id}},\n  \"subpruebas\": [\"VOC1\"]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Requiere version_borrador_id de una versión ficticia en BORRADOR. Sin ese dato queda BLOQUEADO."
+              }
             }
           ]
         },
@@ -874,6 +973,47 @@
                 },
                 "auth": {
                   "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "E22-03 con Decano → 403 SIN_PERMISO",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('token_decano_evaluacion')) {",
+                      "    pm.variables.set('_bloqueado', 'sesión de Decano (PREP-06)');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/evaluaciones",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "evaluaciones"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token_decano_evaluacion}}",
+                      "type": "string"
+                    }
+                  ]
                 }
               }
             }
@@ -965,6 +1105,48 @@
                 },
                 "auth": {
                   "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "E4-04 con Decano → 403 SIN_PERMISO",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('token_decano_evaluacion')) {",
+                      "    pm.variables.set('_bloqueado', 'sesión de Decano (PREP-06)');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "evaluaciones",
+                    "{{evaluacion_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token_decano_evaluacion}}",
+                      "type": "string"
+                    }
+                  ]
                 }
               }
             }
@@ -1128,6 +1310,51 @@
                 },
                 "auth": {
                   "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "E24-05 con Decano → 403 SIN_PERMISO",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('token_decano_evaluacion')) {",
+                      "    pm.variables.set('_bloqueado', 'sesión de Decano (PREP-06)');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}/subpruebas/VOC1/instrucciones",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "evaluaciones",
+                    "{{evaluacion_id}}",
+                    "subpruebas",
+                    "VOC1",
+                    "instrucciones"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token_decano_evaluacion}}",
+                      "type": "string"
+                    }
+                  ]
                 }
               }
             }
@@ -1343,6 +1570,51 @@
                   "type": "noauth"
                 }
               }
+            },
+            {
+              "name": "E5-06 con Decano → 403 SIN_PERMISO",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('token_decano_evaluacion')) {",
+                      "    pm.variables.set('_bloqueado', 'sesión de Decano (PREP-06)');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}/subpruebas/VOC1/iniciar",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "evaluaciones",
+                    "{{evaluacion_id}}",
+                    "subpruebas",
+                    "VOC1",
+                    "iniciar"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token_decano_evaluacion}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
             }
           ]
         },
@@ -1490,6 +1762,51 @@
                 },
                 "auth": {
                   "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "E6-05 con Decano → 403 SIN_PERMISO",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('token_decano_evaluacion')) {",
+                      "    pm.variables.set('_bloqueado', 'sesión de Decano (PREP-06)');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}/subpruebas/VOC1/preguntas",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "evaluaciones",
+                    "{{evaluacion_id}}",
+                    "subpruebas",
+                    "VOC1",
+                    "preguntas"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token_decano_evaluacion}}",
+                      "type": "string"
+                    }
+                  ]
                 }
               }
             }
@@ -1916,6 +2233,111 @@
                   }
                 }
               }
+            },
+            {
+              "name": "E7-09 con Decano → 403 SIN_PERMISO",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('token_decano_evaluacion')) {",
+                      "    pm.variables.set('_bloqueado', 'sesión de Decano (PREP-06)');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}/subpruebas/VOC1/respuestas",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "evaluaciones",
+                    "{{evaluacion_id}}",
+                    "subpruebas",
+                    "VOC1",
+                    "respuestas"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token_decano_evaluacion}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"respuestas\": []\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "E7-10 subprueba inexistente → 404 SUBPRUEBA_NO_ENCONTRADA",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}/subpruebas/NOEXISTE/respuestas",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "evaluaciones",
+                    "{{evaluacion_id}}",
+                    "subpruebas",
+                    "NOEXISTE",
+                    "respuestas"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token_evaluado}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"respuestas\": [ { \"preguntaId\": 999999995, \"opcion\": \"A\" } ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
             }
           ]
         },
@@ -2003,6 +2425,49 @@
                 },
                 "auth": {
                   "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "E8-04 con Decano → 403 SIN_PERMISO",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('token_decano_evaluacion')) {",
+                      "    pm.variables.set('_bloqueado', 'sesión de Decano (PREP-06)');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}/finalizar",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "evaluaciones",
+                    "{{evaluacion_id}}",
+                    "finalizar"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token_decano_evaluacion}}",
+                      "type": "string"
+                    }
+                  ]
                 }
               }
             }

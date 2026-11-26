@@ -57,7 +57,7 @@ export function RecuperarPagina() {
         {pedir.estado.fase === 'cargando' && <EstadoCarga texto="Enviando…" />}
         {pedido && (
           <p className="ev-confirmado" role="status">
-            Si el correo tiene cuenta, recibirá un enlace con el token.
+            Si el correo tiene una cuenta activa, recibirá un token válido por 15 minutos.
           </p>
         )}
         <div className="ev-acciones">
@@ -83,6 +83,7 @@ export function RecuperarPagina() {
           etiqueta="Contraseña nueva"
           type="password"
           autoComplete="new-password"
+          minLength={12}
           value={nueva}
           onChange={(e) => setNueva(e.target.value)}
           required
@@ -93,7 +94,12 @@ export function RecuperarPagina() {
           <button
             type="submit"
             className="ev-boton"
-            disabled={confirmar.estado.fase === 'cargando' || !token.trim() || !nueva}
+            disabled={
+              confirmar.estado.fase === 'cargando' ||
+              !token.trim() ||
+              Array.from(nueva).length < 12 ||
+              !nueva.trim()
+            }
           >
             Cambiar contraseña
           </button>

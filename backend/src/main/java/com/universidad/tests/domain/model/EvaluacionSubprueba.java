@@ -125,4 +125,31 @@ public record EvaluacionSubprueba(
     public Instant getFinLimite() {
         return fechaFinLimite;
     }
+
+    public boolean esFluidezVerbal() {
+        return "FV".equalsIgnoreCase(codigo);
+    }
+
+    public EvaluacionSubprueba iniciar(Instant ahora) {
+        return new EvaluacionSubprueba(
+                idEvaluacionSubprueba,
+                idEvaluacion,
+                idConfiguracionSubprueba,
+                codigo,
+                nombre,
+                orden,
+                duracionSegundos,
+                EstadoSubprueba.ACTIVA,
+                instrucciones,
+                permitirRetroceso,
+                ahora,
+                ahora.plusSeconds(duracionSegundos),
+                null,
+                letraInicial,
+                maximoEntradas);
+    }
+
+    public boolean vencio(Instant ahora) {
+        return fechaFinLimite != null && ahora.isAfter(fechaFinLimite);
+    }
 }

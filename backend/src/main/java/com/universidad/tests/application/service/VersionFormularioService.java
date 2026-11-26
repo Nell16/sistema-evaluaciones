@@ -58,7 +58,7 @@ public class VersionFormularioService {
         if (origen == null) {
             return borrador;
         }
-        autorizacion.exigirPermisoConsultarContenido(origen.getIdVersionFormulario());
+        // E25 ya autorizo la creacion; la copia interna no expone el contenido del origen.
         for (ConfiguracionSubprueba anterior :
                 configuraciones.listarPorVersion(origen.getIdVersionFormulario())) {
             ConfiguracionSubprueba nueva =

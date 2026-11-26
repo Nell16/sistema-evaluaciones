@@ -2,6 +2,7 @@ package com.universidad.tests.application.service;
 
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
 import com.universidad.tests.domain.model.Evaluacion;
+import com.universidad.tests.domain.port.AutorizacionEvaluacionPort;
 import com.universidad.tests.domain.repository.EvaluacionRepository;
 import com.universidad.tests.dto.response.EvaluacionResponse;
 import java.time.Clock;
@@ -15,27 +16,38 @@ public class ConsultaEvaluacionService {
 
     private final EvaluacionRepository evaluacionRepository;
     private final Clock reloj;
+    private final AutorizacionEvaluacionPort autorizacion;
     private final CierreSubpruebasService cierre;
 
     @Autowired
     public ConsultaEvaluacionService(
-            EvaluacionRepository evaluacionRepository, CierreSubpruebasService cierre) {
-        this(evaluacionRepository, cierre, Clock.systemUTC());
+            EvaluacionRepository evaluacionRepository,
+            AutorizacionEvaluacionPort autorizacion,
+            CierreSubpruebasService cierre) {
+        this(evaluacionRepository, autorizacion, cierre, Clock.systemUTC());
     }
 
     // Reloj inyectable para probar el tiempo restante
     public ConsultaEvaluacionService(
             EvaluacionRepository evaluacionRepository,
+            AutorizacionEvaluacionPort autorizacion,
             CierreSubpruebasService cierre,
             Clock reloj) {
-        this.evaluacionRepository = evaluacionRepository;
+        this.autorizacion = autorizacion;
         this.cierre = cierre;
+        this.evaluacionRepository = evaluacionRepository;
         this.reloj = reloj;
     }
 
     public EvaluacionResponse consultar(Long idEvaluacion) {
-        cierre.cerrarVencidas(idEvaluacion);
         Evaluacion evaluacion =
+                evaluacionRepository
+                        .buscarPorId(idEvaluacion)
+                        .orElseThrow(() -> new EvaluacionNoEncontradaException(idEvaluacion));
+        autorizacion.exigirPermisoConsultarEvaluacion(
+                evaluacion.idEvaluacion(), evaluacion.idSujeto());
+        cierre.cerrarVencidas(idEvaluacion);
+        evaluacion =
                 evaluacionRepository
                         .buscarPorId(idEvaluacion)
                         .orElseThrow(() -> new EvaluacionNoEncontradaException(idEvaluacion));

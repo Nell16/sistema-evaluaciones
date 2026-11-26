@@ -13,9 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public class CierreSubpruebasPersistenceAdapter implements CierreSubpruebasRepository {
     private final JdbcTemplate jdbc;
+    private final jakarta.persistence.EntityManager em;
 
-    public CierreSubpruebasPersistenceAdapter(JdbcTemplate jdbc) {
+    public CierreSubpruebasPersistenceAdapter(
+            JdbcTemplate jdbc, jakarta.persistence.EntityManager em) {
         this.jdbc = jdbc;
+        this.em = em;
     }
 
     @Override
@@ -33,6 +36,7 @@ public class CierreSubpruebasPersistenceAdapter implements CierreSubpruebasRepos
     @Override
     @Transactional
     public void cerrarVencidas(Long idEvaluacion, Supplier<Instant> reloj) {
+        em.flush();
         var evaluaciones =
                 jdbc.queryForList(
                         "SELECT id_evaluacion FROM evaluacion WHERE id_evaluacion=? FOR UPDATE",
@@ -62,5 +66,6 @@ public class CierreSubpruebasPersistenceAdapter implements CierreSubpruebasRepos
                 """,
                 idEvaluacion,
                 Timestamp.from(ahora));
+        em.clear();
     }
 }

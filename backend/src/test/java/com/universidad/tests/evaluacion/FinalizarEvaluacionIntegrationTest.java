@@ -2,13 +2,22 @@ package com.universidad.tests.evaluacion;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
-import com.universidad.tests.application.service.FinalizarEvaluacionService;
+import com.universidad.tests.application.service.AutorizacionService;
+import com.universidad.tests.application.service.FinalizacionEvaluacionService;
+import com.universidad.tests.application.service.IdentidadSesion;
 import com.universidad.tests.domain.exception.EvaluacionNoFinalizadaException;
+import com.universidad.tests.domain.exception.SinPermisoException;
 import com.universidad.tests.domain.model.EstadoEvaluacion;
 import com.universidad.tests.domain.model.EstadoSubprueba;
 import com.universidad.tests.domain.model.Evaluacion;
 import com.universidad.tests.domain.model.EvaluacionSubprueba;
+import com.universidad.tests.domain.model.Resultado;
+import com.universidad.tests.domain.model.ResultadoFactor;
+import com.universidad.tests.domain.port.AlcanceSujetoPort;
 import com.universidad.tests.domain.repository.EvaluacionRepository;
 import com.universidad.tests.domain.repository.ResultadoRepository;
 import com.universidad.tests.dto.response.EvaluacionResponse;
@@ -23,21 +32,27 @@ import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
 class FinalizarEvaluacionIntegrationTest {
 
-    @Autowired private FinalizarEvaluacionService finalizarService;
+    @Autowired private FinalizacionEvaluacionService finalizacionService;
     @Autowired private EvaluacionRepository evaluacionRepository;
     @Autowired private ResultadoRepository resultadoRepository;
     @Autowired private EntityManager entityManager;
+
+    @MockitoBean private AutorizacionService auth;
+    @MockitoBean private AlcanceSujetoPort alcance;
 
     private Long idTest;
     private Long idVersion;
@@ -48,15 +63,28 @@ class FinalizarEvaluacionIntegrationTest {
 
     @BeforeEach
     void prepararDatos() {
+        when(auth.exigirPermiso(anyString()))
+                .thenReturn(
+                        new IdentidadSesion(
+                                1L,
+                                1L,
+                                "SUJETO",
+                                Set.of("EVALUACION_FINALIZAR", "RECUPERAR_INTENTO")));
+        when(auth.exigirSesion())
+                .thenReturn(
+                        new IdentidadSesion(
+                                1L,
+                                1L,
+                                "SUJETO",
+                                Set.of("EVALUACION_FINALIZAR", "RECUPERAR_INTENTO")));
+        when(alcance.estaAsignado(any(), any())).thenReturn(true);
+
         TestJpaEntity test = new TestJpaEntity("BFA", "Batería Factorial de Aptitudes", null, true);
         entityManager.persist(test);
 
+        // Crear versión en estado inicial BORRADOR
         VersionFormularioJpaEntity version =
                 new VersionFormularioJpaEntity(test, "1.0", "DEMO-1", "FUENTE-001");
-        version.aplicarEstado(
-                com.universidad.tests.domain.model.EstadoVersionFormulario.PUBLICADA,
-                Instant.now(),
-                "Validacion aprobada");
         entityManager.persist(version);
 
         SubpruebaJpaEntity spVoc1 = new SubpruebaJpaEntity(test, "VOC1", "Sinónimos", "V");
@@ -72,6 +100,13 @@ class FinalizarEvaluacionIntegrationTest {
                         version, spVoc2, 2, 300, null, "Instrucciones VOC2", null, null);
         entityManager.persist(c1);
         entityManager.persist(c2);
+
+        // Transicionar formalmente a PUBLICADA cumpliendo el trigger
+        // comun_bloquear_estado_inicial_invalido
+        version.aplicarEstado(
+                com.universidad.tests.domain.model.EstadoVersionFormulario.PUBLICADA,
+                Instant.now(),
+                "Validacion aprobada");
 
         SujetoJpaEntity sujeto =
                 new SujetoJpaEntity("COD_" + UUID.randomUUID(), "Nelson", "Lacayo", null);
@@ -144,13 +179,13 @@ class FinalizarEvaluacionIntegrationTest {
         Long evaluacionId = guardada.idEvaluacion();
 
         // Antes de finalizar, E9 debe fallar con 409 EVALUACION_NO_FINALIZADA
-        assertThatThrownBy(() -> finalizarService.consultarResultados(evaluacionId))
+        assertThatThrownBy(() -> finalizacionService.consultarResultados(evaluacionId))
                 .isInstanceOf(EvaluacionNoFinalizadaException.class);
 
         // Finalizar con puntuaciones conocidas (E8)
         Map<String, Integer> puntuacionesDirectas = Map.of("VOC1", 12, "VOC2", 18);
         EvaluacionResponse responseE8 =
-                finalizarService.finalizar(evaluacionId, puntuacionesDirectas);
+                finalizacionService.finalizar(evaluacionId, puntuacionesDirectas);
 
         assertThat(responseE8.estado()).isEqualTo("FINALIZADA");
         assertThat(responseE8.estadoResultado()).isEqualTo("PENDIENTE_VALIDACION");
@@ -158,34 +193,64 @@ class FinalizarEvaluacionIntegrationTest {
         assertThat(responseE8.fechaFin()).isNotNull();
 
         // Consultar resultados (E9)
-        ResultadoResponse responseE9 = finalizarService.consultarResultados(evaluacionId);
+        ResultadoResponse responseE9 = finalizacionService.consultarResultados(evaluacionId);
         assertThat(responseE9.evaluacionId()).isEqualTo(evaluacionId);
         assertThat(responseE9.estadoResultado()).isEqualTo("PENDIENTE_VALIDACION");
+        assertThat(responseE9.calificacionId()).isNull();
+        assertThat(responseE9.revision()).isNull();
+        // Antes de publicación de la revisión vigente, factores está vacío según OpenAPI
+        assertThat(responseE9.factores()).isEmpty();
 
-        Map<String, ResultadoResponse.FactorResponse> factores =
-                responseE9.factores().stream()
-                        .collect(
-                                java.util.stream.Collectors.toMap(
-                                        ResultadoResponse.FactorResponse::codigo, f -> f));
+        // Los factores psicométricos calculados quedan persistidos en base de datos
+        Resultado resultadoBd = resultadoRepository.buscarPorEvaluacion(evaluacionId).orElseThrow();
+        assertThat(resultadoBd.factores()).isNotEmpty();
+        Map<String, ResultadoFactor> factoresBd =
+                resultadoBd.factores().stream()
+                        .collect(Collectors.toMap(ResultadoFactor::codigo, f -> f));
 
         // Factores directos calculados
-        assertThat(factores.get("VOC1").puntuacionDirecta()).isEqualTo(12);
-        assertThat(factores.get("VOC1").estadoCalculo()).isEqualTo("CALCULADO");
-        assertThat(factores.get("VOC2").puntuacionDirecta()).isEqualTo(18);
-        assertThat(factores.get("VOC2").estadoCalculo()).isEqualTo("CALCULADO");
+        assertThat(factoresBd.get("VOC1").puntuacionDirecta()).isEqualTo(12);
+        assertThat(factoresBd.get("VOC1").estadoCalculo()).isEqualTo("CALCULADO");
+        assertThat(factoresBd.get("VOC2").puntuacionDirecta()).isEqualTo(18);
+        assertThat(factoresBd.get("VOC2").estadoCalculo()).isEqualTo("CALCULADO");
 
         // Compuesto VOCT = VOC1 + VOC2 = 30
-        assertThat(factores.get("VOCT").puntuacionDirecta()).isEqualTo(30);
-        assertThat(factores.get("VOCT").estadoCalculo()).isEqualTo("CALCULADO");
+        assertThat(factoresBd.get("VOCT").puntuacionDirecta()).isEqualTo(30);
+        assertThat(factoresBd.get("VOCT").estadoCalculo()).isEqualTo("CALCULADO");
 
         // Factores sin calificador quedan NO_CALCULABLE
-        assertThat(factores.get("CV").puntuacionDirecta()).isNull();
-        assertThat(factores.get("CV").estadoCalculo()).isEqualTo("NO_CALCULABLE");
-        assertThat(factores.get("CV").motivo()).isEqualTo("FALTA_PUNTUACION_CV");
+        assertThat(factoresBd.get("CV").puntuacionDirecta()).isNull();
+        assertThat(factoresBd.get("CV").estadoCalculo()).isEqualTo("NO_CALCULABLE");
+        assertThat(factoresBd.get("CV").motivo()).isEqualTo("FALTA_PUNTUACION_CV");
 
         // Idempotencia: repetir E8 devuelve el resultado existente sin recalcular
-        EvaluacionResponse repeticionE8 = finalizarService.finalizar(evaluacionId);
+        EvaluacionResponse repeticionE8 = finalizacionService.finalizar(evaluacionId);
         assertThat(repeticionE8.resultadoId()).isEqualTo(responseE8.resultadoId());
         assertThat(repeticionE8.fechaFin()).isEqualTo(responseE8.fechaFin());
+    }
+
+    @Test
+    void e8RechazaFinalizacionSinAsignacionYNoModificaEstado() {
+        when(alcance.estaAsignado(any(), any())).thenReturn(false);
+
+        Evaluacion evaluacion =
+                new Evaluacion(
+                        null,
+                        idSujeto,
+                        idPeriodo,
+                        idTest,
+                        idVersion,
+                        EstadoEvaluacion.EN_CURSO,
+                        Instant.now(),
+                        null,
+                        List.of());
+        Evaluacion guardada = evaluacionRepository.guardar(evaluacion);
+
+        assertThatThrownBy(() -> finalizacionService.finalizar(guardada.idEvaluacion()))
+                .isInstanceOf(SinPermisoException.class);
+
+        Evaluacion persistida =
+                evaluacionRepository.buscarPorId(guardada.idEvaluacion()).orElseThrow();
+        assertThat(persistida.estado()).isEqualTo(EstadoEvaluacion.EN_CURSO);
     }
 }

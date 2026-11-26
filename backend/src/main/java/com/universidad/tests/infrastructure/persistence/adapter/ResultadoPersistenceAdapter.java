@@ -28,15 +28,29 @@ public class ResultadoPersistenceAdapter implements ResultadoRepository {
     @Transactional
     public Resultado guardar(Resultado resultado) {
         ResultadoJpaEntity entidad =
-                resultadoJpa.saveAndFlush(
-                        new ResultadoJpaEntity(
-                                resultado.idEvaluacion(),
-                                resultado.estadoResultado(),
-                                resultado.versionFormularioId(),
-                                resultado.fechaCalculo(),
-                                resultado.referenciaRevisionVigente(),
-                                resultado.detalle()));
+                resultadoJpa
+                        .findByIdEvaluacion(resultado.idEvaluacion())
+                        .map(
+                                existente ->
+                                        resultadoJpa.saveAndFlush(
+                                                new ResultadoJpaEntity(
+                                                        existente.getIdEvaluacion(),
+                                                        resultado.estadoResultado(),
+                                                        resultado.versionFormularioId(),
+                                                        existente.getCreadoEn(),
+                                                        existente.getReferenciaRevisionVigente())))
+                        .orElseGet(
+                                () ->
+                                        resultadoJpa.saveAndFlush(
+                                                new ResultadoJpaEntity(
+                                                        resultado.idEvaluacion(),
+                                                        resultado.estadoResultado(),
+                                                        resultado.versionFormularioId(),
+                                                        resultado.creadoEn(),
+                                                        resultado.referenciaRevisionVigente())));
 
+        // Guardar o actualizar factores
+        factorJpa.deleteAll(factorJpa.findByIdResultadoOrderByCodigoAsc(entidad.getIdResultado()));
         List<ResultadoFactorJpaEntity> factoresGuardados =
                 factorJpa.saveAllAndFlush(
                         resultado.factores().stream()
@@ -74,11 +88,10 @@ public class ResultadoPersistenceAdapter implements ResultadoRepository {
         return new Resultado(
                 entidad.getIdResultado(),
                 entidad.getIdEvaluacion(),
-                entidad.getEstadoResultado(),
+                entidad.getEstado(),
                 entidad.getVersionFormularioId(),
-                entidad.getFechaCalculo(),
+                entidad.getCreadoEn(),
                 entidad.getReferenciaRevisionVigente(),
-                entidad.getDetalle(),
                 factores.stream()
                         .map(
                                 f ->

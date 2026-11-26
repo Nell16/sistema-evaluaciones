@@ -1,5 +1,7 @@
 package com.universidad.tests.application.usecase;
 
+import com.universidad.tests.application.service.AutorizacionService;
+import com.universidad.tests.application.service.RegistroAuditoria;
 import com.universidad.tests.application.usecase.vista.EvaluacionVista;
 import com.universidad.tests.domain.exception.ErroresEvaluacion;
 import com.universidad.tests.domain.model.ConfiguracionSubprueba;
@@ -38,6 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class IniciarEvaluacionUseCase {
 
     private final AutorizacionEvaluacionPort autorizacion;
+    private final AutorizacionService sesiones;
+    private final RegistroAuditoria auditoria;
     private final TestRepository testRepository;
     private final VersionFormularioRepository versionRepository;
     private final ConfiguracionSubpruebaRepository configuracionRepository;
@@ -50,6 +54,8 @@ public class IniciarEvaluacionUseCase {
 
     public IniciarEvaluacionUseCase(
             AutorizacionEvaluacionPort autorizacion,
+            AutorizacionService sesiones,
+            RegistroAuditoria auditoria,
             TestRepository testRepository,
             VersionFormularioRepository versionRepository,
             ConfiguracionSubpruebaRepository configuracionRepository,
@@ -60,6 +66,8 @@ public class IniciarEvaluacionUseCase {
             List<ReglaInicioTest> reglas,
             Clock reloj) {
         this.autorizacion = autorizacion;
+        this.sesiones = sesiones;
+        this.auditoria = auditoria;
         this.testRepository = testRepository;
         this.versionRepository = versionRepository;
         this.configuracionRepository = configuracionRepository;
@@ -73,6 +81,7 @@ public class IniciarEvaluacionUseCase {
 
     @Transactional
     public EvaluacionVista iniciar(IniciarEvaluacionComando comando) {
+        long idCuenta = sesiones.exigirSesion().idCuenta();
         autorizacion.exigirPermisoIniciarEvaluacion(comando.sujetoId());
 
         if (comando.testId() != null) {
@@ -144,6 +153,8 @@ public class IniciarEvaluacionUseCase {
                         reloj.instant());
         Evaluacion guardada = evaluacionRepository.guardarNueva(nueva);
         reglasDelTest.forEach(r -> r.registrar(contexto, guardada));
+        auditoria.registrar(
+                idCuenta, "INICIAR_EVALUACION", "EVALUACION", guardada.getIdEvaluacion());
 
         return EvaluacionVista.desde(guardada, reloj.instant());
     }

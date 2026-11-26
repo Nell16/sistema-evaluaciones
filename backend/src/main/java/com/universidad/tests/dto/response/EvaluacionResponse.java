@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Instant;
 import java.util.List;
 
-// E4 / E8 — Consultar estado, progreso y finalización (schema EvaluacionResponse del contrato)
+// E4 — Consultar estado y progreso (schema EvaluacionResponse del contrato)
+// resultadoId y estadoResultado se incluyen solo en E8.
 public record EvaluacionResponse(
         Long id,
         Long testId,
@@ -18,7 +19,6 @@ public record EvaluacionResponse(
         List<SubpruebaEstado> subpruebas,
         @JsonInclude(JsonInclude.Include.NON_NULL) Long resultadoId,
         @JsonInclude(JsonInclude.Include.NON_NULL) String estadoResultado) {
-
     public EvaluacionResponse(
             Long id,
             Long testId,

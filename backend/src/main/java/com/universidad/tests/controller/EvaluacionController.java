@@ -1,7 +1,7 @@
 package com.universidad.tests.controller;
 
 import com.universidad.tests.application.service.ConsultaEvaluacionService;
-import com.universidad.tests.application.service.FinalizarEvaluacionService;
+import com.universidad.tests.application.service.FinalizacionEvaluacionService;
 import com.universidad.tests.application.service.MotorSubpruebasService;
 import com.universidad.tests.dto.request.RegistrarRespuestasRequest;
 import com.universidad.tests.dto.response.AvanceSubpruebaResponse;
@@ -22,36 +22,34 @@ import org.springframework.web.bind.annotation.RestController;
 public class EvaluacionController {
 
     private final ConsultaEvaluacionService consultaService;
-
     private final MotorSubpruebasService motor;
-
-    private final FinalizarEvaluacionService finalizarService;
+    private final FinalizacionEvaluacionService finalizacion;
 
     public EvaluacionController(
             ConsultaEvaluacionService consultaService,
             MotorSubpruebasService motor,
-            FinalizarEvaluacionService finalizarService) {
+            FinalizacionEvaluacionService finalizacion) {
         this.motor = motor;
+        this.finalizacion = finalizacion;
         this.consultaService = consultaService;
-        this.finalizarService = finalizarService;
+    }
+
+    // E8
+    @PostMapping("/{evaluacionId}/finalizar")
+    public EvaluacionResponse finalizar(@PathVariable Long evaluacionId) {
+        return finalizacion.finalizar(evaluacionId);
+    }
+
+    // E9
+    @GetMapping("/{evaluacionId}/resultados")
+    public ResultadoResponse consultarResultados(@PathVariable Long evaluacionId) {
+        return finalizacion.consultarResultados(evaluacionId);
     }
 
     // E4
     @GetMapping("/{evaluacionId}")
     public EvaluacionResponse consultarEvaluacion(@PathVariable Long evaluacionId) {
         return consultaService.consultar(evaluacionId);
-    }
-
-    // E8
-    @PostMapping("/{evaluacionId}/finalizar")
-    public EvaluacionResponse finalizarEvaluacion(@PathVariable Long evaluacionId) {
-        return finalizarService.finalizar(evaluacionId);
-    }
-
-    // E9
-    @GetMapping("/{evaluacionId}/resultados")
-    public ResultadoResponse consultarResultados(@PathVariable Long evaluacionId) {
-        return finalizarService.consultarResultados(evaluacionId);
     }
 
     @PostMapping("/{evaluacionId}/subpruebas/{codigo}/iniciar")

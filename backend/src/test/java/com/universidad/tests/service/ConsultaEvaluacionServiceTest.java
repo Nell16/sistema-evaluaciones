@@ -29,6 +29,7 @@ class ConsultaEvaluacionServiceTest {
     private final ConsultaEvaluacionService servicio =
             new ConsultaEvaluacionService(
                     repositorio,
+                    mock(com.universidad.tests.domain.port.AutorizacionEvaluacionPort.class),
                     mock(CierreSubpruebasService.class),
                     Clock.fixed(AHORA, ZoneOffset.UTC));
 
@@ -145,5 +146,25 @@ class ConsultaEvaluacionServiceTest {
 
         assertThatThrownBy(() -> servicio.consultar(99L))
                 .isInstanceOf(EvaluacionNoEncontradaException.class);
+    }
+
+    @Test
+    void unaConsultaDenegadaNoCierraSubpruebasVencidas() {
+        var auth = mock(com.universidad.tests.domain.port.AutorizacionEvaluacionPort.class);
+        var cierre = mock(CierreSubpruebasService.class);
+        var e =
+                new Evaluacion(
+                        15L, 25L, 3L, 1L, 10L, EstadoEvaluacion.EN_CURSO, AHORA, null, List.of());
+        when(repositorio.buscarPorId(15L)).thenReturn(Optional.of(e));
+        org.mockito.Mockito.doThrow(
+                        new com.universidad.tests.domain.exception.SinPermisoException())
+                .when(auth)
+                .exigirPermisoConsultarEvaluacion(15L, 25L);
+        var consulta =
+                new ConsultaEvaluacionService(
+                        repositorio, auth, cierre, Clock.fixed(AHORA, ZoneOffset.UTC));
+        assertThatThrownBy(() -> consulta.consultar(15L))
+                .isInstanceOf(com.universidad.tests.domain.exception.SinPermisoException.class);
+        org.mockito.Mockito.verifyNoInteractions(cierre);
     }
 }

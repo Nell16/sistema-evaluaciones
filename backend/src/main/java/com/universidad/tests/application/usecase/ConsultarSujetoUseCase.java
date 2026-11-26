@@ -1,5 +1,6 @@
 package com.universidad.tests.application.usecase;
 
+import com.universidad.tests.application.service.ContextoSesion;
 import com.universidad.tests.application.usecase.vista.SujetoVista;
 import com.universidad.tests.domain.exception.ErroresEvaluacion;
 import com.universidad.tests.domain.model.Sujeto;
@@ -28,6 +29,9 @@ public class ConsultarSujetoUseCase {
                 sujetoRepository
                         .buscarPorId(idSujeto)
                         .orElseThrow(() -> ErroresEvaluacion.sujetoNoEncontrado(idSujeto));
+        if (ContextoSesion.actual().map(i -> "DECANO".equals(i.rolActivo())).orElse(false)) {
+            return new SujetoVista(sujeto.idSujeto(), sujeto.codigoInstitucional(), null, null);
+        }
         return new SujetoVista(
                 sujeto.idSujeto(),
                 sujeto.codigoInstitucional(),

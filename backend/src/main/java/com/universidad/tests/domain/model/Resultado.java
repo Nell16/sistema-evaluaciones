@@ -9,9 +9,8 @@ public record Resultado(
         Long idEvaluacion,
         String estadoResultado,
         Long versionFormularioId,
-        Instant fechaCalculo,
-        String referenciaRevisionVigente,
-        String detalle,
+        Instant creadoEn,
+        Long referenciaRevisionVigente,
         List<ResultadoFactor> factores) {
 
     public static final String PENDIENTE_VALIDACION = "PENDIENTE_VALIDACION";
@@ -28,7 +27,6 @@ public record Resultado(
             Long idEvaluacion,
             Long versionFormularioId,
             Instant ahora,
-            String detalle,
             List<ResultadoFactor> factores) {
         return new Resultado(
                 null,
@@ -37,7 +35,6 @@ public record Resultado(
                 versionFormularioId,
                 ahora,
                 null,
-                detalle,
                 factores);
     }
 }

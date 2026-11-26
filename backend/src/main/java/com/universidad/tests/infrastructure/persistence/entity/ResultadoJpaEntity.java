@@ -20,20 +20,17 @@ public class ResultadoJpaEntity {
     @Column(name = "id_evaluacion", nullable = false, unique = true)
     private Long idEvaluacion;
 
-    @Column(name = "estado_resultado", nullable = false, length = 30)
-    private String estadoResultado;
+    @Column(name = "estado", nullable = false)
+    private String estado;
+
+    @Column(name = "referencia_revision_vigente")
+    private Long referenciaRevisionVigente;
 
     @Column(name = "version_formulario_id")
     private Long versionFormularioId;
 
-    @Column(name = "fecha_calculo", nullable = false)
-    private Instant fechaCalculo;
-
-    @Column(name = "referencia_revision_vigente", length = 100)
-    private String referenciaRevisionVigente;
-
-    @Column(name = "detalle", columnDefinition = "text")
-    private String detalle;
+    @Column(name = "creado_en", nullable = false)
+    private Instant creadoEn;
 
     protected ResultadoJpaEntity() {
         // Constructor requerido por JPA
@@ -41,17 +38,15 @@ public class ResultadoJpaEntity {
 
     public ResultadoJpaEntity(
             Long idEvaluacion,
-            String estadoResultado,
+            String estado,
             Long versionFormularioId,
-            Instant fechaCalculo,
-            String referenciaRevisionVigente,
-            String detalle) {
+            Instant creadoEn,
+            Long referenciaRevisionVigente) {
         this.idEvaluacion = idEvaluacion;
-        this.estadoResultado = estadoResultado;
+        this.estado = estado;
         this.versionFormularioId = versionFormularioId;
-        this.fechaCalculo = fechaCalculo;
+        this.creadoEn = creadoEn;
         this.referenciaRevisionVigente = referenciaRevisionVigente;
-        this.detalle = detalle;
     }
 
     public Long getIdResultado() {
@@ -62,23 +57,19 @@ public class ResultadoJpaEntity {
         return idEvaluacion;
     }
 
-    public String getEstadoResultado() {
-        return estadoResultado;
+    public String getEstado() {
+        return estado;
+    }
+
+    public Long getReferenciaRevisionVigente() {
+        return referenciaRevisionVigente;
     }
 
     public Long getVersionFormularioId() {
         return versionFormularioId;
     }
 
-    public Instant getFechaCalculo() {
-        return fechaCalculo;
-    }
-
-    public String getReferenciaRevisionVigente() {
-        return referenciaRevisionVigente;
-    }
-
-    public String getDetalle() {
-        return detalle;
+    public Instant getCreadoEn() {
+        return creadoEn;
     }
 }

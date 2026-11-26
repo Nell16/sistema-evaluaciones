@@ -59,12 +59,16 @@ class CierreSubpruebasIntegrationTest {
     @Autowired private PlatformTransactionManager transacciones;
     @PersistenceContext private EntityManager entityManager;
     private Long id;
+    private Long cuentaId;
     private Instant limite;
 
     @BeforeEach
     void preparar() {
         when(autenticacion.validar("cierre-ficticio"))
-                .thenReturn(Optional.of(new IdentidadSesion(25L, 1L, "SUJETO", Set.of())));
+                .thenReturn(
+                        Optional.of(
+                                new IdentidadSesion(
+                                        cuentaId, 1L, "SUJETO", Set.of("RECUPERAR_INTENTO"))));
         limite = Instant.now().minusSeconds(2).truncatedTo(ChronoUnit.MICROS);
         id =
                 new TransactionTemplate(transacciones)
@@ -150,6 +154,20 @@ class CierreSubpruebasIntegrationTest {
                                                                             75))))
                                             .idEvaluacion();
                                 });
+        cuentaId =
+                jdbc.queryForObject(
+                        "insert into cuenta(correo,resumen_contrasena,nombres,apellidos,estado) values (?,'hash-ficticio','Prueba','Cierre','ACTIVA') returning id_cuenta",
+                        Long.class,
+                        "cierre-" + UUID.randomUUID() + "@ejemplo.test");
+        jdbc.update(
+                "insert into cuenta_sujeto_asignado(id_cuenta,id_sujeto) select ?,id_sujeto from evaluacion where id_evaluacion=?",
+                cuentaId,
+                id);
+        when(autenticacion.validar("cierre-ficticio"))
+                .thenReturn(
+                        Optional.of(
+                                new IdentidadSesion(
+                                        cuentaId, 1L, "SUJETO", Set.of("RECUPERAR_INTENTO"))));
     }
 
     private ConfiguracionSubpruebaJpaEntity configuracion(

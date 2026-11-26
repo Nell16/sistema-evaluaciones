@@ -43,6 +43,8 @@ public class MotorSubpruebasService {
     private final OpcionRespuestaRepository opciones;
     private final RespuestaEvaluacionRepository respuestas;
     private final AutorizacionMotorSubpruebasPort autorizacion;
+    private final AutorizacionService sesiones;
+    private final RegistroAuditoria auditoria;
     private final Clock reloj;
 
     @Autowired
@@ -52,7 +54,9 @@ public class MotorSubpruebasService {
             PreguntaRepository preguntas,
             OpcionRespuestaRepository opciones,
             RespuestaEvaluacionRepository respuestas,
-            AutorizacionMotorSubpruebasPort autorizacion) {
+            AutorizacionMotorSubpruebasPort autorizacion,
+            AutorizacionService sesiones,
+            RegistroAuditoria auditoria) {
         this(
                 evaluaciones,
                 configuraciones,
@@ -60,6 +64,8 @@ public class MotorSubpruebasService {
                 opciones,
                 respuestas,
                 autorizacion,
+                sesiones,
+                auditoria,
                 Clock.systemUTC());
     }
 
@@ -70,6 +76,8 @@ public class MotorSubpruebasService {
             OpcionRespuestaRepository opciones,
             RespuestaEvaluacionRepository respuestas,
             AutorizacionMotorSubpruebasPort autorizacion,
+            AutorizacionService sesiones,
+            RegistroAuditoria auditoria,
             Clock reloj) {
         this.evaluaciones = evaluaciones;
         this.configuraciones = configuraciones;
@@ -77,6 +85,8 @@ public class MotorSubpruebasService {
         this.opciones = opciones;
         this.respuestas = respuestas;
         this.autorizacion = autorizacion;
+        this.sesiones = sesiones;
+        this.auditoria = auditoria;
         this.reloj = reloj;
     }
 
@@ -117,8 +127,14 @@ public class MotorSubpruebasService {
                     ERROR_INTERNO, "La duraciÃ³n de la subprueba no estÃ¡ configurada.");
         }
 
+        long idCuenta = sesiones.exigirSesion().idCuenta();
         EvaluacionSubprueba activa = subprueba.iniciar(ahora);
         evaluaciones.iniciarSubprueba(activa);
+        auditoria.registrar(
+                idCuenta,
+                "INICIAR_SUBPRUEBA",
+                "EVALUACION_SUBPRUEBA",
+                activa.idEvaluacionSubprueba());
         return MotorSubpruebasMapper.activa(activa, ahora);
     }
 

@@ -5,9 +5,7 @@ import { ETIQUETAS_ROL } from '../features/acceso/tipos';
 import '../features/acceso/acceso.css';
 
 // Durante la aplicación la persona evaluada no ve la navegación (no debe llegar a resultados).
-const RUTAS_APLICACION = [
-  /^\/bfa\/evaluaciones\/[^/]+$/,
-];
+const RUTAS_APLICACION = [/^\/bfa\/evaluaciones\/[^/]+$/];
 
 /** Marco común de todas las páginas, con la navegación principal. */
 export function Plantilla() {

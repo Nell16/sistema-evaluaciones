@@ -10,11 +10,13 @@ Recorrido común: `test` → `version_formulario` → `configuracion_subprueba` 
 | --- | --- | --- |
 | Test, versión de formulario | BFA y Weill son filas de `test`; cada edición es una fila de `version_formulario` | `test`, `version_formulario` |
 | Subprueba / parte | Bloques de BFA y partes de Weill; el factor de BFA es `subprueba.factor` | `subprueba` |
-| Configuración (tiempo, tipo de respuesta, orden, instrucciones) | `tiempo_limite_segundos`, `tipo_respuesta` (SELECCION, TEXTO_LIBRE), `orden_aplicacion`, `instrucciones_ref`, `practica_ref`, `maximo_entradas` | `configuracion_subprueba` |
+| Configuración (tiempo, tipo de respuesta, orden, instrucciones) | `tiempo_limite_segundos`, `tipo_respuesta` (SELECCION, TEXTO_LIBRE), `orden_aplicacion`, `instrucciones_ref`, `practica_ref`, `maximo_entradas`, `opciones_esperadas` (entero opcional mayor que cero si se informa, desde `V202611251500`) | `configuracion_subprueba` |
 | Pregunta / ítem y opción, con recursos (imágenes) | `enunciado`, `recurso_ref` en pregunta y opción | `pregunta`, `opcion_respuesta` |
 | Fluidez Verbal (BFA) | Columnas de aplicación y respuesta; no es catálogo de ítems | `evaluacion_subprueba`, `respuesta_evaluacion` (fuera de este tema) |
 
-### Tablas propias: clave de corrección (solo BFA)
+### Diseño de la clave de corrección de BFA
+
+El PR #50 no llegó a `main`. Las dos tablas de esta sección documentan el diseño pendiente de integrar.
 
 **Por qué hace falta tabla propia:** la opción correcta no puede ser una columna (`es_correcta`) en `opcion_respuesta`, porque el evaluado recibe esa tabla y la clave debe estar protegida y versionarse aparte de la edición del contenido (Documento BFA §4.3, ENT-BFA-02 y 03; D03). Una clave puede corregirse sin cambiar las preguntas. Nombres y columnas son los ya fijados en el PR #50 (migración `V202611121500__bfa_claves_versionadas.sql`); no se renombran.
 
@@ -45,7 +47,7 @@ No se propone tabla propia. Weill usa las seis tablas del núcleo para test, par
 
 ### Tablas que NO se crean en este tema
 
-`factor`, `baremo`, `rango_baremo`, `resultado`, puntajes por factor y aplicación BFA (ENT-BFA-01, 04 a 13) pertenecen a otros temas (baremos, resultados, ejecución). `baremo_bfa` y `rango_baremo_bfa` ya existen en #69.
+`factor`, `baremo`, `rango_baremo`, `resultado`, puntajes por factor y aplicación BFA (ENT-BFA-01, 04 a 13) pertenecen a otros temas (baremos, resultados, ejecución). `baremo_bfa` y `rango_baremo_bfa` se definen en el PR #69, pendiente de integrar.
 
 ### Incógnitas para el Registro
 

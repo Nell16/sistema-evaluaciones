@@ -103,7 +103,7 @@ class CalculoBfaDesdeRespuestasIntegrationTest {
                             codigo);
             long config =
                     jdbc.queryForObject(
-                            "insert into configuracion_subprueba(id_version_formulario,id_subprueba,orden_aplicacion,tipo_respuesta,instrucciones_ref,tiempo_limite_segundos) values (?,?,?,'SELECCION','FICTICIA',300) returning id_configuracion_subprueba",
+                            "insert into configuracion_subprueba(id_version_formulario,id_subprueba,orden_aplicacion,tipo_respuesta,instrucciones_ref,tiempo_limite_segundos,practica_ref) values (?,?,?,'SELECCION','FICTICIA',300,'PRACTICA FICTICIA SEPARADA') returning id_configuracion_subprueba",
                             Long.class,
                             version,
                             sp,
@@ -114,8 +114,8 @@ class CalculoBfaDesdeRespuestasIntegrationTest {
                     config,
                     codigo,
                     bloque + 1);
-            for (int i = 0; i < 4; i++) {
-                String numero = i == 0 ? "A" : String.valueOf(i);
+            for (int i = 1; i <= 3; i++) {
+                String numero = String.valueOf(i);
                 long pregunta =
                         jdbc.queryForObject(
                                 "insert into pregunta(id_configuracion_subprueba,numero_visible,orden_presentacion,enunciado) values (?,?,?,'Contenido ficticio') returning id_pregunta",
@@ -162,7 +162,7 @@ class CalculoBfaDesdeRespuestasIntegrationTest {
     }
 
     @Test
-    void e8CalculaDesdeRespuestasClaveAprobadaSinContarEjemploYRepiteSinRecalcular()
+    void e8CalculaDesdeCatalogoClaveAprobadaConPracticaSeparadaYRepiteSinRecalcular()
             throws Exception {
         String primero =
                 mvc.perform(post(ruta()).header("Authorization", "Bearer " + token))

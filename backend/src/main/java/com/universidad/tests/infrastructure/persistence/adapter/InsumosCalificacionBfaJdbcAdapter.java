@@ -65,10 +65,9 @@ public class InsumosCalificacionBfaJdbcAdapter implements InsumosCalificacionBfa
             Long configuracion = ((Number) bloque.get("id_configuracion_subprueba")).longValue();
             var preguntas =
                     jdbc.queryForList(
-                            "select id_pregunta from pregunta where id_configuracion_subprueba=? and not (? in ('VOC1','VOC2') and upper(numero_visible) in ('A','B')) order by orden_presentacion",
+                            "select id_pregunta from pregunta where id_configuracion_subprueba=? order by orden_presentacion",
                             Long.class,
-                            configuracion,
-                            codigo);
+                            configuracion);
             if (preguntas.isEmpty()) continue;
             Map<Long, Long> clave = new LinkedHashMap<>();
             List<OpcionRespuesta> opciones = new ArrayList<>();
@@ -111,8 +110,7 @@ public class InsumosCalificacionBfaJdbcAdapter implements InsumosCalificacionBfa
             for (var r : registros)
                 if (!todas.contains(r.pregunta()))
                     throw new IllegalStateException("Respuesta ajena al bloque aplicado");
-            // Los ejemplos A/B no participan en la calificacion, aunque exista respuesta de
-            // practica.
+            // La practica permanece en practica_ref; no se deduce por el numero visible.
             for (var r : registros) if (preguntas.contains(r.pregunta())) respuestas.add(r);
             salida.add(new Bloque(claves.get(0), codigo, clave, opciones, respuestas));
         }

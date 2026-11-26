@@ -503,7 +503,7 @@
               }
             },
             {
-              "name": "E3-03 sujeto inexistente → 404 SUJETO_NO_ENCONTRADO",
+              "name": "E3-03 sujeto inexistente (no asignado) → 403 SIN_PERMISO",
               "request": {
                 "method": "POST",
                 "header": [
@@ -523,6 +523,7 @@
                     "evaluaciones"
                   ]
                 },
+                "description": "docs/arquitectura/decision-alcance-evaluaciones.md (25-nov): para un sujeto no asignado E3 responde 403 antes de consultar sus datos, aunque el identificador no exista. Reemplaza el 404 SUJETO_NO_ENCONTRADO de openapi.yaml para este caso.",
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"versionFormularioId\": {{version_id}},\n  \"sujetoId\": 999999999,\n  \"periodoId\": {{periodo_id}},\n  \"subpruebas\": [\"VOC1\", \"VOC2\"]\n}",

@@ -167,8 +167,368 @@
     },
     {
       "name": "Evaluación",
-      "description": "E3–E8 y E24. Casos de TEST-32.",
-      "item": []
+      "description": "TEST-32: comprobaciones de autenticación sin token para E3–E8, E22 y E24. Las solicitudes autenticadas y las pruebas positivas requieren cuentas demo y registros ficticios autorizados; no se consideran verificadas por esta carpeta.",
+      "item": [
+        {
+          "name": "E3 sin token: 401 NO_AUTENTICADO",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versionFormularioId\": 999999991,\n  \"sujetoId\": 999999992,\n  \"periodoId\": 999999993,\n  \"subpruebas\": [\n    \"VOC1\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/evaluaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evaluaciones"
+              ]
+            },
+            "description": "Caso negativo del contrato. Identificadores exclusivamente ficticios; sin Authorization. Verifica rechazo antes de cualquier operación de negocio. NO equivale a una prueba positiva ni a la ejecución en el VPS."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('E3: responde 401 sin token', () => pm.response.to.have.status(401));",
+                  "pm.test('E3: formato de error y código NO_AUTENTICADO', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.include.keys('timestamp', 'status', 'codigo', 'mensaje', 'ruta');",
+                  "    pm.expect(body.status).to.eql(401);",
+                  "    pm.expect(body.codigo).to.eql('NO_AUTENTICADO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E4 sin token: 401 NO_AUTENTICADO",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evaluaciones/999999994",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evaluaciones",
+                "999999994"
+              ]
+            },
+            "description": "Caso negativo del contrato. Identificadores exclusivamente ficticios; sin Authorization. Verifica rechazo antes de cualquier operación de negocio. NO equivale a una prueba positiva ni a la ejecución en el VPS."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('E4: responde 401 sin token', () => pm.response.to.have.status(401));",
+                  "pm.test('E4: formato de error y código NO_AUTENTICADO', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.include.keys('timestamp', 'status', 'codigo', 'mensaje', 'ruta');",
+                  "    pm.expect(body.status).to.eql(401);",
+                  "    pm.expect(body.codigo).to.eql('NO_AUTENTICADO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E5 sin token: 401 NO_AUTENTICADO",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evaluaciones/999999994/subpruebas/VOC1/iniciar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evaluaciones",
+                "999999994",
+                "subpruebas",
+                "VOC1",
+                "iniciar"
+              ]
+            },
+            "description": "Caso negativo del contrato. Identificadores exclusivamente ficticios; sin Authorization. Verifica rechazo antes de cualquier operación de negocio. NO equivale a una prueba positiva ni a la ejecución en el VPS."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('E5: responde 401 sin token', () => pm.response.to.have.status(401));",
+                  "pm.test('E5: formato de error y código NO_AUTENTICADO', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.include.keys('timestamp', 'status', 'codigo', 'mensaje', 'ruta');",
+                  "    pm.expect(body.status).to.eql(401);",
+                  "    pm.expect(body.codigo).to.eql('NO_AUTENTICADO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E6 sin token: 401 NO_AUTENTICADO",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evaluaciones/999999994/subpruebas/VOC1/preguntas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evaluaciones",
+                "999999994",
+                "subpruebas",
+                "VOC1",
+                "preguntas"
+              ]
+            },
+            "description": "Caso negativo del contrato. Identificadores exclusivamente ficticios; sin Authorization. Verifica rechazo antes de cualquier operación de negocio. NO equivale a una prueba positiva ni a la ejecución en el VPS."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('E6: responde 401 sin token', () => pm.response.to.have.status(401));",
+                  "pm.test('E6: formato de error y código NO_AUTENTICADO', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.include.keys('timestamp', 'status', 'codigo', 'mensaje', 'ruta');",
+                  "    pm.expect(body.status).to.eql(401);",
+                  "    pm.expect(body.codigo).to.eql('NO_AUTENTICADO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E7 sin token: 401 NO_AUTENTICADO",
+          "request": {
+            "method": "PUT",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"respuestas\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/evaluaciones/999999994/subpruebas/VOC1/respuestas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evaluaciones",
+                "999999994",
+                "subpruebas",
+                "VOC1",
+                "respuestas"
+              ]
+            },
+            "description": "Caso negativo del contrato. Identificadores exclusivamente ficticios; sin Authorization. Verifica rechazo antes de cualquier operación de negocio. NO equivale a una prueba positiva ni a la ejecución en el VPS."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('E7: responde 401 sin token', () => pm.response.to.have.status(401));",
+                  "pm.test('E7: formato de error y código NO_AUTENTICADO', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.include.keys('timestamp', 'status', 'codigo', 'mensaje', 'ruta');",
+                  "    pm.expect(body.status).to.eql(401);",
+                  "    pm.expect(body.codigo).to.eql('NO_AUTENTICADO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E8 sin token: 401 NO_AUTENTICADO",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evaluaciones/999999994/finalizar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evaluaciones",
+                "999999994",
+                "finalizar"
+              ]
+            },
+            "description": "Caso negativo del contrato. Identificadores exclusivamente ficticios; sin Authorization. Verifica rechazo antes de cualquier operación de negocio. NO equivale a una prueba positiva ni a la ejecución en el VPS."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('E8: responde 401 sin token', () => pm.response.to.have.status(401));",
+                  "pm.test('E8: formato de error y código NO_AUTENTICADO', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.include.keys('timestamp', 'status', 'codigo', 'mensaje', 'ruta');",
+                  "    pm.expect(body.status).to.eql(401);",
+                  "    pm.expect(body.codigo).to.eql('NO_AUTENTICADO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E22 sin token: 401 NO_AUTENTICADO",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evaluaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evaluaciones"
+              ]
+            },
+            "description": "Caso negativo del contrato. Identificadores exclusivamente ficticios; sin Authorization. Verifica rechazo antes de cualquier operación de negocio. NO equivale a una prueba positiva ni a la ejecución en el VPS."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('E22: responde 401 sin token', () => pm.response.to.have.status(401));",
+                  "pm.test('E22: formato de error y código NO_AUTENTICADO', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.include.keys('timestamp', 'status', 'codigo', 'mensaje', 'ruta');",
+                  "    pm.expect(body.status).to.eql(401);",
+                  "    pm.expect(body.codigo).to.eql('NO_AUTENTICADO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E24 sin token: 401 NO_AUTENTICADO",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evaluaciones/999999994/subpruebas/VOC1/instrucciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evaluaciones",
+                "999999994",
+                "subpruebas",
+                "VOC1",
+                "instrucciones"
+              ]
+            },
+            "description": "Caso negativo del contrato. Identificadores exclusivamente ficticios; sin Authorization. Verifica rechazo antes de cualquier operación de negocio. NO equivale a una prueba positiva ni a la ejecución en el VPS."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('E24: responde 401 sin token', () => pm.response.to.have.status(401));",
+                  "pm.test('E24: formato de error y código NO_AUTENTICADO', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.include.keys('timestamp', 'status', 'codigo', 'mensaje', 'ruta');",
+                  "    pm.expect(body.status).to.eql(401);",
+                  "    pm.expect(body.codigo).to.eql('NO_AUTENTICADO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Resultados",

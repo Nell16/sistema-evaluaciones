@@ -9,9 +9,16 @@ const responder = (status: number, cuerpo: unknown) => {
 
 afterEach(() => vi.unstubAllGlobals());
 
+const datosBorrador = { codigoVersion: 'demo-v2', fuenteRef: 'referencia-ficticia' };
+
 describe('servicioAdministracion (llamadas reales)', () => {
   it.each([
-    ['E25', () => servicioAdministracion.crearVersion(1), 'POST', '/api/v1/tests/1/versiones'],
+    [
+      'E25',
+      () => servicioAdministracion.crearVersion(1, datosBorrador),
+      'POST',
+      '/api/v1/tests/1/versiones',
+    ],
     [
       'E26',
       () => servicioAdministracion.guardarConfiguracion(11, 'VOC1', {}),
@@ -60,7 +67,20 @@ describe('servicioAdministracion (llamadas reales)', () => {
     expect(fetchSimulado).toHaveBeenCalledWith(ruta, expect.objectContaining({ method: metodo }));
   });
 
-  it('E25 y E31 van sin cuerpo; E26 envía el JSON', async () => {
+  it('E25 envía el código y la referencia de la fuente al crear el borrador', async () => {
+    const fetchSimulado = responder(201, { id: 11, testId: 1, estado: 'BORRADOR' });
+    await expect(servicioAdministracion.crearVersion(1, datosBorrador)).resolves.toEqual({
+      id: 11,
+      testId: 1,
+      estado: 'BORRADOR',
+    });
+    expect(fetchSimulado).toHaveBeenCalledWith(
+      '/api/v1/tests/1/versiones',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(datosBorrador) }),
+    );
+  });
+
+  it('E31 va sin cuerpo; E26 envía el JSON', async () => {
     const fetchSimulado = responder(200, {});
     await servicioAdministracion.publicar(11);
     expect(fetchSimulado.mock.calls[0]?.[1]).not.toHaveProperty('body');

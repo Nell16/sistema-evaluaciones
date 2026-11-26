@@ -12,10 +12,11 @@ const falla = async (promesa: Promise<unknown>) => {
   expect(error).toBeInstanceOf(ApiError);
   return (error as ApiError).error!;
 };
+const datosBorrador = { codigoVersion: 'demo-v2', fuenteRef: 'referencia-ficticia' };
 const config = { orden: 1, tiempoLimiteSegundos: 60, tipoRespuesta: 'SELECCION' as const };
 
 async function borradorVacio(c: ClienteAdministracion) {
-  return c.crearVersion(2);
+  return c.crearVersion(2, datosBorrador);
 }
 
 describe('E1 y E2', () => {
@@ -29,8 +30,12 @@ describe('E1 y E2', () => {
 describe('E25', () => {
   it('crea un borrador y rechaza un test inexistente', async () => {
     const c = nuevo();
-    expect(await c.crearVersion(1)).toEqual({ id: 11, testId: 1, estado: 'BORRADOR' });
-    expect((await falla(c.crearVersion(99))).codigo).toBe('TEST_NO_ENCONTRADO');
+    expect(await c.crearVersion(1, datosBorrador)).toEqual({
+      id: 11,
+      testId: 1,
+      estado: 'BORRADOR',
+    });
+    expect((await falla(c.crearVersion(99, datosBorrador))).codigo).toBe('TEST_NO_ENCONTRADO');
   });
 });
 
@@ -48,7 +53,7 @@ describe('E26–E30 sobre versiones no editables', () => {
 describe('E26', () => {
   it('guarda y valida con detalles', async () => {
     const c = nuevo();
-    const v = await c.crearVersion(1);
+    const v = await c.crearVersion(1, datosBorrador);
     await expect(c.guardarConfiguracion(v.id, 'VOC1', config)).resolves.toEqual(config);
     const error = await falla(c.guardarConfiguracion(v.id, 'VOC1', { ...config, orden: 0 }));
     expect(error).toMatchObject({ status: 400, codigo: 'SOLICITUD_INVALIDA' });
@@ -60,7 +65,7 @@ describe('E26', () => {
 describe('E27, E28 y E29', () => {
   it('agrega preguntas, rechaza duplicados y valida opciones y clave', async () => {
     const c = nuevo();
-    const v = await c.crearVersion(1);
+    const v = await c.crearVersion(1, datosBorrador);
     const p = await c.agregarPregunta(v.id, 'VOC1', {
       numeroVisible: 2,
       ordenPresentacion: 2,
@@ -123,7 +128,7 @@ describe('E30', () => {
 describe('E31', () => {
   it('publica el borrador copiado y retira la versión anterior', async () => {
     const c = nuevo();
-    const v = await c.crearVersion(1);
+    const v = await c.crearVersion(1, datosBorrador);
     await expect(c.publicar(v.id)).resolves.toEqual({ id: v.id, testId: 1, estado: 'PUBLICADA' });
     expect((await falla(c.publicar(v.id))).codigo).toBe('VERSION_NO_EDITABLE');
   });
@@ -138,7 +143,7 @@ describe('E31', () => {
 
   it('una pregunta sin clave impide publicar', async () => {
     const c = nuevo();
-    const v = await c.crearVersion(1);
+    const v = await c.crearVersion(1, datosBorrador);
     await c.agregarPregunta(v.id, 'VOC1', {
       numeroVisible: 9,
       ordenPresentacion: 9,

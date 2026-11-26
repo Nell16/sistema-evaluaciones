@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { EstadoCarga } from '../evaluacion/componentes/EstadoCarga';
 import { MensajeError } from '../evaluacion/componentes/MensajeError';
 import { aErrorMostrable } from '../evaluacion/mensajesError';
@@ -40,6 +40,9 @@ export function AdministracionPagina() {
   const [preguntas, setPreguntas] = useState<PreguntaSesion[]>([]);
   const [paso, setPaso] = useState(0);
   const creacion = useEnvio();
+  const [codigoVersion, setCodigoVersion] = useState('');
+  const [fuenteRef, setFuenteRef] = useState('');
+  const [descripcion, setDescripcion] = useState('');
 
   useEffect(() => {
     cliente.listarTests().then(setTests, (e: unknown) => setErrorCarga(aErrorMostrable(e)));
@@ -49,6 +52,9 @@ export function AdministracionPagina() {
     setTestId(id);
     setDetalle(null);
     setVersionId(undefined);
+    setCodigoVersion('');
+    setFuenteRef('');
+    setDescripcion('');
     setPaso(0);
     // Sin edición publicada E2 responde 404: el test se administra sin subpruebas base.
     cliente.obtenerTest(id).then(
@@ -64,13 +70,24 @@ export function AdministracionPagina() {
     );
   };
 
-  const crearBorrador = () =>
-    creacion.enviar(async () => {
-      const v = await cliente.crearVersion(testId!);
+  const crearBorrador = (evento: FormEvent<HTMLFormElement>) => {
+    evento.preventDefault();
+    if (testId === undefined || !codigoVersion.trim() || !fuenteRef.trim()) return;
+    const detalleVersion = descripcion.trim();
+    void creacion.enviar(async () => {
+      const v = await cliente.crearVersion(testId, {
+        codigoVersion: codigoVersion.trim(),
+        fuenteRef: fuenteRef.trim(),
+        ...(detalleVersion ? { descripcion: detalleVersion } : {}),
+      });
       setVersiones((previas) => [...previas, v]);
       setVersionId(v.id);
+      setCodigoVersion('');
+      setFuenteRef('');
+      setDescripcion('');
       return `Borrador ${v.id} creado.`;
     });
+  };
 
   const alPublicar = (v: VersionFormularioResponse) =>
     setVersiones((previas) =>
@@ -176,16 +193,51 @@ export function AdministracionPagina() {
                       ))}
                   </tbody>
                 </table>
-                <div className="ev-acciones">
-                  <button
-                    type="button"
-                    className="ev-boton"
-                    disabled={creacion.estado.pendiente}
-                    onClick={() => void crearBorrador()}
-                  >
-                    Crear borrador
-                  </button>
-                </div>
+                <form onSubmit={crearBorrador} aria-label="Crear borrador">
+                  <div className="ev-campo">
+                    <label htmlFor="adm-codigo-version">Código de versión</label>
+                    <input
+                      id="adm-codigo-version"
+                      className="ev-input"
+                      value={codigoVersion}
+                      onChange={(e) => setCodigoVersion(e.target.value)}
+                      disabled={creacion.estado.pendiente}
+                      required
+                    />
+                  </div>
+                  <div className="ev-campo">
+                    <label htmlFor="adm-fuente-version">Referencia de la fuente autorizada</label>
+                    <input
+                      id="adm-fuente-version"
+                      className="ev-input"
+                      value={fuenteRef}
+                      onChange={(e) => setFuenteRef(e.target.value)}
+                      disabled={creacion.estado.pendiente}
+                      required
+                    />
+                  </div>
+                  <div className="ev-campo">
+                    <label htmlFor="adm-descripcion-version">Descripción (opcional)</label>
+                    <input
+                      id="adm-descripcion-version"
+                      className="ev-input"
+                      value={descripcion}
+                      onChange={(e) => setDescripcion(e.target.value)}
+                      disabled={creacion.estado.pendiente}
+                    />
+                  </div>
+                  <div className="ev-acciones">
+                    <button
+                      type="submit"
+                      className="ev-boton"
+                      disabled={
+                        creacion.estado.pendiente || !codigoVersion.trim() || !fuenteRef.trim()
+                      }
+                    >
+                      Crear borrador
+                    </button>
+                  </div>
+                </form>
                 <ResultadoEnvio estado={creacion.estado} />
               </>
             )}

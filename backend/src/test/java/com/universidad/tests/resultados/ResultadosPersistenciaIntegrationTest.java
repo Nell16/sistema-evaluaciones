@@ -166,12 +166,22 @@ class ResultadosPersistenciaIntegrationTest {
                 .andExpect(jsonPath("$.revision").value(2))
                 .andExpect(jsonPath("$.versionReglas").value("R-2"))
                 .andExpect(jsonPath("$.factores[0].puntuacionDirecta").value(0));
+    }
+
+    @Test
+    void auditoriaDistingueDosRevisionesDeLaMismaEvaluacion() throws Exception {
+        long primera = publicar(2, "PSICOLOGO", 12);
+        mvc.perform(get(ruta()).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+        long segunda = publicar(3, "PSICOLOGO", 13);
+        mvc.perform(get(ruta()).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
         assertThat(
-                        jdbc.queryForObject(
-                                "select count(*) from evento_auditoria where entidad_id=? and accion='CONSULTAR_RESULTADO'",
+                        jdbc.queryForList(
+                                "select entidad_id from evento_auditoria where id_evaluacion=? and accion='CONSULTAR_RESULTADO' and entidad_tipo='REVISION_RESULTADO' order by id_evento_auditoria",
                                 Long.class,
                                 evaluacion))
-                .isEqualTo(1);
+                .containsExactly(primera, segunda);
     }
 
     @Test
@@ -268,22 +278,43 @@ class ResultadosPersistenciaIntegrationTest {
     }
 
     @Test
-    void conversionSinBaremoValidadoNoSeEntrega() throws Exception {
-        long rev = publicar(2, "PSICOLOGO", 12);
-        Long factor =
-                jdbc.queryForObject(
-                        "select id_resultado_escala from resultado_escala where id_revision_resultado=?",
-                        Long.class,
-                        rev);
-        jdbc.update(
-                "update resultado_escala set estado_normativo='CONVERTIDO' where id_resultado_escala=?",
-                factor);
-        jdbc.update(
-                "insert into conversion_resultado_escala(id_resultado_escala,tipo_salida,puntaje_convertido,id_rango) values (?,'PERCENTIL',50,999)",
-                factor);
+    void conversionBfaSinBaremoValidadoNoSeEntrega() throws Exception {
+        identificarInstrumento("BFA");
+        convertir(publicar(2, "PSICOLOGO", 12), 999);
         mvc.perform(get(ruta()).header("Authorization", "Bearer " + token))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.factores").doesNotExist());
+    }
+
+    @Test
+    void conversionWeillNoUsaBaremoBfaNiExponePercentilSinVerificar() throws Exception {
+        identificarInstrumento("WEILL");
+        convertir(publicar(2, "PSICOLOGO", 12), 999);
+        mvc.perform(get(ruta()).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.factores[0].puntuacionDirecta").value(12))
+                .andExpect(jsonPath("$.factores[0].estadoNormativo").value("CONVERTIDO"))
+                .andExpect(jsonPath("$.factores[0].percentil").isEmpty())
+                .andExpect(jsonPath("$.factores[0].idRango").isEmpty());
+    }
+
+    private void identificarInstrumento(String codigo) {
+        jdbc.update(
+                "update test set codigo=? where id_test=(select id_test from version_formulario where id_version_formulario=?)",
+                codigo,
+                version);
+    }
+
+    private void convertir(long revision, long rango) {
+        Long factor =
+                jdbc.queryForObject(
+                        "update resultado_escala set estado_normativo='CONVERTIDO' where id_revision_resultado=? returning id_resultado_escala",
+                        Long.class,
+                        revision);
+        jdbc.update(
+                "insert into conversion_resultado_escala(id_resultado_escala,tipo_salida,puntaje_convertido,id_rango) values (?,'PERCENTIL',50,?)",
+                factor,
+                rango);
     }
 
     @Test

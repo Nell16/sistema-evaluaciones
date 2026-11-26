@@ -1,5 +1,6 @@
 package com.universidad.tests.infrastructure.persistence.resultados;
 
+import com.universidad.tests.domain.model.bfa.ConfiguracionBfa;
 import com.universidad.tests.domain.model.resultados.ContenedorResultado;
 import com.universidad.tests.domain.model.resultados.EvaluacionConsultada;
 import com.universidad.tests.domain.model.resultados.FactorResultado;
@@ -72,9 +73,10 @@ public class ConsultaResultadosJdbcAdapter
             var revisiones =
                     jdbc.queryForList(
                             """
-                    select v.*,g.version as version_reglas,g.id_version_formulario,e.id_test
+                    select v.*,g.version as version_reglas,g.id_version_formulario,e.id_test,t.codigo as instrumento
                     from revision_resultado v join regla_calificacion g using(id_regla_calificacion)
                     join evaluacion e on e.id_evaluacion=?
+                    join test t on t.id_test=e.id_test
                     where v.id_revision_resultado=? and v.id_resultado=?
                     and g.id_version_formulario=e.id_version_formulario
                     and g.estado in ('APROBADA','RETIRADA')
@@ -87,6 +89,7 @@ public class ConsultaResultadosJdbcAdapter
                     || !"VALIDADA".equals(revisiones.get(0).get("estado_revision")))
                 throw inconsistente();
             var vigente = revisiones.get(0);
+            boolean esBfa = ConfiguracionBfa.CODIGO_TEST.equals(vigente.get("instrumento"));
             List<FactorResultado> factores =
                     jdbc.query(
                             """
@@ -102,12 +105,14 @@ public class ConsultaResultadosJdbcAdapter
                                         vigente.get("id_test"), rs.getObject("factor_test")))
                                     throw inconsistente();
                                 Integer directa = (Integer) rs.getObject("puntaje_bruto");
-                                Integer percentil = (Integer) rs.getObject("puntaje_convertido");
-                                Long rango = (Long) rs.getObject("id_rango");
+                                // Solo BFA dispone de referencias de baremo verificables aquí.
+                                Integer percentil =
+                                        esBfa ? (Integer) rs.getObject("puntaje_convertido") : null;
+                                Long rango = esBfa ? (Long) rs.getObject("id_rango") : null;
                                 String normativo = rs.getString("estado_normativo");
                                 String codigo = rs.getString("codigo");
-                                if ("CONVERTIDO".equals(normativo))
-                                    verificarRango(vigente, codigo, directa, percentil, rango);
+                                if (esBfa && FactorResultado.CONVERTIDO.equals(normativo))
+                                    verificarRangoBfa(vigente, codigo, directa, percentil, rango);
                                 return new FactorResultado(
                                         codigo,
                                         directa,
@@ -123,15 +128,15 @@ public class ConsultaResultadosJdbcAdapter
                             referencia.longValue(),
                             ((Number) vigente.get("numero_revision")).intValue(),
                             (String) vigente.get("version_reglas"),
-                            (Long) vigente.get("id_clave"),
-                            (Long) vigente.get("id_baremo"),
+                            esBfa ? (Long) vigente.get("id_clave") : null,
+                            esBfa ? (Long) vigente.get("id_baremo") : null,
                             factores);
         }
         return Optional.of(
                 new ContenedorResultado(resultadoId, id, (String) fila.get("estado"), revision));
     }
 
-    private void verificarRango(
+    private void verificarRangoBfa(
             Map<String, Object> revision,
             String codigo,
             Integer directa,

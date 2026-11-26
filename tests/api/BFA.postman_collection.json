@@ -197,8 +197,11 @@
               "    if (Number(m[1]) >= 400) {",
               "        pm.test('Formato común de error' + (m[2] ? ' con codigo ' + m[2].split('|').join(' o ') : ''), () => {",
               "            const j = pm.response.json();",
-              "            pm.expect(j).to.have.property('codigo');",
-              "            pm.expect(j).to.have.property('mensaje');",
+              "            pm.expect(j.timestamp).to.be.a('string');",
+              "            pm.expect(j.status).to.eql(Number(m[1]));",
+              "            pm.expect(j.codigo).to.be.a('string');",
+              "            pm.expect(j.mensaje).to.be.a('string');",
+              "            pm.expect(j.ruta).to.be.a('string');",
               "            if (m[2]) pm.expect(m[2].split('|')).to.include(j.codigo);",
               "        });",
               "    }",
@@ -461,7 +464,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"versionFormularioId\": {{version_id}},\n  \"sujetoId\": {{sujeto_id}},\n  \"periodoId\": {{periodo_id}},\n  \"subpruebas\": [\"VOC1\", \"VOC2\"]\n}",
+                  "raw": "{\n  \"versionFormularioId\": 999999991,\n  \"sujetoId\": 999999992,\n  \"periodoId\": 999999993,\n  \"subpruebas\": [\n    \"VOC1\"\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -949,7 +952,7 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}",
+                  "raw": "{{base_url}}/api/v1/evaluaciones/999999994",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -957,7 +960,7 @@
                     "api",
                     "v1",
                     "evaluaciones",
-                    "{{evaluacion_id}}"
+                    "999999994"
                   ]
                 },
                 "auth": {
@@ -1109,7 +1112,7 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}/subpruebas/VOC1/instrucciones",
+                  "raw": "{{base_url}}/api/v1/evaluaciones/999999994/subpruebas/VOC1/instrucciones",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -1117,7 +1120,7 @@
                     "api",
                     "v1",
                     "evaluaciones",
-                    "{{evaluacion_id}}",
+                    "999999994",
                     "subpruebas",
                     "VOC1",
                     "instrucciones"
@@ -1322,7 +1325,7 @@
                 "method": "POST",
                 "header": [],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}/subpruebas/VOC1/iniciar",
+                  "raw": "{{base_url}}/api/v1/evaluaciones/999999994/subpruebas/VOC1/iniciar",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -1330,7 +1333,7 @@
                     "api",
                     "v1",
                     "evaluaciones",
-                    "{{evaluacion_id}}",
+                    "999999994",
                     "subpruebas",
                     "VOC1",
                     "iniciar"
@@ -1471,7 +1474,7 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}/subpruebas/VOC1/preguntas",
+                  "raw": "{{base_url}}/api/v1/evaluaciones/999999994/subpruebas/VOC1/preguntas",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -1479,7 +1482,7 @@
                     "api",
                     "v1",
                     "evaluaciones",
-                    "{{evaluacion_id}}",
+                    "999999994",
                     "subpruebas",
                     "VOC1",
                     "preguntas"
@@ -1886,7 +1889,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}/subpruebas/VOC1/respuestas",
+                  "raw": "{{base_url}}/api/v1/evaluaciones/999999994/subpruebas/VOC1/respuestas",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -1894,7 +1897,7 @@
                     "api",
                     "v1",
                     "evaluaciones",
-                    "{{evaluacion_id}}",
+                    "999999994",
                     "subpruebas",
                     "VOC1",
                     "respuestas"
@@ -1905,7 +1908,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"respuestas\": [ { \"preguntaId\": 1, \"opcion\": \"A\" } ]\n}",
+                  "raw": "{\n  \"respuestas\": []\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1986,7 +1989,7 @@
                 "method": "POST",
                 "header": [],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/evaluaciones/{{evaluacion_id}}/finalizar",
+                  "raw": "{{base_url}}/api/v1/evaluaciones/999999994/finalizar",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -1994,7 +1997,7 @@
                     "api",
                     "v1",
                     "evaluaciones",
-                    "{{evaluacion_id}}",
+                    "999999994",
                     "finalizar"
                   ]
                 },

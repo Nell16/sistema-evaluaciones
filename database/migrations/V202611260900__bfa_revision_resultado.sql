@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS revision_resultado (
     numero_revision INTEGER NOT NULL CHECK (numero_revision >= 1),
     motivo TEXT NOT NULL CHECK (BTRIM(motivo) <> ''),
     version_reglas VARCHAR(80),
-    id_clave BIGINT REFERENCES version_clave_bfa(id_clave),
-    id_baremo BIGINT REFERENCES baremo_bfa(id_baremo),
+    id_clave BIGINT, -- sin FK: version_clave_bfa aún no está en main
+    id_baremo BIGINT, -- sin FK: baremo_bfa aún no está en main
     id_solicitud VARCHAR(80),
     id_cuenta_autor BIGINT NOT NULL REFERENCES cuenta(id_cuenta),
     creada_en TIMESTAMPTZ NOT NULL DEFAULT statement_timestamp(),

@@ -1,5 +1,5 @@
-// Material de EJEMPLO de S1, S2 y S1b: figuras 3D de Ganis y Kievit 2015 (CC BY 4.0) en
-// public/material/bfa-espacial. No son reactivos del BFA ni llevan clave (E6 nunca devuelve
+// Material de EJEMPLO de S1, S2 y S1b: figuras 3D sintéticas (frontend/scripts/generar_espacial.py)
+// en public/material/bfa-espacial. No son reactivos del BFA ni llevan clave (E6 nunca devuelve
 // la respuesta correcta); el orden de las alternativas se baraja de forma determinista.
 
 export interface ItemFigura {
@@ -10,7 +10,7 @@ export interface ItemFigura {
   opciones: string[];
 }
 
-export const CREDITO_ESPACIAL = 'Figuras: Ganis y Kievit 2015 (CC BY 4.0)';
+export const CREDITO_ESPACIAL = 'Figuras sintéticas de ejemplo';
 export const RUTA_ESPACIAL = '/material/bfa-espacial/';
 
 const ENUNCIADO = 'Elige la figura que es el modelo girado, sin darle vuelta.';

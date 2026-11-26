@@ -34,6 +34,7 @@ public class FinalizacionEvaluacionService {
     private final FinalizacionEvaluacionPort cierre;
     private final RegistroAuditoria auditoria;
     private final ResultadoRepository resultadoRepository;
+    private final CalculoPuntuacionesBfaService calculoPuntuaciones;
 
     public FinalizacionEvaluacionService(
             AutorizacionService auth,
@@ -42,7 +43,8 @@ public class FinalizacionEvaluacionService {
             PreparacionFinalizacionService preparacion,
             FinalizacionEvaluacionPort cierre,
             RegistroAuditoria auditoria,
-            ResultadoRepository resultadoRepository) {
+            ResultadoRepository resultadoRepository,
+            CalculoPuntuacionesBfaService calculoPuntuaciones) {
         this.auth = auth;
         this.alcance = alcance;
         this.evaluaciones = evaluaciones;
@@ -50,11 +52,12 @@ public class FinalizacionEvaluacionService {
         this.cierre = cierre;
         this.auditoria = auditoria;
         this.resultadoRepository = resultadoRepository;
+        this.calculoPuntuaciones = calculoPuntuaciones;
     }
 
     @Transactional
     public EvaluacionResponse finalizar(Long id) {
-        return finalizar(id, Map.of());
+        return finalizar(id, null);
     }
 
     @Transactional
@@ -78,12 +81,22 @@ public class FinalizacionEvaluacionService {
             auditoria.registrar(sesion.idCuenta(), "FINALIZAR_EVALUACION", "EVALUACION", id);
 
             // BFA-BE-38: Consolidar y persistir factores psicométricos BFA
-            consolidarYPersistirFactoresBfa(
-                    resultado.resultadoId(),
-                    original.idEvaluacion(),
-                    original.idVersionFormulario(),
-                    puntuacionesDirectas,
-                    ahora);
+            var puntuaciones =
+                    puntuacionesDirectas != null
+                            ? java.util.Optional.of(
+                                    new CalculoPuntuacionesBfaService.Calculo(
+                                            puntuacionesDirectas, null))
+                            : calculoPuntuaciones.calcular(
+                                    original.idEvaluacion(), original.idVersionFormulario());
+            puntuaciones.ifPresent(
+                    insumos ->
+                            consolidarYPersistirFactoresBfa(
+                                    resultado.resultadoId(),
+                                    original.idEvaluacion(),
+                                    original.idVersionFormulario(),
+                                    insumos.puntuaciones(),
+                                    ahora,
+                                    insumos.idClave()));
         }
 
         var e =
@@ -115,7 +128,8 @@ public class FinalizacionEvaluacionService {
             Long evaluacionId,
             Long versionFormularioId,
             Map<String, Integer> puntuacionesDirectas,
-            Instant ahora) {
+            Instant ahora,
+            Long idClaveCalculo) {
         List<String> subpruebasBfa =
                 List.of("VOC1", "VOC2", "CV", "S1", "S2", "R1", "R2", "N1", "N2", "FV");
         Map<String, Integer> insumos = new LinkedHashMap<>();
@@ -156,6 +170,7 @@ public class FinalizacionEvaluacionService {
                         versionFormularioId,
                         ahora,
                         null,
+                        idClaveCalculo,
                         factores);
 
         resultadoRepository.guardar(resultadoObj);

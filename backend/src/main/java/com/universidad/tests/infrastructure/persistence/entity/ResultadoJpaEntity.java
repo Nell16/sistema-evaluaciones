@@ -32,6 +32,17 @@ public class ResultadoJpaEntity {
     @Column(name = "creado_en", nullable = false)
     private Instant creadoEn;
 
+    @Column(name = "id_clave_calculo")
+    private Long idClaveCalculo;
+
+    public Long getIdClaveCalculo() {
+        return idClaveCalculo;
+    }
+
+    public void registrarClaveCalculo(Long idClave) {
+        this.idClaveCalculo = idClave;
+    }
+
     protected ResultadoJpaEntity() {
         // Constructor requerido por JPA
     }

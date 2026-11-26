@@ -78,7 +78,10 @@ class FinalizacionEvaluacionServiceTest {
                         preparacion,
                         cierre,
                         auditoria,
-                        resultadoRepository);
+                        resultadoRepository,
+                        mock(
+                                com.universidad.tests.application.service
+                                        .CalculoPuntuacionesBfaService.class));
     }
 
     @Test

@@ -28,6 +28,12 @@ Comprobación conjunta actualizada sobre main `12138f1003f06faf080a024284d5888a2
 
 ## Pendientes que impiden la aceptación completa
 
-E8 por HTTP todavía invoca la sobrecarga sin puntuaciones: falta conectar los calificadores versionados a las respuestas persistidas. La sobrecarga con mapa de prueba no demuestra ese recorrido. No se deben inventar números ni asumir que familias ausentes fueron calculadas.
+E8 ya obtiene las puntuaciones verbales desde respuestas persistidas de bloques cerrados y la única clave aprobada de la versión aplicada. Reutiliza CalificadorVerbalBfa; los ejemplos A/B no puntúan. Se prueban VOC1=1, VOC2=1 y VOCT=2 con contenido ficticio; una clave BORRADOR no produce puntuaciones y una incompleta o respuesta ajena al bloque no se usa. Repetir E8 conserva resultado y cierre.
+
+El contenedor guarda id_clave_calculo para identificar la clave utilizada sin revelar su contenido. Se amplía la migración 1620 que aún NO está fusionada en main; su contenido actualizado y la FK coordinada con PR #95 requieren revisión del custodio. El SQL exacto de #95, SHA 7b418a9, se usa solo como recurso de test dentro de transacciones aisladas; no activa esa migración en el proyecto ni en el VPS.
+
+La suite completa con el cálculo y trazabilidad pasó 446 pruebas funcionales; después se añadió la protección frente a respuestas ajenas al bloque y pasó el foco de 4 pruebas de integración con Maven verify y Spotless. El CI del SHA publicado debe corroborar la suite completa final. Estos recuentos corresponden a ejecuciones distintas.
+
+Familias sin calificador o insumos aprobados conservan NO_CALCULABLE, sin inventar puntuaciones ni percentiles. Los módulos de claves/baremos deben integrarse conforme a sus revisiones vigentes antes de certificar la publicación.
 
 Quedan además la migración aprobada de revisiones y publicación E12, la prueba en la URL publicada, Testing y aceptación por el revisor indicado. No se ha escrito en el VPS ni se ha otorgado testing-ok a esta corrección. Se preservan el historial y los responsables del PR #143.

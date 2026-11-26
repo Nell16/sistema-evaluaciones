@@ -47,6 +47,9 @@ public class ResultadoPersistenceAdapter implements ResultadoRepository {
                                                         resultado.creadoEn(),
                                                         resultado.referenciaRevisionVigente())));
 
+        entidad.registrarClaveCalculo(resultado.idClaveCalculo());
+        resultadoJpa.saveAndFlush(entidad);
+
         // Guardar o actualizar factores
         factorJpa.deleteAll(factorJpa.findByIdResultadoOrderByCodigoAsc(entidad.getIdResultado()));
         factorJpa.flush();
@@ -91,6 +94,7 @@ public class ResultadoPersistenceAdapter implements ResultadoRepository {
                 entidad.getVersionFormularioId(),
                 entidad.getCreadoEn(),
                 entidad.getReferenciaRevisionVigente(),
+                entidad.getIdClaveCalculo(),
                 factores.stream()
                         .map(
                                 f ->

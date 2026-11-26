@@ -11,6 +11,7 @@ public record Resultado(
         Long versionFormularioId,
         Instant creadoEn,
         Long referenciaRevisionVigente,
+        Long idClaveCalculo,
         List<ResultadoFactor> factores) {
 
     public static final String PENDIENTE_VALIDACION = "PENDIENTE_VALIDACION";
@@ -21,6 +22,25 @@ public record Resultado(
         Objects.requireNonNull(idEvaluacion, "idEvaluacion es obligatorio");
         Objects.requireNonNull(estadoResultado, "estadoResultado es obligatorio");
         factores = factores == null ? List.of() : List.copyOf(factores);
+    }
+
+    public Resultado(
+            Long idResultado,
+            Long idEvaluacion,
+            String estadoResultado,
+            Long versionFormularioId,
+            Instant creadoEn,
+            Long referenciaRevisionVigente,
+            List<ResultadoFactor> factores) {
+        this(
+                idResultado,
+                idEvaluacion,
+                estadoResultado,
+                versionFormularioId,
+                creadoEn,
+                referenciaRevisionVigente,
+                null,
+                factores);
     }
 
     public static Resultado nuevo(

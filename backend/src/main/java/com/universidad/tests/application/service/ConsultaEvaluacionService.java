@@ -2,6 +2,7 @@ package com.universidad.tests.application.service;
 
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
 import com.universidad.tests.domain.model.Evaluacion;
+import com.universidad.tests.domain.port.AutorizacionEvaluacionPort;
 import com.universidad.tests.domain.repository.EvaluacionRepository;
 import com.universidad.tests.dto.response.EvaluacionResponse;
 import java.time.Clock;
@@ -15,14 +16,25 @@ public class ConsultaEvaluacionService {
 
     private final EvaluacionRepository evaluacionRepository;
     private final Clock reloj;
+    private final AutorizacionEvaluacionPort autorizacion;
+    private final CierreSubpruebasService cierre;
 
     @Autowired
-    public ConsultaEvaluacionService(EvaluacionRepository evaluacionRepository) {
-        this(evaluacionRepository, Clock.systemUTC());
+    public ConsultaEvaluacionService(
+            EvaluacionRepository evaluacionRepository,
+            AutorizacionEvaluacionPort autorizacion,
+            CierreSubpruebasService cierre) {
+        this(evaluacionRepository, autorizacion, cierre, Clock.systemUTC());
     }
 
     // Reloj inyectable para probar el tiempo restante
-    public ConsultaEvaluacionService(EvaluacionRepository evaluacionRepository, Clock reloj) {
+    public ConsultaEvaluacionService(
+            EvaluacionRepository evaluacionRepository,
+            AutorizacionEvaluacionPort autorizacion,
+            CierreSubpruebasService cierre,
+            Clock reloj) {
+        this.autorizacion = autorizacion;
+        this.cierre = cierre;
         this.evaluacionRepository = evaluacionRepository;
         this.reloj = reloj;
     }
@@ -32,31 +44,15 @@ public class ConsultaEvaluacionService {
                 evaluacionRepository
                         .buscarPorId(idEvaluacion)
                         .orElseThrow(() -> new EvaluacionNoEncontradaException(idEvaluacion));
+        autorizacion.exigirPermisoConsultarEvaluacion(
+                evaluacion.idEvaluacion(), evaluacion.idSujeto());
+        cierre.cerrarVencidas(idEvaluacion);
+        evaluacion =
+                evaluacionRepository
+                        .buscarPorId(idEvaluacion)
+                        .orElseThrow(() -> new EvaluacionNoEncontradaException(idEvaluacion));
         Instant ahora = reloj.instant();
 
-        return new EvaluacionResponse(
-                evaluacion.idEvaluacion(),
-                evaluacion.idTest(),
-                evaluacion.idSujeto(),
-                evaluacion.idPeriodo(),
-                evaluacion.idVersionFormulario(),
-                evaluacion.estado().name(),
-                evaluacion.fechaInicio(),
-                evaluacion.fechaFin(),
-                evaluacion
-                        .subpruebaActiva()
-                        .map(
-                                s ->
-                                        new EvaluacionResponse.SubpruebaActiva(
-                                                s.codigo(),
-                                                s.fechaFinLimite(),
-                                                s.segundosRestantes(ahora)))
-                        .orElse(null),
-                evaluacion.subpruebas().stream()
-                        .map(
-                                s ->
-                                        new EvaluacionResponse.SubpruebaEstado(
-                                                s.codigo(), s.estado().name(), s.fechaCierre()))
-                        .toList());
+        return EvaluacionResponseMapper.aRespuesta(evaluacion, ahora);
     }
 }

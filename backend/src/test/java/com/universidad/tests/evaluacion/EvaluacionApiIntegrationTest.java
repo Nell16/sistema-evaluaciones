@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,8 +19,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.universidad.tests.application.service.AutenticacionService;
 import com.universidad.tests.application.service.IdentidadSesion;
+import com.universidad.tests.domain.exception.SinPermisoException;
 import com.universidad.tests.domain.model.EstadoVersionFormulario;
 import com.universidad.tests.domain.model.TipoRespuesta;
+import com.universidad.tests.domain.port.AutorizacionEvaluacionPort;
 import com.universidad.tests.infrastructure.persistence.entity.ConfiguracionSubpruebaJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.PeriodoJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.SubpruebaJpaEntity;
@@ -38,6 +41,7 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +52,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
@@ -69,6 +74,7 @@ class EvaluacionApiIntegrationTest {
     @Autowired private MockMvc mockMvc;
 
     @MockitoBean private AutenticacionService autenticacion;
+    @MockitoSpyBean private AutorizacionEvaluacionPort autorizacionEvaluacion;
     @Autowired private ObjectMapper json;
     @Autowired private JdbcTemplate jdbc;
     @PersistenceContext private EntityManager entityManager;
@@ -85,6 +91,10 @@ class EvaluacionApiIntegrationTest {
     private Map<String, ConfiguracionSubpruebaJpaEntity> configuraciones;
     private Long sujetoId;
     private Long periodoId;
+    private Long cuentaId;
+    private String rolPrueba = "COORDINADOR";
+    private Set<String> permisosPrueba =
+            Set.of("OPERACION_AUTORIZAR", "RECUPERAR_INTENTO", "SUJETO_LEER", "PERIODO_LEER");
 
     @BeforeEach
     void prepararCatalogo() {
@@ -93,6 +103,18 @@ class EvaluacionApiIntegrationTest {
         configuraciones = configuracionesDe(version);
         sujetoId = crearSujeto("Ana", "Ruiz");
         periodoId = crearPeriodo(true);
+        cuentaId =
+                jdbc.queryForObject(
+                        "insert into cuenta(correo,resumen_contrasena,nombres,apellidos,estado) values (?,?,?,?,'ACTIVA') returning id_cuenta",
+                        Long.class,
+                        "alcance-" + java.util.UUID.randomUUID() + "@ejemplo.test",
+                        "hash-ficticio-sin-credencial",
+                        "Persona",
+                        "Ficticia");
+        jdbc.update(
+                "insert into cuenta_sujeto_asignado(id_cuenta,id_sujeto) values (?,?)",
+                cuentaId,
+                sujetoId);
     }
 
     // ---------- E3: crear ----------
@@ -152,7 +174,11 @@ class EvaluacionApiIntegrationTest {
 
     @Test
     void noDuplicaLaEvaluacionAbiertaDelMismoSujetoTestYPeriodo() throws Exception {
-        ejecutar(iniciar(cuerpo(null, null))).andExpect(status().isCreated());
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
 
         ejecutar(iniciar(cuerpo(null, null)))
                 .andExpect(status().isConflict())
@@ -160,6 +186,28 @@ class EvaluacionApiIntegrationTest {
                 .andExpect(jsonPath("$.ruta").value("/api/v1/evaluaciones"));
 
         assertThat(contar("evaluacion where id_sujeto = " + sujetoId)).isEqualTo(1);
+        assertThat(
+                        jdbc.queryForList(
+                                """
+                                select id_cuenta, accion, entidad_tipo, entidad_id, id_evaluacion,
+                                       ocurrido_en is not null as fechado
+                                from evento_auditoria where id_cuenta = ?
+                                """,
+                                cuentaId))
+                .containsExactly(
+                        Map.of(
+                                "id_cuenta",
+                                cuentaId,
+                                "accion",
+                                "INICIAR_EVALUACION",
+                                "entidad_tipo",
+                                "EVALUACION",
+                                "entidad_id",
+                                id,
+                                "id_evaluacion",
+                                id,
+                                "fechado",
+                                true));
     }
 
     @Test
@@ -187,8 +235,8 @@ class EvaluacionApiIntegrationTest {
         Map<String, Object> sinSujeto = cuerpo(null, null);
         sinSujeto.put("sujetoId", 999_999_999L);
         ejecutar(iniciar(sinSujeto))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.codigo").value("SUJETO_NO_ENCONTRADO"));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("SIN_PERMISO"));
 
         Map<String, Object> sinPeriodo = cuerpo(null, null);
         sinPeriodo.put("periodoId", 999_999_999L);
@@ -266,6 +314,69 @@ class EvaluacionApiIntegrationTest {
         assertThat(letra).isEqualTo("M");
     }
 
+    @Test
+    void e3Devuelve403CuandoElPuertoDeniegaLaCreacion() throws Exception {
+        doThrow(new SinPermisoException())
+                .when(autorizacionEvaluacion)
+                .exigirPermisoIniciarEvaluacion(sujetoId);
+
+        ejecutar(iniciar(cuerpo(null, null)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("SIN_PERMISO"));
+
+        assertThat(contar("evaluacion where id_sujeto = " + sujetoId)).isZero();
+    }
+
+    @Test
+    void e3RechazaLaCreacionSinToken() throws Exception {
+        mockMvc.perform(iniciar(cuerpo(null, null)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("WWW-Authenticate", "Bearer"))
+                .andExpect(jsonPath("$.codigo").value("NO_AUTENTICADO"));
+
+        assertThat(contar("evaluacion where id_sujeto = " + sujetoId)).isZero();
+    }
+
+    // ---------- E4: consultar ----------
+
+    @Test
+    void e4ConsultaLaEvaluacionPersistidaPorE3() throws Exception {
+        MvcResult creada =
+                ejecutar(iniciar(cuerpo(null, null))).andExpect(status().isCreated()).andReturn();
+        long id = idDe(creada);
+        String ruta = "/api/v1/evaluaciones/" + id;
+        assertThat(creada.getResponse().getHeader("Location")).isEqualTo(ruta);
+        entityManager.flush();
+        entityManager.clear();
+
+        ejecutar(get(ruta))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.testId").value(test.getIdTest()))
+                .andExpect(
+                        jsonPath("$.versionFormularioId").value(version.getIdVersionFormulario()))
+                .andExpect(jsonPath("$.sujetoId").value(sujetoId))
+                .andExpect(jsonPath("$.periodoId").value(periodoId))
+                .andExpect(jsonPath("$.estado").value("EN_CURSO"))
+                .andExpect(jsonPath("$.subpruebaActiva").value(nullValue()))
+                .andExpect(jsonPath("$.subpruebas[*].codigo", contains("VOC1", "VOC2", "CV")))
+                .andExpect(
+                        jsonPath(
+                                "$.subpruebas[*].estado",
+                                contains("PENDIENTE", "PENDIENTE", "PENDIENTE")));
+    }
+
+    @Test
+    void e4RechazaLaConsultaSinToken() throws Exception {
+        MvcResult creada =
+                ejecutar(iniciar(cuerpo(null, null))).andExpect(status().isCreated()).andReturn();
+
+        mockMvc.perform(get("/api/v1/evaluaciones/{id}", idDe(creada)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("WWW-Authenticate", "Bearer"))
+                .andExpect(jsonPath("$.codigo").value("NO_AUTENTICADO"));
+    }
+
     // ---------- E2, E19 y E21 ----------
 
     @Test
@@ -293,8 +404,8 @@ class EvaluacionApiIntegrationTest {
                 .andExpect(jsonPath("$.apellidos").value("Ruiz"));
 
         ejecutar(get("/api/v1/sujetos/{id}", 999_999_999L))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.codigo").value("SUJETO_NO_ENCONTRADO"));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("SIN_PERMISO"));
 
         Long cerrado = crearPeriodo(false);
         ejecutar(get("/api/v1/periodos").param("disponible", "true"))
@@ -328,6 +439,163 @@ class EvaluacionApiIntegrationTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
+    @Test
+    void e3DeniegaSesionSinPermisoRealYNoEscribe() throws Exception {
+        permisosPrueba = Set.of();
+        ejecutar(iniciar(cuerpo(null, null)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("SIN_PERMISO"));
+        assertThat(contar("evaluacion where id_sujeto = " + sujetoId)).isZero();
+    }
+
+    @Test
+    void e3DeniegaPermisoSinAsignacionYNoEscribe() throws Exception {
+        jdbc.update("delete from cuenta_sujeto_asignado where id_cuenta=?", cuentaId);
+        ejecutar(iniciar(cuerpo(null, null))).andExpect(status().isForbidden());
+        assertThat(contar("evaluacion where id_sujeto = " + sujetoId)).isZero();
+    }
+
+    @Test
+    void e4NoExponeDatosCuandoSeRetiraLaAsignacion() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        jdbc.update("delete from cuenta_sujeto_asignado where id_cuenta=?", cuentaId);
+        ejecutar(get("/api/v1/evaluaciones/" + id))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.id").doesNotExist());
+    }
+
+    @Test
+    void e4DeniegaAunqueConserveAsignacionSiFaltaPermiso() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        permisosPrueba = Set.of("SUJETO_LEER");
+        ejecutar(get("/api/v1/evaluaciones/" + id)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void decanoAsignadoSoloRecibeIdentificacionInstitucional() throws Exception {
+        rolPrueba = "DECANO";
+        permisosPrueba = Set.of("SUJETO_LEER");
+        ejecutar(get("/api/v1/sujetos/" + sujetoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombres").doesNotExist())
+                .andExpect(jsonPath("$.apellidos").doesNotExist());
+    }
+
+    @Test
+    void e8FinalizaSinInventarResultadosYRepiteSinDuplicarAuditoria() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        jdbc.update(
+                "update evaluacion_subprueba set estado='CERRADA',fecha_inicio=statement_timestamp(),fecha_fin_limite=statement_timestamp()+interval '5 minutes',fecha_cierre=statement_timestamp() where id_evaluacion=?",
+                id);
+        rolPrueba = "SUJETO";
+        permisosPrueba = Set.of("EVALUACION_FINALIZAR", "RECUPERAR_INTENTO");
+        var primero =
+                ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.estado").value("FINALIZADA"))
+                        .andExpect(jsonPath("$.estadoResultado").value("PENDIENTE_VALIDACION"))
+                        .andExpect(jsonPath("$.resultadoId").isNumber())
+                        .andReturn();
+        String cuerpoPrimero = primero.getResponse().getContentAsString();
+        var repetido =
+                ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+        assertThat(repetido.getResponse().getContentAsString()).isEqualTo(cuerpoPrimero);
+        assertThat(contar("resultado where id_evaluacion=" + id)).isEqualTo(1);
+        assertThat(
+                        contar(
+                                "evento_auditoria where entidad_id="
+                                        + id
+                                        + " and accion='FINALIZAR_EVALUACION'"))
+                .isEqualTo(1);
+    }
+
+    @Test
+    void e8NoFinalizaConSubpruebasPendientesNiCreaResultado() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        rolPrueba = "SUJETO";
+        permisosPrueba = Set.of("EVALUACION_FINALIZAR");
+        ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codigo").value("SUBPRUEBAS_PENDIENTES"));
+        assertThat(contar("resultado where id_evaluacion=" + id)).isZero();
+        assertThat(
+                        jdbc.queryForObject(
+                                "select estado from evaluacion where id_evaluacion=?",
+                                String.class,
+                                id))
+                .isEqualTo("EN_CURSO");
+    }
+
+    @Test
+    void e8SinPermisoOAsignacionNoModificaLaEvaluacion() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                .andExpect(status().isForbidden());
+        rolPrueba = "SUJETO";
+        permisosPrueba = Set.of("EVALUACION_FINALIZAR");
+        jdbc.update("delete from cuenta_sujeto_asignado where id_cuenta=?", cuentaId);
+        ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                .andExpect(status().isForbidden());
+        assertThat(contar("resultado where id_evaluacion=" + id)).isZero();
+        assertThat(
+                        jdbc.queryForObject(
+                                "select estado from evaluacion where id_evaluacion=?",
+                                String.class,
+                                id))
+                .isEqualTo("EN_CURSO");
+    }
+
+    @Test
+    void e8CierraActivaVencidaSinBloquearFinalizacion() throws Exception {
+        long id =
+                idDe(
+                        ejecutar(iniciar(cuerpo(null, null)))
+                                .andExpect(status().isCreated())
+                                .andReturn());
+        jdbc.update(
+                "update evaluacion set fecha_inicio=statement_timestamp()-interval '2 hours' where id_evaluacion=?",
+                id);
+        jdbc.update(
+                "update evaluacion_subprueba set estado='CERRADA',fecha_inicio=statement_timestamp()-interval '1 hour',fecha_fin_limite=statement_timestamp()-interval '30 minutes',fecha_cierre=statement_timestamp()-interval '30 minutes' where id_evaluacion=?",
+                id);
+        jdbc.update(
+                "update evaluacion_subprueba set estado='ACTIVA',fecha_cierre=null where id_evaluacion=? and codigo='VOC1'",
+                id);
+        rolPrueba = "SUJETO";
+        permisosPrueba = Set.of("EVALUACION_FINALIZAR", "RECUPERAR_INTENTO");
+        ejecutar(post("/api/v1/evaluaciones/" + id + "/finalizar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("FINALIZADA"));
+        assertThat(
+                        jdbc.queryForObject(
+                                "select fecha_cierre=fecha_fin_limite from evaluacion_subprueba where id_evaluacion=? and codigo='VOC1'",
+                                Boolean.class,
+                                id))
+                .isTrue();
+    }
+
     // ---------- Datos ficticios ----------
 
     private ResultActions ejecutar(RequestBuilder solicitud) throws Exception {
@@ -335,7 +603,7 @@ class EvaluacionApiIntegrationTest {
         when(autenticacion.validar("token-ficticio"))
                 .thenReturn(
                         java.util.Optional.of(
-                                new IdentidadSesion(1L, 1L, "SUJETO", java.util.Set.of())));
+                                new IdentidadSesion(cuentaId, 1L, rolPrueba, permisosPrueba)));
         return mockMvc.perform(
                 context -> {
                     var peticion = solicitud.buildRequest(context);

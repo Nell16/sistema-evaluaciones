@@ -32,7 +32,8 @@ export interface ResultadoFactor {
 
 export interface ResultadoResponse {
   evaluacionId: number;
-  resultadoId: number;
+  /** Nulo mientras estadoResultado es CALCULANDO (aún sin contenedor persistido). */
+  resultadoId: number | null;
   estadoResultado: EstadoResultado;
   versionFormularioId: number | null;
   /** Nulos sin revisión publicada. */

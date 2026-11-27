@@ -56,4 +56,12 @@ describe('VistaResultado', () => {
       'Datos simulados',
     );
   });
+
+  it('presenta CALCULANDO con resultadoId nulo sin romper la vista', async () => {
+    const base = await cliente.obtenerResultado(18);
+    const marcado = html({ ...base, resultadoId: null });
+    expect(marcado).toContain('En cálculo');
+    expect(marcado).not.toContain('res-tabla');
+    expect(marcado).toContain('No hay una revisión publicada');
+  });
 });

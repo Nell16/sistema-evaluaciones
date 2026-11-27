@@ -349,7 +349,12 @@ export class ControladorBfa {
     this.fijar({ fase: 'iniciando', subprueba: config });
     try {
       const activa = await this.api.iniciarSubprueba(this.evaluacionId, config.codigo);
-      await this.mostrarPreguntas(config, activa.segundosRestantes, false, activa.letraInicial);
+      await this.mostrarPreguntas(
+        config,
+        activa.segundosRestantes,
+        false,
+        activa.letraInicial ?? undefined,
+      );
     } catch (e) {
       this.fallar(e);
     } finally {

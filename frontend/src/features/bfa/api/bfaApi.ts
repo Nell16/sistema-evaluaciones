@@ -1,4 +1,9 @@
 import { http } from '../../../services/http';
+import {
+  crearClienteInstrucciones,
+  crearClienteRegistroSubpruebas,
+  crearClienteSubpruebas,
+} from '../../../services/subpruebas';
 import type {
   AvanceSubpruebaResponse,
   EvaluacionResponse,
@@ -31,8 +36,9 @@ export interface BfaApi {
   finalizarEvaluacion(evaluacionId: number): Promise<EvaluacionResponse>;
 }
 
-const sub = (evaluacionId: number, codigo: string) =>
-  `/evaluaciones/${evaluacionId}/subpruebas/${encodeURIComponent(codigo)}`;
+const clienteSubpruebas = crearClienteSubpruebas();
+const clienteInstrucciones = crearClienteInstrucciones();
+const clienteRegistroSubpruebas = crearClienteRegistroSubpruebas();
 
 /** Implementación real: usa el cliente HTTP común (`services/http.ts`). */
 export const bfaApiHttp: BfaApi = {
@@ -41,10 +47,10 @@ export const bfaApiHttp: BfaApi = {
   iniciarEvaluacion: (solicitud) =>
     http('/evaluaciones', { method: 'POST', body: JSON.stringify(solicitud) }),
   obtenerEvaluacion: (id) => http(`/evaluaciones/${id}`),
-  consultarInstrucciones: (id, codigo) => http(`${sub(id, codigo)}/instrucciones`),
-  iniciarSubprueba: (id, codigo) => http(`${sub(id, codigo)}/iniciar`, { method: 'POST' }),
-  obtenerPreguntas: (id, codigo) => http(`${sub(id, codigo)}/preguntas`),
+  consultarInstrucciones: clienteInstrucciones.consultarInstrucciones,
+  iniciarSubprueba: clienteSubpruebas.iniciar,
+  obtenerPreguntas: clienteSubpruebas.obtenerPreguntas,
   registrarRespuestas: (id, codigo, cuerpo) =>
-    http(`${sub(id, codigo)}/respuestas`, { method: 'PUT', body: JSON.stringify(cuerpo) }),
+    clienteRegistroSubpruebas.registrarRespuestas(id, codigo, cuerpo),
   finalizarEvaluacion: (id) => http(`/evaluaciones/${id}/finalizar`, { method: 'POST' }),
 };

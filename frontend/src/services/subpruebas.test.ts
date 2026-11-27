@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { http } from './http';
-import { crearClienteSubpruebas } from './subpruebas';
+import {
+  crearClienteInstrucciones,
+  crearClienteRegistroSubpruebas,
+  crearClienteSubpruebas,
+} from './subpruebas';
 
 type Llamada = { ruta: string; opciones?: RequestInit };
 
@@ -10,7 +14,7 @@ function clienteFalso() {
     llamadas.push({ ruta, opciones });
     return {};
   }) as typeof http;
-  return { llamadas, cliente: crearClienteSubpruebas(falso) };
+  return { llamadas, cliente: crearClienteSubpruebas(falso), transport: falso };
 }
 
 describe('servicio de subpruebas (E5, E6, E7)', () => {
@@ -37,5 +41,24 @@ describe('servicio de subpruebas (E5, E6, E7)', () => {
     expect(JSON.parse(String(llamadas[0].opciones?.body))).toEqual({
       respuestas: [{ preguntaId: 120, opcion: 'C' }],
     });
+  });
+
+  it('E7 de Fluidez Verbal conserva palabras y ordenEntrada en el cuerpo', async () => {
+    const { llamadas, transport } = clienteFalso();
+    const palabras = [
+      { ordenEntrada: 1, texto: 'palabra ficticia uno' },
+      { ordenEntrada: 2, texto: 'palabra ficticia dos' },
+    ];
+    await crearClienteRegistroSubpruebas(transport).registrarRespuestas(15, 'FV', { palabras });
+    expect(llamadas[0].ruta).toBe('/evaluaciones/15/subpruebas/FV/respuestas');
+    expect(llamadas[0].opciones?.method).toBe('PUT');
+    expect(JSON.parse(String(llamadas[0].opciones?.body))).toEqual({ palabras });
+  });
+
+  it('E24 consulta instrucciones y práctica con GET antes de iniciar', async () => {
+    const { llamadas, transport } = clienteFalso();
+    await crearClienteInstrucciones(transport).consultarInstrucciones(15, 'N1-A');
+    expect(llamadas[0].ruta).toBe('/evaluaciones/15/subpruebas/N1-A/instrucciones');
+    expect(llamadas[0].opciones?.method).toBeUndefined();
   });
 });

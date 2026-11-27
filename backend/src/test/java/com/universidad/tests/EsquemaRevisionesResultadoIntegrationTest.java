@@ -182,4 +182,29 @@ class EsquemaRevisionesResultadoIntegrationTest {
                                         factor))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
+
+    @Test
+    void solicitudDeRecalculoEsUnicaDentroDelResultado() {
+        long rev = revision();
+        jdbc.update(
+                "update revision_resultado set id_solicitud='ficticia' where id_revision_resultado=?",
+                rev);
+        assertThatThrownBy(
+                        () ->
+                                jdbc.update(
+                                        "insert into revision_resultado(id_resultado,numero_revision,estado_revision,id_solicitud) values (?,2,'PENDIENTE','ficticia')",
+                                        resultado))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void autoriaDeRevisionNoPuedeApuntarAUnaCuentaInexistente() {
+        long rev = revision();
+        assertThatThrownBy(
+                        () ->
+                                jdbc.update(
+                                        "update revision_resultado set id_cuenta_autor=-1 where id_revision_resultado=?",
+                                        rev))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
 }

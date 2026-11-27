@@ -1,0 +1,5 @@
+Creditos del material de ejemplo
+
+bfa-espacial/ - Figuras 3D sinteticas para S1, S2 y S1b
+  Generadas al azar con frontend/scripts/generar_espacial.py (semilla fija).
+  No provienen de ningun banco de items ni estudio y no son reactivos del BFA.

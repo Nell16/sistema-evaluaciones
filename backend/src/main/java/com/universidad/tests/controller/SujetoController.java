@@ -5,14 +5,19 @@ import com.universidad.tests.application.usecase.ConsultarSujetoUseCase;
 import com.universidad.tests.application.usecase.RegistrarSujetoUseCase;
 import com.universidad.tests.application.usecase.vista.SujetoVista;
 import com.universidad.tests.dto.request.SujetoRequest;
+import com.universidad.tests.dto.response.ErrorResponse;
 import com.universidad.tests.dto.response.SujetoResponse;
 import com.universidad.tests.mapper.EvaluacionMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.net.URI;
+import java.time.Instant;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,5 +72,23 @@ public class SujetoController {
     @GetMapping("/{sujetoId}")
     public SujetoResponse consultar(@PathVariable @Positive Long sujetoId) {
         return mapper.aResponse(consultarSujeto.consultar(sujetoId));
+    }
+
+    /** E23: parámetro ausente → SOLICITUD_INVALIDA con el parámetro en `detalles`. */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> parametroAusente(
+            MissingServletRequestParameterException ex, HttpServletRequest request) {
+        String mensaje = "Falta el parámetro obligatorio " + ex.getParameterName() + ".";
+        return ResponseEntity.badRequest()
+                .body(
+                        new ErrorResponse(
+                                Instant.now(),
+                                400,
+                                "SOLICITUD_INVALIDA",
+                                mensaje,
+                                request.getRequestURI(),
+                                List.of(
+                                        new ErrorResponse.DetalleCampo(
+                                                ex.getParameterName(), mensaje))));
     }
 }

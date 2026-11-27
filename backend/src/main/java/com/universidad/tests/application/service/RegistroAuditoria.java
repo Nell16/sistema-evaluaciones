@@ -17,4 +17,10 @@ public class RegistroAuditoria {
     public void registrar(long idCuenta, String tipo, String entidad, long idEntidad) {
         eventos.insertar(idCuenta, tipo, entidad, idEntidad);
     }
+
+    @Transactional
+    public void registrar(
+            long idCuenta, String tipo, String entidad, long idEntidad, long idEvaluacion) {
+        eventos.insertar(idCuenta, tipo, entidad, idEntidad, idEvaluacion);
+    }
 }

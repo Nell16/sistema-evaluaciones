@@ -1,10 +1,10 @@
 package com.universidad.tests.application.usecase.bfa;
 
+import static com.universidad.tests.domain.exception.bfa.RevisionBfaException.Codigo.RESPUESTA_NO_FV;
 import static com.universidad.tests.domain.exception.bfa.RevisionBfaException.Codigo.REVISION_COMPLETADA;
 import static com.universidad.tests.domain.exception.bfa.RevisionBfaException.Codigo.REVISION_NO_ENCONTRADA;
 import static com.universidad.tests.domain.exception.bfa.RevisionBfaException.Codigo.REVISION_NO_PUBLICABLE;
 import static com.universidad.tests.domain.exception.bfa.RevisionBfaException.Codigo.REVISION_VIGENTE_CAMBIO;
-import static com.universidad.tests.domain.exception.bfa.RevisionBfaException.Codigo.RESPUESTA_NO_FV;
 import static com.universidad.tests.domain.exception.bfa.RevisionBfaException.Codigo.SOLICITUD_INVALIDA;
 import static com.universidad.tests.domain.model.MatrizPermisos.PUBLICAR_RESULTADOS;
 import static com.universidad.tests.domain.model.MatrizPermisos.RECALCULAR_BFA;

@@ -164,8 +164,8 @@ public class RevisionResultadoBfaPersistenceAdapter
     public void publicar(Long idResultado, Long idRevision, List<String> audiencia, String motivo) {
         jdbc.sql(
                         "UPDATE revision_resultado SET audiencia_publicacion = :aud,"
-                            + " motivo_publicacion = :motivo, publicada_en = statement_timestamp()"
-                            + " WHERE id_revision_resultado = :rev")
+                                + " motivo_publicacion = :motivo, publicada_en = statement_timestamp()"
+                                + " WHERE id_revision_resultado = :rev")
                 .param("aud", String.join(",", audiencia))
                 .param("motivo", motivo)
                 .param("rev", idRevision)

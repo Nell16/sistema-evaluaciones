@@ -72,15 +72,15 @@ class FinalizarEvaluacionIntegrationTest {
         when(auth.exigirPermiso(anyString()))
                 .thenReturn(
                         new IdentidadSesion(
-                                1L,
                                 cuenta,
+                                1L,
                                 "SUJETO",
                                 Set.of("EVALUACION_FINALIZAR", "RECUPERAR_INTENTO")));
         when(auth.exigirSesion())
                 .thenReturn(
                         new IdentidadSesion(
-                                1L,
                                 cuenta,
+                                1L,
                                 "SUJETO",
                                 Set.of("EVALUACION_FINALIZAR", "RECUPERAR_INTENTO")));
         when(alcance.estaAsignado(any(), any())).thenReturn(true);

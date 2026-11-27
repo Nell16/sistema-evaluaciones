@@ -3,6 +3,7 @@ package com.universidad.tests.controller;
 import com.universidad.tests.application.service.ConsultaEvaluacionService;
 import com.universidad.tests.application.service.FinalizacionEvaluacionService;
 import com.universidad.tests.application.service.MotorSubpruebasService;
+import com.universidad.tests.application.service.MotorSubpruebasService.InstruccionesResponse;
 import com.universidad.tests.dto.request.RegistrarRespuestasRequest;
 import com.universidad.tests.dto.response.AvanceSubpruebaResponse;
 import com.universidad.tests.dto.response.EvaluacionResponse;
@@ -50,6 +51,12 @@ public class EvaluacionController {
     @GetMapping("/{evaluacionId}")
     public EvaluacionResponse consultarEvaluacion(@PathVariable Long evaluacionId) {
         return consultaService.consultar(evaluacionId);
+    }
+
+    @GetMapping("/{evaluacionId}/subpruebas/{codigo}/instrucciones")
+    public InstruccionesResponse consultarInstrucciones(
+            @PathVariable Long evaluacionId, @PathVariable String codigo) {
+        return motor.consultarInstrucciones(evaluacionId, codigo);
     }
 
     @PostMapping("/{evaluacionId}/subpruebas/{codigo}/iniciar")

@@ -20,6 +20,8 @@ class MatrizPermisosTest {
                         "RECUPERAR_INTENTO",
                         "EVALUACION_FINALIZAR",
                         "SUBPRUEBA_INICIAR",
+                        "INSTRUCCIONES_LEER",
+                        "PRACTICA_REALIZAR",
                         "ITEMS_LEER",
                         "RESPUESTA_ESCRIBIR");
     }

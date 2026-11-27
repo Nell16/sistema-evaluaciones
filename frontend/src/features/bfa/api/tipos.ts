@@ -80,7 +80,7 @@ export interface SubpruebaActivaResponse {
   finLimite: string;
   segundosRestantes: number;
   /** Solo FV. */
-  letraInicial?: string;
+  letraInicial?: string | null;
 }
 
 export interface OpcionPregunta {

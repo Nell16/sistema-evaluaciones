@@ -49,6 +49,7 @@ export function AdministracionPagina() {
   }, []);
 
   const elegirTest = (id: number) => {
+    if (creacion.estado.pendiente) return;
     setTestId(id);
     setDetalle(null);
     setVersionId(undefined);
@@ -131,6 +132,7 @@ export function AdministracionPagina() {
                   type="button"
                   className="ev-boton ev-boton--secundario"
                   aria-pressed={testId === t.id}
+                  disabled={creacion.estado.pendiente}
                   onClick={() => elegirTest(t.id)}
                 >
                   {t.codigo} · {t.nombre}

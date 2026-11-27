@@ -2,6 +2,8 @@ package com.universidad.tests.domain.port;
 
 public interface AutorizacionMotorSubpruebasPort {
     enum Permiso {
+        INSTRUCCIONES_LEER,
+        PRACTICA_REALIZAR,
         SUBPRUEBA_INICIAR,
         ITEMS_LEER,
         RESPUESTA_ESCRIBIR

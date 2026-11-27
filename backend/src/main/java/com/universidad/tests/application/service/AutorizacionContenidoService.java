@@ -2,12 +2,15 @@ package com.universidad.tests.application.service;
 
 import static com.universidad.tests.domain.model.MatrizPermisos.CONFIGURAR_BFA;
 import static com.universidad.tests.domain.model.MatrizPermisos.CONTENIDO_EDITAR;
+import static com.universidad.tests.domain.model.MatrizPermisos.INSTRUCCIONES_EDITAR;
+import static com.universidad.tests.domain.model.MatrizPermisos.OPCIONES_EDITAR;
 
 import com.universidad.tests.domain.port.AutorizacionContenidoPort;
 import org.springframework.stereotype.Service;
 
 // GEN-06-BE: reemplaza a AutorizacionContenidoDenegadaAdapter con los permisos del contrato
-// (docs/api/openapi.yaml): E25 y E31 piden CONFIGURAR_BFA; E27 pide CONTENIDO_EDITAR.
+// (docs/api/openapi.yaml): E25 y E31 piden CONFIGURAR_BFA; E27 pide CONTENIDO_EDITAR;
+// E28 y E29 piden OPCIONES_EDITAR.
 // Retirar y consultar contenido restringido no tienen permiso documentado: siguen denegados.
 @Service
 public class AutorizacionContenidoService implements AutorizacionContenidoPort {
@@ -29,9 +32,14 @@ public class AutorizacionContenidoService implements AutorizacionContenidoPort {
     }
 
     @Override
+    public void exigirPermisoEditarOpciones(Long idVersionFormulario) {
+        autorizacion.exigirPermiso(OPCIONES_EDITAR);
+    }
+
+    @Override
     public void exigirPermisoConfigurarSubprueba(Long idVersionFormulario) {
         autorizacion.exigirPermiso(CONFIGURAR_BFA);
-        autorizacion.exigirPermiso("INSTRUCCIONES_EDITAR");
+        autorizacion.exigirPermiso(INSTRUCCIONES_EDITAR);
     }
 
     @Override

@@ -95,4 +95,9 @@ public class EvaluacionJpaEntity {
     public Instant getFechaFin() {
         return fechaFin;
     }
+
+    public void finalizar(Instant fechaFin) {
+        this.estado = EstadoEvaluacion.FINALIZADA;
+        this.fechaFin = fechaFin;
+    }
 }

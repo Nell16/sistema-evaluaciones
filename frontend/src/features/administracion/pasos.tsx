@@ -3,12 +3,14 @@ import type { ConfiguracionSubprueba } from '../evaluacion/tipos';
 import { Campo, CajaJson, ErroresCliente, ResultadoEnvio } from './componentes';
 import type {
   ClienteAdministracion,
+  ConfiguracionSubpruebaRequest,
   OpcionRespuesta,
   PreguntaResponse,
   VersionFormularioResponse,
 } from './tipos';
 import { useEnvio } from './useEnvio';
 import {
+  analizarJson,
   analizarOpciones,
   validarBaremo,
   validarClave,
@@ -83,6 +85,7 @@ export function PasoConfiguracion({ cliente, version, subpruebas }: ContextoPaso
     opciones: String(base?.opciones ?? ''),
     maximo: String(base?.maximoEntradas ?? ''),
     practica: base?.tienePractica ?? false,
+    ejemplos: '',
     instrucciones: `Instrucciones ficticias de ${base?.nombre ?? ''}.`,
   });
   if (!base) return SIN_SUBPRUEBAS;
@@ -97,6 +100,7 @@ export function PasoConfiguracion({ cliente, version, subpruebas }: ContextoPaso
       opciones: String(s.opciones ?? ''),
       maximo: String(s.maximoEntradas ?? ''),
       practica: s.tienePractica,
+      ejemplos: '',
       instrucciones: `Instrucciones ficticias de ${s.nombre}.`,
     });
   };
@@ -105,7 +109,13 @@ export function PasoConfiguracion({ cliente, version, subpruebas }: ContextoPaso
 
   const guardar = (e: FormEvent) => {
     e.preventDefault();
+    const ejemplos = valores.practica ? analizarJson(valores.ejemplos || '[]') : { valor: [] };
+    if ('error' in ejemplos) {
+      setErrores([{ campo: 'ejemplos', mensaje: ejemplos.error }]);
+      return;
+    }
     const solicitud = {
+      ejemplos: ejemplos.valor as ConfiguracionSubpruebaRequest['ejemplos'],
       orden: Number(valores.orden),
       tiempoLimiteSegundos: Number(valores.tiempo),
       tipoRespuesta: valores.tipo,
@@ -191,6 +201,20 @@ export function PasoConfiguracion({ cliente, version, subpruebas }: ContextoPaso
         />{' '}
         Tiene práctica
       </label>
+      {valores.practica && (
+        <Campo etiqueta="Ejemplos de práctica (JSON)">
+          {(id) => (
+            <textarea
+              id={id}
+              className="ev-input"
+              rows={4}
+              value={valores.ejemplos}
+              placeholder='[{"numero":1,"enunciado":"Ejemplo ficticio"}]'
+              onChange={(e) => campo('ejemplos', e.target.value)}
+            />
+          )}
+        </Campo>
+      )}
       <Campo etiqueta="Instrucciones">
         {(id) => (
           <textarea

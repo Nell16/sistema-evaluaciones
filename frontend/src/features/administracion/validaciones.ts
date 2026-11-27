@@ -69,13 +69,22 @@ export function validarConfiguracion(valor: unknown): ErroresValidacion {
     e.push({ campo: 'tienePractica', mensaje: 'debe ser verdadero o falso' });
   if (c.instrucciones !== undefined && typeof c.instrucciones !== 'string')
     e.push({ campo: 'instrucciones', mensaje: 'debe ser texto' });
-  if (c.ejemplos !== undefined) {
+  if (c.tienePractica === true && (!Array.isArray(c.ejemplos) || c.ejemplos.length === 0))
+    e.push({ campo: 'ejemplos', mensaje: 'la práctica necesita al menos un ejemplo' });
+  else if (c.ejemplos !== undefined) {
     if (!Array.isArray(c.ejemplos)) e.push({ campo: 'ejemplos', mensaje: 'debe ser una lista' });
     else
       c.ejemplos.forEach((ej, i) => {
-        if (!esObjeto(ej)) e.push({ campo: `ejemplos[${i}]`, mensaje: 'debe ser un objeto' });
-        else if (ej.opciones !== undefined)
-          validarOpcionesLista(ej.opciones, `ejemplos[${i}].opciones`, e);
+        const campo = `ejemplos[${i}]`;
+        if (!esObjeto(ej)) {
+          e.push({ campo, mensaje: 'debe ser un objeto' });
+          return;
+        }
+        if (!esEntero(ej.numero) || ej.numero < 1)
+          e.push({ campo: `${campo}.numero`, mensaje: 'debe ser un entero positivo' });
+        if (!esTexto(ej.enunciado))
+          e.push({ campo: `${campo}.enunciado`, mensaje: 'es obligatorio' });
+        if (ej.opciones != null) validarOpcionesLista(ej.opciones, `${campo}.opciones`, e);
       });
   }
   return e;
@@ -145,7 +154,9 @@ export function validarBaremo(valor: unknown): ErroresValidacion {
     else if (o.estadoCelda === 'RANGO') {
       if (!esEntero(o.limiteInferior))
         e.push({ campo: c('limiteInferior'), mensaje: 'es obligatorio si estadoCelda es RANGO' });
-      else if (esEntero(o.limiteSuperior) && o.limiteSuperior < o.limiteInferior)
+      if (!esEntero(o.limiteSuperior))
+        e.push({ campo: c('limiteSuperior'), mensaje: 'es obligatorio si estadoCelda es RANGO' });
+      else if (esEntero(o.limiteInferior) && o.limiteSuperior < o.limiteInferior)
         e.push({
           campo: c('limiteSuperior'),
           mensaje: 'no puede ser menor que el límite inferior',

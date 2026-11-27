@@ -21,7 +21,18 @@ describe('analizarJson', () => {
 describe('validarConfiguracion (E26)', () => {
   it('acepta una configuración válida', () => {
     const c = { orden: 1, tiempoLimiteSegundos: 300, tipoRespuesta: 'SELECCION', opciones: 5 };
-    expect(validarConfiguracion({ ...c, maximoEntradas: null, tienePractica: true })).toEqual([]);
+    expect(
+      validarConfiguracion({
+        ...c,
+        maximoEntradas: null,
+        tienePractica: true,
+        ejemplos: [{ numero: 1, enunciado: 'Ejemplo ficticio' }],
+      }),
+    ).toEqual([]);
+  });
+
+  it('exige un ejemplo cuando la práctica está habilitada', () => {
+    expect(campos(validarConfiguracion({ tienePractica: true }))).toEqual(['ejemplos']);
   });
 
   it('señala campos con tipo o valor incorrecto', () => {
@@ -113,7 +124,11 @@ describe('validarBaremo (E30)', () => {
       ...base,
       rangos: [{ idFactor: 'F1', percentil: 100, estadoCelda: 'RANGO' }],
     });
-    expect(campos(errores)).toEqual(['rangos[0].percentil', 'rangos[0].limiteInferior']);
+    expect(campos(errores)).toEqual([
+      'rangos[0].percentil',
+      'rangos[0].limiteInferior',
+      'rangos[0].limiteSuperior',
+    ]);
   });
 
   it('exige rangos y datos generales', () => {

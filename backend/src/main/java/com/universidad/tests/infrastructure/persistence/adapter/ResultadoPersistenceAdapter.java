@@ -31,14 +31,12 @@ public class ResultadoPersistenceAdapter implements ResultadoRepository {
                 resultadoJpa
                         .findByIdEvaluacion(resultado.idEvaluacion())
                         .map(
-                                existente ->
-                                        resultadoJpa.saveAndFlush(
-                                                new ResultadoJpaEntity(
-                                                        existente.getIdEvaluacion(),
-                                                        resultado.estadoResultado(),
-                                                        resultado.versionFormularioId(),
-                                                        existente.getCreadoEn(),
-                                                        existente.getReferenciaRevisionVigente())))
+                                existente -> {
+                                    existente.actualizarCalculo(
+                                            resultado.estadoResultado(),
+                                            resultado.versionFormularioId());
+                                    return resultadoJpa.saveAndFlush(existente);
+                                })
                         .orElseGet(
                                 () ->
                                         resultadoJpa.saveAndFlush(
@@ -51,6 +49,7 @@ public class ResultadoPersistenceAdapter implements ResultadoRepository {
 
         // Guardar o actualizar factores
         factorJpa.deleteAll(factorJpa.findByIdResultadoOrderByCodigoAsc(entidad.getIdResultado()));
+        factorJpa.flush();
         List<ResultadoFactorJpaEntity> factoresGuardados =
                 factorJpa.saveAllAndFlush(
                         resultado.factores().stream()

@@ -49,6 +49,11 @@ public class ResultadoJpaEntity {
         this.referenciaRevisionVigente = referenciaRevisionVigente;
     }
 
+    public void actualizarCalculo(String estado, Long versionFormularioId) {
+        this.estado = estado;
+        this.versionFormularioId = versionFormularioId;
+    }
+
     public Long getIdResultado() {
         return idResultado;
     }

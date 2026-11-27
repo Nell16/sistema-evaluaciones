@@ -42,47 +42,36 @@ class ClonadoVersionFormularioIntegrationTest {
     void prepararContenidoFicticioPublicado() {
         testId =
                 jdbc.queryForObject(
-                        "insert into test(codigo,nombre) values (?, 'Catalogo ficticio') returning"
-                            + " id_test",
+                        "insert into test(codigo,nombre) values (?, 'Catalogo ficticio') returning id_test",
                         Long.class,
                         "E25-" + UUID.randomUUID());
         long subprueba =
                 jdbc.queryForObject(
-                        "insert into subprueba(id_test,codigo,nombre) values (?, 'DEMO', 'Subprueba"
-                            + " ficticia') returning id_subprueba",
+                        "insert into subprueba(id_test,codigo,nombre) values (?, 'DEMO', 'Subprueba ficticia') returning id_subprueba",
                         Long.class,
                         testId);
         origenId =
                 jdbc.queryForObject(
-                        "insert into version_formulario(id_test,codigo_version,fuente_ref) values"
-                            + " (?, 'v1', 'fuente-ficticia') returning id_version_formulario",
+                        "insert into version_formulario(id_test,codigo_version,fuente_ref) values (?, 'v1', 'fuente-ficticia') returning id_version_formulario",
                         Long.class,
                         testId);
         long configuracion =
                 jdbc.queryForObject(
-                        "insert into"
-                            + " configuracion_subprueba(id_version_formulario,id_subprueba,orden_aplicacion,tipo_respuesta,instrucciones_ref,opciones_esperadas)"
-                            + " values (?, ?, 1, 'SELECCION', 'instruccion-ficticia', 2) returning"
-                            + " id_configuracion_subprueba",
+                        "insert into configuracion_subprueba(id_version_formulario,id_subprueba,orden_aplicacion,tipo_respuesta,instrucciones_ref,opciones_esperadas) values (?, ?, 1, 'SELECCION', 'instruccion-ficticia', 2) returning id_configuracion_subprueba",
                         Long.class,
                         origenId,
                         subprueba);
         long pregunta =
                 jdbc.queryForObject(
-                        "insert into"
-                            + " pregunta(id_configuracion_subprueba,numero_visible,orden_presentacion,enunciado)"
-                            + " values (?, '1', 1, 'Pregunta ficticia') returning id_pregunta",
+                        "insert into pregunta(id_configuracion_subprueba,numero_visible,orden_presentacion,enunciado) values (?, '1', 1, 'Pregunta ficticia') returning id_pregunta",
                         Long.class,
                         configuracion);
         jdbc.update(
-                "insert into opcion_respuesta(id_pregunta,codigo,orden_presentacion,texto) values"
-                    + " (?, 'A', 1, 'Opcion ficticia A'), (?, 'B', 2, 'Opcion ficticia B')",
+                "insert into opcion_respuesta(id_pregunta,codigo,orden_presentacion,texto) values (?, 'A', 1, 'Opcion ficticia A'), (?, 'B', 2, 'Opcion ficticia B')",
                 pregunta,
                 pregunta);
         jdbc.update(
-                "update version_formulario set"
-                    + " estado='PUBLICADA',publicada_en=current_timestamp,evidencia_validacion='evidencia-ficticia'"
-                    + " where id_version_formulario=?",
+                "update version_formulario set estado='PUBLICADA',publicada_en=current_timestamp,evidencia_validacion='evidencia-ficticia' where id_version_formulario=?",
                 origenId);
     }
 
@@ -99,9 +88,7 @@ class ClonadoVersionFormularioIntegrationTest {
     void coordinadorClonaCargaClaveYPublicaConAuditoria() throws Exception {
         long cuenta =
                 jdbc.queryForObject(
-                        "insert into cuenta(correo,resumen_contrasena,nombres,apellidos,estado)"
-                            + " values (?,'hash-ficticio','Demo','E31','ACTIVA') returning"
-                            + " id_cuenta",
+                        "insert into cuenta(correo,resumen_contrasena,nombres,apellidos,estado) values (?,'hash-ficticio','Demo','E31','ACTIVA') returning id_cuenta",
                         Long.class,
                         UUID.randomUUID() + "@example.test");
         var identidad =
@@ -121,14 +108,12 @@ class ClonadoVersionFormularioIntegrationTest {
                 .andExpect(status().isCreated());
         long borrador =
                 jdbc.queryForObject(
-                        "select id_version_formulario from version_formulario where id_test=? and"
-                            + " codigo_version='v2'",
+                        "select id_version_formulario from version_formulario where id_test=? and codigo_version='v2'",
                         Long.class,
                         testId);
         long pregunta =
                 jdbc.queryForObject(
-                        "select p.id_pregunta from pregunta p join configuracion_subprueba c"
-                            + " using(id_configuracion_subprueba) where c.id_version_formulario=?",
+                        "select p.id_pregunta from pregunta p join configuracion_subprueba c using(id_configuracion_subprueba) where c.id_version_formulario=?",
                         Long.class,
                         borrador);
         mvc.perform(
@@ -148,9 +133,7 @@ class ClonadoVersionFormularioIntegrationTest {
                 .andExpect(jsonPath("$.estado").value("PUBLICADA"));
         assertThat(
                         jdbc.queryForObject(
-                                "select count(*) from evento_auditoria where id_cuenta=? and"
-                                    + " entidad_id=? and accion='PUBLICAR_VERSION' and"
-                                    + " entidad_tipo='VERSION_FORMULARIO'",
+                                "select count(*) from evento_auditoria where id_cuenta=? and entidad_id=? and accion='PUBLICAR_VERSION' and entidad_tipo='VERSION_FORMULARIO'",
                                 Integer.class,
                                 cuenta,
                                 borrador))
@@ -171,19 +154,14 @@ class ClonadoVersionFormularioIntegrationTest {
                 .andExpect(jsonPath("$.estado").value("BORRADOR"));
         assertThat(
                         jdbc.queryForObject(
-                                "select estado from version_formulario where"
-                                    + " id_version_formulario=?",
+                                "select estado from version_formulario where id_version_formulario=?",
                                 String.class,
                                 origenId))
                 .isEqualTo("PUBLICADA");
         for (String codigo : new String[] {"v1", "v2"}) {
             assertThat(
                             jdbc.queryForObject(
-                                    "select count(*) from opcion_respuesta o join pregunta p"
-                                        + " using(id_pregunta) join configuracion_subprueba c"
-                                        + " using(id_configuracion_subprueba) join"
-                                        + " version_formulario v using(id_version_formulario) where"
-                                        + " v.id_test=? and v.codigo_version=?",
+                                    "select count(*) from opcion_respuesta o join pregunta p using(id_pregunta) join configuracion_subprueba c using(id_configuracion_subprueba) join version_formulario v using(id_version_formulario) where v.id_test=? and v.codigo_version=?",
                                     Integer.class,
                                     testId,
                                     codigo))

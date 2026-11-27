@@ -1,7 +1,7 @@
 package com.universidad.tests.controller;
 
-import com.universidad.tests.application.service.VersionFormularioRestService.ResumenVersion;
 import com.universidad.tests.application.service.VersionFormularioRestService;
+import com.universidad.tests.application.service.VersionFormularioRestService.ResumenVersion;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.net.URI;

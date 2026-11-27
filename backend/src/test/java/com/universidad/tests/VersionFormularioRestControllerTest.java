@@ -7,8 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.universidad.tests.application.service.AutenticacionService;
 import com.universidad.tests.application.service.IdentidadSesion;
-import com.universidad.tests.application.service.VersionFormularioRestService.ResumenVersion;
 import com.universidad.tests.application.service.VersionFormularioRestService;
+import com.universidad.tests.application.service.VersionFormularioRestService.ResumenVersion;
 import com.universidad.tests.application.service.VersionFormularioService.VersionDuplicadaException;
 import com.universidad.tests.controller.VersionFormularioController;
 import com.universidad.tests.controller.VersionadoErrorHandler;

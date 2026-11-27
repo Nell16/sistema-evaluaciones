@@ -1,5 +1,7 @@
 # BFA-BE-38: corrección del cierre E8
 
+actualización de integración: los apartados siguientes conservan evidencia histórica. en la rama de cierre, el esquema se instala con flyway y se retiraron las cargas manuales de ddl. el estado y la validación final están en `INT-33-cierre-local-bfa.md`; esta nota no acredita el vps ni testing independiente.
+
 Comprobación del 25-Nov-2026, 23:02 Nicaragua, sobre PR #143, base `bac6a2e110864f3132cea633622a003fb6b790e8`, más la corrección de persistencia de este PR.
 
 ## Problema y corrección

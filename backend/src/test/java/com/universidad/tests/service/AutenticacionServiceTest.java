@@ -57,8 +57,10 @@ class AutenticacionServiceTest {
         assertThat(sesion.permisos())
                 .containsExactly(
                         "EVALUACION_FINALIZAR",
+                        "INSTRUCCIONES_LEER",
                         "ITEMS_LEER",
                         "PERIODO_LEER",
+                        "PRACTICA_REALIZAR",
                         "RECUPERAR_INTENTO",
                         "RESPUESTA_ESCRIBIR",
                         "SUBPRUEBA_INICIAR",

@@ -5,7 +5,7 @@ import type {
   ConfiguracionSubpruebaRequest,
   EstadoVersion,
   OpcionesRequest,
-  OpcionRespuesta,
+  OpcionVersionada,
   PreguntaRequest,
   PreguntaResponse,
   VersionFormularioResponse,
@@ -34,7 +34,7 @@ import { TEST_BFA, escenarioPorId, fallar } from './evaluacion.mock';
 
 interface PreguntaGuardada extends PreguntaResponse {
   codigo: string;
-  opciones: OpcionRespuesta[];
+  opciones: OpcionVersionada[];
 }
 
 interface VersionGuardada {

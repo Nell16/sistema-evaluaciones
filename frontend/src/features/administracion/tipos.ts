@@ -44,8 +44,15 @@ export interface PreguntaResponse extends PreguntaRequest {
   id: number;
 }
 
+export interface OpcionVersionada {
+  letra: string;
+  texto?: string | null;
+  recursoRef?: string | null;
+  orden?: number;
+}
+
 export interface OpcionesRequest {
-  opciones: OpcionRespuesta[];
+  opciones: OpcionVersionada[];
 }
 
 export interface ClaveRequest {

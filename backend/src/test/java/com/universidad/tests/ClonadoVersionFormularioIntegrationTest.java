@@ -194,4 +194,36 @@ class ClonadoVersionFormularioIntegrationTest {
         assertThatThrownBy(() -> versiones.buscarPorId(origenId))
                 .isInstanceOf(SinPermisoException.class);
     }
+
+    // GEN-45-BE (aporte Carlos): E31 exige sesion y CONFIGURAR_BFA, y sin permiso no cambia nada.
+    @Test
+    void e31SinPermisoNoPublicaNiAudita() throws Exception {
+        long borrador =
+                jdbc.queryForObject(
+                        "insert into version_formulario(id_test,codigo_version,fuente_ref) values (?, 'v-e31', 'fuente-ficticia') returning id_version_formulario",
+                        Long.class,
+                        testId);
+        when(autenticacion.validar("token-ficticio"))
+                .thenReturn(Optional.of(identidad(Rol.PSICOLOGO)));
+
+        mvc.perform(post("/api/v1/versiones/{id}/publicar", borrador))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(
+                        post("/api/v1/versiones/{id}/publicar", borrador)
+                                .header("Authorization", "Bearer token-ficticio"))
+                .andExpect(status().isForbidden());
+
+        assertThat(
+                        jdbc.queryForObject(
+                                "select estado from version_formulario where id_version_formulario=?",
+                                String.class,
+                                borrador))
+                .isEqualTo("BORRADOR");
+        assertThat(
+                        jdbc.queryForObject(
+                                "select count(*) from evento_auditoria where entidad_tipo='VERSION_FORMULARIO' and entidad_id=?",
+                                Integer.class,
+                                borrador))
+                .isZero();
+    }
 }

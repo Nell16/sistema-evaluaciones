@@ -5,6 +5,7 @@ import type { EvaluacionResponse } from './tipos';
 const evaluacion = (subpruebas: EvaluacionResponse['subpruebas']): EvaluacionResponse => ({
   id: 15,
   testId: 1,
+  versionFormularioId: 10,
   sujetoId: 25,
   periodoId: 3,
   estado: 'EN_CURSO',

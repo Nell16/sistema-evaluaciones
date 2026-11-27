@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { servicioEvaluacion } from './evaluacion';
+import { cuerpoInicio, servicioEvaluacion } from './evaluacion';
 
 const responder = (status: number, cuerpo: unknown) => {
   const simulado = vi.fn().mockResolvedValue(new Response(JSON.stringify(cuerpo), { status }));
@@ -33,6 +33,74 @@ describe('servicioEvaluacion (llamadas reales)', () => {
     const fetchSimulado = responder(200, {});
     await llamar();
     expect(fetchSimulado).toHaveBeenCalledWith(ruta, expect.anything());
+  });
+
+  it('E3 omite subpruebas vacías (el backend responde 400 con lista vacía)', async () => {
+    const fetchSimulado = responder(201, { id: 15 });
+    await servicioEvaluacion.iniciarEvaluacion({
+      versionFormularioId: 10,
+      sujetoId: 25,
+      periodoId: 3,
+      subpruebas: [' ', ''],
+    });
+    const [, opciones] = fetchSimulado.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(opciones.body as string)).toEqual({
+      versionFormularioId: 10,
+      sujetoId: 25,
+      periodoId: 3,
+    });
+  });
+
+  it('E3 envía la letra de FV recortada y en mayúscula, y la omite si está vacía', () => {
+    const base = { versionFormularioId: 10, sujetoId: 25, periodoId: 3 };
+    expect(cuerpoInicio({ ...base, subpruebas: ['FV'], fluidez: { letraInicial: ' m ' } })).toEqual(
+      { ...base, subpruebas: ['FV'], fluidez: { letraInicial: 'M' } },
+    );
+    expect(cuerpoInicio({ ...base, fluidez: { letraInicial: '  ' } })).toEqual(base);
+  });
+
+  it('E4 entrega la forma del contrato (cerradaEn y subpruebaActiva)', async () => {
+    const cuerpo = {
+      id: 15,
+      testId: 1,
+      versionFormularioId: 10,
+      sujetoId: 25,
+      periodoId: 3,
+      estado: 'EN_CURSO',
+      fechaInicio: '2026-10-30T15:30:00Z',
+      fechaFin: null,
+      subpruebaActiva: {
+        codigo: 'VOC2',
+        finLimite: '2026-10-30T15:42:10Z',
+        segundosRestantes: 214,
+      },
+      subpruebas: [
+        { codigo: 'VOC1', estado: 'CERRADA', cerradaEn: '2026-10-30T15:38:00Z' },
+        { codigo: 'VOC2', estado: 'ACTIVA', cerradaEn: null },
+      ],
+    };
+    responder(200, cuerpo);
+    await expect(servicioEvaluacion.obtenerEvaluacion(15)).resolves.toEqual(cuerpo);
+  });
+
+  it.each([
+    [409, 'EVALUACION_EN_CURSO'],
+    [409, 'LETRA_NO_ASIGNADA'],
+    [409, 'VERSION_NO_PUBLICADA'],
+    [422, 'VERSION_INCOMPATIBLE'],
+    [422, 'SUBPRUEBA_NO_INCLUIDA'],
+    [404, 'PERIODO_NO_ENCONTRADO'],
+  ])('E3 propaga %i %s con su código', async (status, codigo) => {
+    responder(status, {
+      timestamp: 't',
+      status,
+      codigo,
+      mensaje: 'm',
+      ruta: '/api/v1/evaluaciones',
+    });
+    await expect(
+      servicioEvaluacion.iniciarEvaluacion({ versionFormularioId: 10, sujetoId: 25, periodoId: 3 }),
+    ).rejects.toMatchObject({ status, error: { codigo } });
   });
 
   it('propaga el error del backend con su código', async () => {

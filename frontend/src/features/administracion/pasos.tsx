@@ -3,12 +3,14 @@ import type { ConfiguracionSubprueba } from '../evaluacion/tipos';
 import { Campo, CajaJson, ErroresCliente, ResultadoEnvio } from './componentes';
 import type {
   ClienteAdministracion,
-  OpcionRespuesta,
+  ConfiguracionSubpruebaRequest,
+  OpcionVersionada,
   PreguntaResponse,
   VersionFormularioResponse,
 } from './tipos';
 import { useEnvio } from './useEnvio';
 import {
+  analizarJson,
   analizarOpciones,
   validarBaremo,
   validarClave,
@@ -21,7 +23,7 @@ import {
 export interface PreguntaSesion extends PreguntaResponse {
   versionId: number;
   codigo: string;
-  opciones: OpcionRespuesta[];
+  opciones: OpcionVersionada[];
 }
 
 export interface ContextoPaso {
@@ -83,6 +85,7 @@ export function PasoConfiguracion({ cliente, version, subpruebas }: ContextoPaso
     opciones: String(base?.opciones ?? ''),
     maximo: String(base?.maximoEntradas ?? ''),
     practica: base?.tienePractica ?? false,
+    ejemplos: '',
     instrucciones: `Instrucciones ficticias de ${base?.nombre ?? ''}.`,
   });
   if (!base) return SIN_SUBPRUEBAS;
@@ -97,6 +100,7 @@ export function PasoConfiguracion({ cliente, version, subpruebas }: ContextoPaso
       opciones: String(s.opciones ?? ''),
       maximo: String(s.maximoEntradas ?? ''),
       practica: s.tienePractica,
+      ejemplos: '',
       instrucciones: `Instrucciones ficticias de ${s.nombre}.`,
     });
   };
@@ -105,7 +109,13 @@ export function PasoConfiguracion({ cliente, version, subpruebas }: ContextoPaso
 
   const guardar = (e: FormEvent) => {
     e.preventDefault();
+    const ejemplos = valores.practica ? analizarJson(valores.ejemplos || '[]') : { valor: [] };
+    if ('error' in ejemplos) {
+      setErrores([{ campo: 'ejemplos', mensaje: ejemplos.error }]);
+      return;
+    }
     const solicitud = {
+      ejemplos: ejemplos.valor as ConfiguracionSubpruebaRequest['ejemplos'],
       orden: Number(valores.orden),
       tiempoLimiteSegundos: Number(valores.tiempo),
       tipoRespuesta: valores.tipo,
@@ -191,6 +201,20 @@ export function PasoConfiguracion({ cliente, version, subpruebas }: ContextoPaso
         />{' '}
         Tiene práctica
       </label>
+      {valores.practica && (
+        <Campo etiqueta="Ejemplos de práctica (JSON)">
+          {(id) => (
+            <textarea
+              id={id}
+              className="ev-input"
+              rows={4}
+              value={valores.ejemplos}
+              placeholder='[{"numero":1,"enunciado":"Ejemplo ficticio"}]'
+              onChange={(e) => campo('ejemplos', e.target.value)}
+            />
+          )}
+        </Campo>
+      )}
       <Campo etiqueta="Instrucciones">
         {(id) => (
           <textarea
@@ -220,19 +244,18 @@ function OpcionesPregunta({
 }: {
   pregunta: PreguntaSesion;
   cliente: ClienteAdministracion;
-  onGuardadas: (id: number, opciones: OpcionRespuesta[]) => void;
+  onGuardadas: (id: number, opciones: OpcionVersionada[]) => void;
 }) {
   const [texto, setTexto] = useState('A = Opción ficticia A\nB = Opción ficticia B');
   const [errores, setErrores] = useState<ReturnType<typeof validarOpciones>>([]);
   const { estado, enviar } = useEnvio();
-  const guardar = () => {
-    const solicitud = { opciones: analizarOpciones(texto) };
+  const guardar = (solicitud: { opciones: OpcionVersionada[] }) => {
     const encontrados = validarOpciones(solicitud);
     setErrores(encontrados);
     if (encontrados.length === 0)
       void enviar(async () => {
-        await cliente.guardarOpciones(pregunta.versionId, pregunta.id, solicitud);
-        onGuardadas(pregunta.id, solicitud.opciones);
+        const guardadas = await cliente.guardarOpciones(pregunta.versionId, pregunta.id, solicitud);
+        onGuardadas(pregunta.id, guardadas.opciones);
         return 'Opciones guardadas.';
       });
   };
@@ -259,11 +282,25 @@ function OpcionesPregunta({
           type="button"
           className="ev-boton ev-boton--secundario"
           disabled={estado.pendiente}
-          onClick={guardar}
+          onClick={() => guardar({ opciones: analizarOpciones(texto) })}
         >
           Guardar opciones
         </button>
       </div>
+      <details>
+        <summary>Opciones con imagen u orden explícito</summary>
+        <CajaJson
+          titulo="Opciones versionadas (JSON)"
+          ejemplo={JSON.stringify(
+            { opciones: [{ letra: 'A', recursoRef: 'demo/imagen.svg', orden: 1 }] },
+            null,
+            2,
+          )}
+          validar={validarOpciones}
+          deshabilitado={estado.pendiente}
+          onEnviar={(valor) => guardar(valor as { opciones: OpcionVersionada[] })}
+        />
+      </details>
       <ResultadoEnvio estado={estado} />
     </li>
   );
@@ -281,6 +318,7 @@ export function PasoPreguntas({
   const [numero, setNumero] = useState('1');
   const [orden, setOrden] = useState('1');
   const [enunciado, setEnunciado] = useState('Pregunta ficticia de ejemplo');
+  const [recursoRef, setRecursoRef] = useState('');
   const [errores, setErrores] = useState<ReturnType<typeof validarPregunta>>([]);
   const { estado, enviar } = useEnvio();
   if (subpruebas.length === 0) return SIN_SUBPRUEBAS;
@@ -291,6 +329,7 @@ export function PasoPreguntas({
       numeroVisible: Number(numero),
       ordenPresentacion: Number(orden),
       enunciado,
+      ...(recursoRef.trim() && { recursoRef: recursoRef.trim() }),
     };
     const encontrados = validarPregunta(solicitud);
     setErrores(encontrados);
@@ -303,6 +342,7 @@ export function PasoPreguntas({
       ]);
       setNumero(String(solicitud.numeroVisible + 1));
       setOrden(String(solicitud.ordenPresentacion + 1));
+      setRecursoRef('');
       return `Pregunta creada con id ${creada.id}. Defina sus opciones abajo.`;
     });
   };
@@ -342,6 +382,16 @@ export function PasoPreguntas({
               rows={2}
               value={enunciado}
               onChange={(e) => setEnunciado(e.target.value)}
+            />
+          )}
+        </Campo>
+        <Campo etiqueta="Referencia de la imagen (opcional)">
+          {(id) => (
+            <input
+              id={id}
+              className="ev-input"
+              value={recursoRef}
+              onChange={(e) => setRecursoRef(e.target.value)}
             />
           )}
         </Campo>

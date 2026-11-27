@@ -13,7 +13,8 @@ const enviar = (metodo: 'POST' | 'PUT', cuerpo?: unknown): RequestInit => ({
 export const servicioAdministracion: ClienteAdministracion = {
   listarTests: () => http<TestResumenResponse[]>('/tests'),
   obtenerTest: (testId) => http<TestDetalleResponse>(`/tests/${testId}`),
-  crearVersion: (testId) => http(`/tests/${testId}/versiones`, enviar('POST')),
+  crearVersion: (testId, solicitud) =>
+    http(`/tests/${testId}/versiones`, enviar('POST', solicitud)),
   guardarConfiguracion: (versionId, codigo, solicitud) =>
     http(
       `/versiones/${versionId}/configuraciones/${encodeURIComponent(codigo)}`,

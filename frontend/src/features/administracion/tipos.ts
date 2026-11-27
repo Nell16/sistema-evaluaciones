@@ -4,6 +4,12 @@ import type { ClienteCatalogo, DetalleCampo, TipoRespuesta } from '../evaluacion
 
 export type EstadoVersion = 'BORRADOR' | 'PUBLICADA' | 'RETIRADA';
 
+export interface CrearVersionRequest {
+  codigoVersion: string;
+  fuenteRef: string;
+  descripcion?: string;
+}
+
 export interface VersionFormularioResponse {
   id: number;
   testId: number;
@@ -44,8 +50,15 @@ export interface PreguntaResponse extends PreguntaRequest {
   id: number;
 }
 
+export interface OpcionVersionada {
+  letra: string;
+  texto?: string | null;
+  recursoRef?: string | null;
+  orden?: number;
+}
+
 export interface OpcionesRequest {
-  opciones: OpcionRespuesta[];
+  opciones: OpcionVersionada[];
 }
 
 export interface ClaveRequest {
@@ -73,7 +86,7 @@ export interface BaremoRequest {
 
 /** Puerto de administración: lo implementan el servicio real y el mock. */
 export interface ClienteAdministracion extends ClienteCatalogo {
-  crearVersion(testId: number): Promise<VersionFormularioResponse>;
+  crearVersion(testId: number, solicitud: CrearVersionRequest): Promise<VersionFormularioResponse>;
   guardarConfiguracion(
     versionId: number,
     codigo: string,

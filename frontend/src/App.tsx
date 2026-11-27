@@ -7,6 +7,7 @@ import { Ui05Preview } from './dev/Ui05Preview';
 import { SesionProveedor } from './features/acceso/SesionProveedor';
 import { RutaProtegida } from './features/acceso/RutaProtegida';
 import { rutasAcceso } from './features/acceso/rutas';
+import { rutasAdministracion } from './features/administracion/rutas';
 import { rutasBfa } from './features/bfa/rutas';
 import { rutasCatalogo } from './features/catalog/rutas';
 import { rutasEvaluacion } from './features/evaluacion/rutas';
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
         element: <RutaProtegida />,
         // E9 decide el acceso a resultados según la audiencia publicada, incluido SUJETO.
         children: [...rutasCatalogo, ...rutasEvaluacion, ...rutasBfa, ...rutasResultados],
+      },
+      {
+        element: <RutaProtegida roles={['COORDINADOR']} />,
+        children: rutasAdministracion,
       },
     ],
   },

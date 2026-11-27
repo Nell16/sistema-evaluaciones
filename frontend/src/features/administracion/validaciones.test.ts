@@ -71,7 +71,7 @@ describe('validarPregunta (E27)', () => {
 });
 
 describe('validarOpciones (E28)', () => {
-  it('pide al menos dos opciones con letra única', () => {
+  it('pide al menos una opción con letra única', () => {
     expect(
       validarOpciones({
         opciones: [
@@ -80,7 +80,17 @@ describe('validarOpciones (E28)', () => {
         ],
       }),
     ).toEqual([]);
-    expect(validarOpciones({ opciones: [{ letra: 'A', texto: 'x' }] })).toHaveLength(1);
+    expect(validarOpciones({ opciones: [{ letra: 'A', texto: 'x' }] })).toEqual([]);
+    expect(validarOpciones({ opciones: [] })).toHaveLength(1);
+    expect(validarOpciones({ opciones: [{ letra: 'A', recursoRef: 'demo/a.svg' }] })).toEqual([]);
+    expect(
+      validarOpciones({
+        opciones: [
+          { letra: 'A', texto: 'x', orden: 2 },
+          { letra: 'B', texto: 'y' },
+        ],
+      }),
+    ).toHaveLength(1);
     expect(
       campos(
         validarOpciones({

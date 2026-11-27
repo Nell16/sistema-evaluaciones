@@ -33,11 +33,17 @@ function enteroOpcional(o: Objeto, campo: string, minimo: number, errores: Error
     errores.push({ campo, mensaje: `debe ser un entero mayor o igual a ${minimo}` });
 }
 
-function validarOpcionesLista(valor: unknown, campo: string, errores: ErroresValidacion) {
+function validarOpcionesLista(
+  valor: unknown,
+  campo: string,
+  errores: ErroresValidacion,
+  versionadas = false,
+) {
   if (!Array.isArray(valor)) {
     errores.push({ campo, mensaje: 'debe ser una lista' });
     return;
   }
+  const ordenes = new Set<number>();
   const letras = new Set<string>();
   valor.forEach((item, i) => {
     const o = esObjeto(item) ? item : {};
@@ -46,7 +52,19 @@ function validarOpcionesLista(valor: unknown, campo: string, errores: ErroresVal
     else if (letras.has(o.letra.trim().toUpperCase()))
       errores.push({ campo: `${campo}[${i}].letra`, mensaje: 'está repetida' });
     else letras.add(o.letra.trim().toUpperCase());
-    if (!esTexto(o.texto))
+    if (versionadas) {
+      const orden = o.orden === undefined ? i + 1 : o.orden;
+      if (!esEntero(orden) || orden < 1 || ordenes.has(orden))
+        errores.push({ campo: `${campo}[${i}].orden`, mensaje: 'debe ser positivo y único' });
+      else ordenes.add(orden);
+      if (esTexto(o.letra) && [...o.letra.trim()].length > 40)
+        errores.push({ campo: `${campo}[${i}].letra`, mensaje: 'máximo 40 caracteres' });
+      for (const k of ['texto', 'recursoRef']) {
+        if (o[k] != null && typeof o[k] !== 'string')
+          errores.push({ campo: `${campo}[${i}].${k}`, mensaje: 'debe ser texto' });
+      }
+    }
+    if (!esTexto(o.texto) && !(versionadas && esTexto(o.recursoRef)))
       errores.push({ campo: `${campo}[${i}].texto`, mensaje: 'es obligatorio' });
   });
 }
@@ -109,9 +127,9 @@ export function validarOpciones(valor: unknown): ErroresValidacion {
     return [{ campo: 'opciones', mensaje: 'es obligatorio' }];
   const e: ErroresValidacion = [];
   const lista = (valor as Partial<OpcionesRequest>).opciones;
-  validarOpcionesLista(lista, 'opciones', e);
-  if (Array.isArray(lista) && lista.length < 2)
-    e.push({ campo: 'opciones', mensaje: 'se necesitan al menos 2 opciones' });
+  validarOpcionesLista(lista, 'opciones', e, true);
+  if (Array.isArray(lista) && lista.length === 0)
+    e.push({ campo: 'opciones', mensaje: 'se necesita al menos una opción' });
   return e;
 }
 

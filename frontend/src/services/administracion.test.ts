@@ -95,4 +95,36 @@ describe('servicioAdministracion (llamadas reales)', () => {
       error: { codigo: 'VERSION_INCOMPLETA' },
     });
   });
+
+  it.each([{}, { recursoRef: 'demo/imagen-ficticia.svg' }])(
+    'E27 conserva el cuerpo enviado y lee la pregunta creada (201) con %o',
+    async (imagen) => {
+      const solicitud = {
+        numeroVisible: 2,
+        ordenPresentacion: 3,
+        enunciado: 'Pregunta de prueba',
+        ...imagen,
+      };
+      const creada = { ...solicitud, id: 121, recursoRef: imagen.recursoRef ?? null };
+      const fetchSimulado = responder(201, creada);
+      await expect(servicioAdministracion.agregarPregunta(11, 'VOC1', solicitud)).resolves.toEqual(
+        creada,
+      );
+      expect(fetchSimulado).toHaveBeenCalledWith(
+        '/api/v1/versiones/11/configuraciones/VOC1/preguntas',
+        expect.objectContaining({ method: 'POST', body: JSON.stringify(solicitud) }),
+      );
+    },
+  );
+
+  it('E27 conserva el código de error si el número u orden ya está en uso', async () => {
+    responder(422, { codigo: 'PREGUNTA_DUPLICADA', mensaje: 'Pregunta duplicada.' });
+    await expect(
+      servicioAdministracion.agregarPregunta(11, 'VOC1', {
+        numeroVisible: 2,
+        ordenPresentacion: 3,
+        enunciado: 'Pregunta de prueba',
+      }),
+    ).rejects.toMatchObject({ status: 422, error: { codigo: 'PREGUNTA_DUPLICADA' } });
+  });
 });

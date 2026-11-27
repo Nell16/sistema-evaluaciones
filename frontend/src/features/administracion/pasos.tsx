@@ -4,7 +4,7 @@ import { Campo, CajaJson, ErroresCliente, ResultadoEnvio } from './componentes';
 import type {
   ClienteAdministracion,
   ConfiguracionSubpruebaRequest,
-  OpcionRespuesta,
+  OpcionVersionada,
   PreguntaResponse,
   VersionFormularioResponse,
 } from './tipos';
@@ -23,7 +23,7 @@ import {
 export interface PreguntaSesion extends PreguntaResponse {
   versionId: number;
   codigo: string;
-  opciones: OpcionRespuesta[];
+  opciones: OpcionVersionada[];
 }
 
 export interface ContextoPaso {
@@ -244,19 +244,18 @@ function OpcionesPregunta({
 }: {
   pregunta: PreguntaSesion;
   cliente: ClienteAdministracion;
-  onGuardadas: (id: number, opciones: OpcionRespuesta[]) => void;
+  onGuardadas: (id: number, opciones: OpcionVersionada[]) => void;
 }) {
   const [texto, setTexto] = useState('A = Opción ficticia A\nB = Opción ficticia B');
   const [errores, setErrores] = useState<ReturnType<typeof validarOpciones>>([]);
   const { estado, enviar } = useEnvio();
-  const guardar = () => {
-    const solicitud = { opciones: analizarOpciones(texto) };
+  const guardar = (solicitud: { opciones: OpcionVersionada[] }) => {
     const encontrados = validarOpciones(solicitud);
     setErrores(encontrados);
     if (encontrados.length === 0)
       void enviar(async () => {
-        await cliente.guardarOpciones(pregunta.versionId, pregunta.id, solicitud);
-        onGuardadas(pregunta.id, solicitud.opciones);
+        const guardadas = await cliente.guardarOpciones(pregunta.versionId, pregunta.id, solicitud);
+        onGuardadas(pregunta.id, guardadas.opciones);
         return 'Opciones guardadas.';
       });
   };
@@ -283,11 +282,25 @@ function OpcionesPregunta({
           type="button"
           className="ev-boton ev-boton--secundario"
           disabled={estado.pendiente}
-          onClick={guardar}
+          onClick={() => guardar({ opciones: analizarOpciones(texto) })}
         >
           Guardar opciones
         </button>
       </div>
+      <details>
+        <summary>Opciones con imagen u orden explícito</summary>
+        <CajaJson
+          titulo="Opciones versionadas (JSON)"
+          ejemplo={JSON.stringify(
+            { opciones: [{ letra: 'A', recursoRef: 'demo/imagen.svg', orden: 1 }] },
+            null,
+            2,
+          )}
+          validar={validarOpciones}
+          deshabilitado={estado.pendiente}
+          onEnviar={(valor) => guardar(valor as { opciones: OpcionVersionada[] })}
+        />
+      </details>
       <ResultadoEnvio estado={estado} />
     </li>
   );
@@ -305,6 +318,7 @@ export function PasoPreguntas({
   const [numero, setNumero] = useState('1');
   const [orden, setOrden] = useState('1');
   const [enunciado, setEnunciado] = useState('Pregunta ficticia de ejemplo');
+  const [recursoRef, setRecursoRef] = useState('');
   const [errores, setErrores] = useState<ReturnType<typeof validarPregunta>>([]);
   const { estado, enviar } = useEnvio();
   if (subpruebas.length === 0) return SIN_SUBPRUEBAS;
@@ -315,6 +329,7 @@ export function PasoPreguntas({
       numeroVisible: Number(numero),
       ordenPresentacion: Number(orden),
       enunciado,
+      ...(recursoRef.trim() && { recursoRef: recursoRef.trim() }),
     };
     const encontrados = validarPregunta(solicitud);
     setErrores(encontrados);
@@ -327,6 +342,7 @@ export function PasoPreguntas({
       ]);
       setNumero(String(solicitud.numeroVisible + 1));
       setOrden(String(solicitud.ordenPresentacion + 1));
+      setRecursoRef('');
       return `Pregunta creada con id ${creada.id}. Defina sus opciones abajo.`;
     });
   };
@@ -366,6 +382,16 @@ export function PasoPreguntas({
               rows={2}
               value={enunciado}
               onChange={(e) => setEnunciado(e.target.value)}
+            />
+          )}
+        </Campo>
+        <Campo etiqueta="Referencia de la imagen (opcional)">
+          {(id) => (
+            <input
+              id={id}
+              className="ev-input"
+              value={recursoRef}
+              onChange={(e) => setRecursoRef(e.target.value)}
             />
           )}
         </Campo>

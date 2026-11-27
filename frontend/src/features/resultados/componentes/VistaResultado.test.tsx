@@ -45,6 +45,18 @@ describe('VistaResultado', () => {
     expect(marcado).toContain('Pendiente de validación');
   });
 
+  it.each([
+    { calificacionId: null, revision: 1 },
+    { calificacionId: 4, revision: null },
+    { calificacionId: null, revision: null },
+  ])('no muestra factores si DISPONIBLE no identifica la revisión: %j', async (ids) => {
+    const r = await cliente.obtenerResultado(16);
+    const marcado = html({ ...r, ...ids });
+    expect(marcado).not.toContain('res-tabla');
+    expect(marcado).not.toContain('Resultado disponible');
+    expect(marcado).toContain('No se pudo identificar la revisión publicada');
+  });
+
   it('usa el código del backend por defecto y acepta nombres inyectados por un módulo de test', async () => {
     const r = await cliente.obtenerResultado(16);
     expect(html(r)).toContain('>VOC1<');

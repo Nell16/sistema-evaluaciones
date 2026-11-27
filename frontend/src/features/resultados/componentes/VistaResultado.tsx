@@ -17,9 +17,10 @@ export interface VistaResultadoProps extends Pick<TablaFactoresProps, 'etiquetaF
  */
 export function VistaResultado({ resultado, datosSimulados, etiquetaFactor }: VistaResultadoProps) {
   const publicada = tieneRevisionPublicada(resultado);
+  const disponibleSinRevision = resultado.estadoResultado === 'DISPONIBLE' && !publicada;
   // Un resultado pendiente nunca se presenta como definitivo (Documento general §4.4).
   const mostrarFactores =
-    resultado.estadoResultado === 'DISPONIBLE' && resultado.factores.length > 0;
+    resultado.estadoResultado === 'DISPONIBLE' && publicada && resultado.factores.length > 0;
 
   return (
     <section className="res-vista" aria-labelledby="res-titulo">
@@ -30,16 +31,25 @@ export function VistaResultado({ resultado, datosSimulados, etiquetaFactor }: Vi
           message="Datos simulados para desarrollo: no son puntuaciones ni percentiles reales."
         />
       )}
-      <AvisoEstadoResultado resultado={resultado} />
+      {disponibleSinRevision ? (
+        <TestNotice
+          kind="warning"
+          message="No se pudo identificar la revisión publicada. Vuelva a consultar o informe el problema."
+        />
+      ) : (
+        <AvisoEstadoResultado resultado={resultado} />
+      )}
       <DatosRevision resultado={resultado} />
 
       {mostrarFactores ? (
         <TablaFactores factores={resultado.factores} etiquetaFactor={etiquetaFactor} />
       ) : (
         <p className="res-vacio">
-          {publicada && resultado.estadoResultado === 'DISPONIBLE'
-            ? 'La revisión publicada no contiene factores.'
-            : 'No hay una revisión publicada; no se muestran puntuaciones ni percentiles.'}
+          {disponibleSinRevision
+            ? 'No se muestran puntuaciones ni percentiles hasta identificar la revisión.'
+            : publicada && resultado.estadoResultado === 'DISPONIBLE'
+              ? 'La revisión publicada no contiene factores.'
+              : 'No hay una revisión publicada; no se muestran puntuaciones ni percentiles.'}
         </p>
       )}
     </section>

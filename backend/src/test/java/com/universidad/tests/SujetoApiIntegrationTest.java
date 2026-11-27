@@ -6,8 +6,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.universidad.tests.application.service.AutenticacionService;
 import com.universidad.tests.application.service.IdentidadSesion;
+import com.universidad.tests.domain.model.Cuenta;
+import com.universidad.tests.domain.model.EstadoCuenta;
+import com.universidad.tests.domain.model.Rol;
+import com.universidad.tests.domain.port.HashContrasenasPort;
+import com.universidad.tests.domain.repository.CuentaRepository;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -22,7 +29,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-/** HTTP y PostgreSQL reales. Solo se sustituye la validación del token, no la autorización. */
+/**
+ * HTTP y PostgreSQL reales. Las pruebas de 403 y de alta simulan la validación del token (spy sobre
+ * AutenticacionService) porque la matriz aprobada da SUJETO_LEER a los cinco roles y no existe un
+ * rol real sin ese permiso; la prueba de E23 con identificador vacío usa un Bearer emitido por E14.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -30,6 +41,9 @@ class SujetoApiIntegrationTest {
     @Autowired private MockMvc mvc;
     @Autowired private JdbcTemplate jdbc;
     @MockitoSpyBean private AutenticacionService autenticacion;
+    @Autowired private ObjectMapper json;
+    @Autowired private CuentaRepository cuentas;
+    @Autowired private HashContrasenasPort hash;
     private Long cuentaId;
 
     @BeforeEach
@@ -174,14 +188,44 @@ class SujetoApiIntegrationTest {
     }
 
     @Test
-    void busquedaConIdentificadorVacioDevuelveListaVaciaSegunContrato() throws Exception {
-        permisos("SUJETO_LEER");
-        mvc.perform(
-                        get(RUTA)
-                                .header("Authorization", "Bearer " + TOKEN)
-                                .param("identificadorInstitucional", "  "))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+    void busquedaConIdentificadorVacioDevuelveListaVaciaConBearerDeE14() throws Exception {
+        String clave = "solo-fixture-sintetico-123";
+        String correo = "e23-" + UUID.randomUUID() + "@ejemplo.test";
+        cuentas.guardar(
+                new Cuenta(
+                        null,
+                        correo,
+                        hash.crear(clave.toCharArray()),
+                        "Persona",
+                        "Ficticia",
+                        EstadoCuenta.ACTIVA,
+                        Set.of(Rol.SUJETO)));
+        String token =
+                json.readTree(
+                                mvc.perform(
+                                                post("/api/v1/auth/sesion")
+                                                        .contentType(MediaType.APPLICATION_JSON)
+                                                        .content(
+                                                                json.writeValueAsString(
+                                                                        Map.of(
+                                                                                "correo",
+                                                                                correo,
+                                                                                "contrasena",
+                                                                                clave))))
+                                        .andExpect(status().isOk())
+                                        .andReturn()
+                                        .getResponse()
+                                        .getContentAsString())
+                        .path("token")
+                        .asText();
+        for (String vacio : new String[] {"", " ", "   "}) {
+            mvc.perform(
+                            get(RUTA)
+                                    .header("Authorization", "Bearer " + token)
+                                    .param("identificadorInstitucional", vacio))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(0));
+        }
     }
 
     @Test

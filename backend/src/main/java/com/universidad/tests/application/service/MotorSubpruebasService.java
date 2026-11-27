@@ -2,6 +2,11 @@ package com.universidad.tests.application.service;
 
 import static com.universidad.tests.domain.exception.MotorSubpruebasException.Codigo.*;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
 import com.universidad.tests.domain.exception.MotorSubpruebasException;
 import com.universidad.tests.domain.model.ConfiguracionSubprueba;
@@ -37,6 +42,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MotorSubpruebasService {
+    private static final ObjectReader LECTOR_EJEMPLOS =
+            JsonMapper.builder().build().readerFor(new TypeReference<List<EjemploPractica>>() {});
+
     private final EvaluacionRepository evaluaciones;
     private final ConfiguracionSubpruebaRepository configuraciones;
     private final PreguntaRepository preguntas;
@@ -89,6 +97,49 @@ public class MotorSubpruebasService {
         this.auditoria = auditoria;
         this.reloj = reloj;
     }
+
+    @Transactional(readOnly = true)
+    public InstruccionesResponse consultarInstrucciones(Long id, String codigo) {
+        autorizacion.exigirPermiso(Permiso.PRACTICA_REALIZAR);
+        Evaluacion evaluacion = obtenerEvaluacion(id, Permiso.INSTRUCCIONES_LEER, false);
+        EvaluacionSubprueba subprueba = buscarSubprueba(evaluacion, codigo);
+        ConfiguracionSubprueba configuracion = configuracionAplicada(evaluacion, subprueba);
+        String instrucciones = subprueba.instrucciones();
+        return new InstruccionesResponse(
+                subprueba.codigo(),
+                instrucciones != null ? instrucciones : configuracion.getInstruccionesRef(),
+                leerEjemplos(configuracion.getPracticaRef()));
+    }
+
+    private List<EjemploPractica> leerEjemplos(String practica) {
+        // E26 guarda un arreglo JSON. Las referencias antiguas no contienen ejemplos en línea.
+        if (practica == null || !practica.stripLeading().startsWith("[")) {
+            return List.of();
+        }
+        try {
+            return LECTOR_EJEMPLOS.readValue(practica);
+        } catch (JsonProcessingException ex) {
+            throw new MotorSubpruebasException(
+                    ERROR_INTERNO,
+                    "Los ejemplos de práctica de la subprueba no están disponibles.");
+        }
+    }
+
+    public record InstruccionesResponse(
+            String codigo, String instrucciones, List<EjemploPractica> ejemplos) {}
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record EjemploPractica(
+            Integer numero,
+            String enunciado,
+            List<OpcionPractica> opciones,
+            String retroalimentacion) {
+        public EjemploPractica {
+            opciones = opciones == null ? List.of() : opciones;
+        }
+    }
+
+    public record OpcionPractica(String letra, String texto) {}
 
     @Transactional
     public SubpruebaActivaResponse iniciar(Long id, String codigo) {

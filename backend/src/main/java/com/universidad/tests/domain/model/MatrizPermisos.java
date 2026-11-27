@@ -46,6 +46,10 @@ public final class MatrizPermisos {
     // E22
     public static final String OPERACION_AUTORIZAR = "OPERACION_AUTORIZAR";
 
+    // E24: instrucciones y práctica de la asignación del sujeto.
+    public static final String INSTRUCCIONES_LEER = "INSTRUCCIONES_LEER";
+    public static final String PRACTICA_REALIZAR = "PRACTICA_REALIZAR";
+
     // E5-E7: captura de respuestas reservada al sujeto dentro de su asignacion.
     public static final String SUBPRUEBA_INICIAR = "SUBPRUEBA_INICIAR";
     public static final String EVALUACION_FINALIZAR = "EVALUACION_FINALIZAR";
@@ -56,6 +60,8 @@ public final class MatrizPermisos {
     private static final Map<String, Set<Rol>> APROBADA = new LinkedHashMap<>();
 
     static {
+        APROBADA.put(INSTRUCCIONES_LEER, Set.of(SUJETO));
+        APROBADA.put(PRACTICA_REALIZAR, Set.of(SUJETO));
         APROBADA.put(SUBPRUEBA_INICIAR, Set.of(SUJETO));
         APROBADA.put(EVALUACION_FINALIZAR, Set.of(SUJETO));
         APROBADA.put(ITEMS_LEER, Set.of(SUJETO));

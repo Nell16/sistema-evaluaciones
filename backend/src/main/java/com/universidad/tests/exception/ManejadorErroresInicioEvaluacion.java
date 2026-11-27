@@ -194,6 +194,20 @@ public class ManejadorErroresInicioEvaluacion {
                         List.of());
             }
         }
+        for (Throwable causa = e; causa != null; causa = causa.getCause()) {
+            if (causa instanceof SQLException sql
+                    && "23505".equals(sql.getSQLState())
+                    && sql.getMessage() != null
+                    && sql.getMessage().contains("uq_periodo_codigo")
+                    && request.getRequestURI().equals("/api/v1/periodos")) {
+                return responder(
+                        HttpStatus.CONFLICT,
+                        "PERIODO_DUPLICADO",
+                        "Ya existe un período registrado con ese código.",
+                        request,
+                        List.of());
+            }
+        }
         return inesperado(e, request);
     }
 

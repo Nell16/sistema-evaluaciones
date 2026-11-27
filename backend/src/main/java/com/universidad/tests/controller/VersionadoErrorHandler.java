@@ -3,15 +3,18 @@ package com.universidad.tests.controller;
 import com.universidad.tests.application.service.AgregarPreguntaVersionadaService.PreguntaDuplicadaException;
 import com.universidad.tests.application.service.VersionFormularioService.VersionDuplicadaException;
 import com.universidad.tests.dto.response.ErrorResponse;
+
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.Instant;
-import java.util.NoSuchElementException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.time.Instant;
+import java.util.NoSuchElementException;
 
 // Errores propios del versionado con el formato comun (Documento general §5.2.2).
 // NO_AUTENTICADO y SIN_PERMISO los responde ManejadorErroresSeguridad.
@@ -36,6 +39,13 @@ public class VersionadoErrorHandler {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ErrorResponse> noEncontrado(Exception error, HttpServletRequest request) {
         return responder(HttpStatus.NOT_FOUND, "RECURSO_NO_ENCONTRADO", error, request);
+    }
+
+    @ExceptionHandler(
+            com.universidad.tests.application.service.PublicacionVersionFormularioService
+                    .VersionIncompletaException.class)
+    public ResponseEntity<ErrorResponse> incompleta(Exception error, HttpServletRequest request) {
+        return responder(HttpStatus.UNPROCESSABLE_ENTITY, "VERSION_INCOMPLETA", error, request);
     }
 
     @ExceptionHandler(IllegalStateException.class)

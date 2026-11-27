@@ -8,11 +8,13 @@ import com.universidad.tests.domain.model.TipoRespuesta;
 import com.universidad.tests.domain.model.VersionFormulario;
 import com.universidad.tests.domain.port.AutorizacionContenidoPort;
 import com.universidad.tests.domain.repository.*;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PublicacionVersionFormularioService {
@@ -21,7 +23,9 @@ public class PublicacionVersionFormularioService {
     private final ConfiguracionSubpruebaRepository configuracionRepository;
     private final SubpruebaRepository subpruebaRepository;
     private final PreguntaRepository preguntaRepository;
-    private final OpcionRespuestaRepository opcionRepository;
+    private final OpcionRespuestaRepository.Edicion opcionRepository;
+    private final VersionClaveBFARepository claves;
+    private final EntradaClaveBFARepository entradas;
     private final AutorizacionContenidoPort autorizacion;
 
     public PublicacionVersionFormularioService(
@@ -29,7 +33,9 @@ public class PublicacionVersionFormularioService {
             ConfiguracionSubpruebaRepository configuracionRepository,
             SubpruebaRepository subpruebaRepository,
             PreguntaRepository preguntaRepository,
-            OpcionRespuestaRepository opcionRepository,
+            OpcionRespuestaRepository.Edicion opcionRepository,
+            VersionClaveBFARepository claves,
+            EntradaClaveBFARepository entradas,
             AutorizacionContenidoPort autorizacion) {
 
         this.versionRepository = versionRepository;
@@ -37,6 +43,8 @@ public class PublicacionVersionFormularioService {
         this.subpruebaRepository = subpruebaRepository;
         this.preguntaRepository = preguntaRepository;
         this.opcionRepository = opcionRepository;
+        this.claves = claves;
+        this.entradas = entradas;
         this.autorizacion = autorizacion;
     }
 
@@ -47,6 +55,7 @@ public class PublicacionVersionFormularioService {
 
         // Exigir permiso antes de publicar.
         autorizacion.exigirPermisoPublicar(idVersionFormulario);
+        opcionRepository.bloquearVersion(idVersionFormulario);
 
         VersionFormulario version = buscarVersion(idVersionFormulario);
 
@@ -98,8 +107,20 @@ public class PublicacionVersionFormularioService {
 
         if (configuraciones.isEmpty()) {
 
-            throw new IllegalStateException("No se puede publicar una version sin subpruebas");
+            throw new VersionIncompletaException("No se puede publicar una version sin subpruebas");
         }
+
+        var claveVersion =
+                claves.buscarPorFormularioYVersion(idVersion, version.getCodigoVersion());
+        var clavesPorPregunta = new java.util.HashMap<Long, Long>();
+        claveVersion.ifPresent(
+                clave ->
+                        entradas.listarPorClave(clave.getIdClave())
+                                .forEach(
+                                        entrada ->
+                                                clavesPorPregunta.put(
+                                                        entrada.getIdPregunta(),
+                                                        entrada.getIdOpcionCorrecta())));
 
         for (ConfiguracionSubprueba configuracion : configuraciones) {
 
@@ -114,7 +135,18 @@ public class PublicacionVersionFormularioService {
             // Comprobar que pertenece al mismo test.
             if (!Objects.equals(subprueba.getIdTest(), version.getIdTest())) {
 
-                throw new IllegalStateException("Una subprueba pertenece a otro test");
+                throw new VersionIncompletaException("Una subprueba pertenece a otro test");
+            }
+
+            if (configuracion.getInstruccionesRef() == null
+                    || configuracion.getInstruccionesRef().isBlank()) {
+                throw new VersionIncompletaException(
+                        "Faltan instrucciones en " + subprueba.getCodigo());
+            }
+            if ("FV".equals(subprueba.getCodigo())) {
+                // DOC-41: la letra por ejecución no certifica la letra de esta versión.
+                throw new VersionIncompletaException(
+                        "Falta la letra de Fluidez Verbal por versión");
             }
 
             // Recuperar preguntas de la configuracion.
@@ -124,7 +156,7 @@ public class PublicacionVersionFormularioService {
 
             if (preguntas.isEmpty()) {
 
-                throw new IllegalStateException(
+                throw new VersionIncompletaException(
                         "La subprueba " + subprueba.getCodigo() + " no contiene preguntas");
             }
 
@@ -133,15 +165,28 @@ public class PublicacionVersionFormularioService {
 
                 for (Pregunta pregunta : preguntas) {
 
-                    if (opcionRepository.listarPorPregunta(pregunta.getIdPregunta()).isEmpty()) {
+                    var opciones = opcionRepository.listarPorPregunta(pregunta.getIdPregunta());
+                    if (opciones.isEmpty()) {
 
-                        throw new IllegalStateException(
+                        throw new VersionIncompletaException(
                                 "La pregunta "
                                         + pregunta.getNumeroVisible()
                                         + " no contiene opciones");
                     }
+                    Long correcta = clavesPorPregunta.get(pregunta.getIdPregunta());
+                    if (correcta == null
+                            || opciones.stream().noneMatch(o -> correcta.equals(o.getIdOpcion()))) {
+                        throw new VersionIncompletaException(
+                                "La clave no corresponde a las opciones vigentes");
+                    }
                 }
             }
+        }
+    }
+
+    public static class VersionIncompletaException extends IllegalStateException {
+        public VersionIncompletaException(String mensaje) {
+            super(mensaje);
         }
     }
 

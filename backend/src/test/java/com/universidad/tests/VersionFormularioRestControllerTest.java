@@ -12,9 +12,7 @@ import com.universidad.tests.application.service.VersionFormularioRestService.Re
 import com.universidad.tests.application.service.VersionFormularioService.VersionDuplicadaException;
 import com.universidad.tests.controller.VersionFormularioController;
 import com.universidad.tests.controller.VersionadoErrorHandler;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Set;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +21,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.Set;
 
 @WebMvcTest(VersionFormularioController.class)
 @Import(VersionadoErrorHandler.class)
@@ -34,6 +36,36 @@ class VersionFormularioRestControllerTest {
     private static final String RUTA = "/api/v1/tests/1/versiones";
     private static final String TOKEN = "token-prueba";
     private static final String CUERPO = "{\"codigoVersion\":\"v2\",\"fuenteRef\":\"DOC-BFA\"}";
+
+    @Test
+    void e31PublicaSinCuerpo() throws Exception {
+        when(servicio.publicar(11L)).thenReturn(new ResumenVersion(11L, 1L, "PUBLICADA"));
+        mvc.perform(
+                        post("/api/v1/versiones/11/publicar")
+                                .header("Authorization", "Bearer " + TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("PUBLICADA"));
+    }
+
+    @Test
+    void e31DistingueConflictoYContenidoIncompleto() throws Exception {
+        when(servicio.publicar(11L))
+                .thenThrow(new IllegalStateException("Ya publicada"))
+                .thenThrow(
+                        new com.universidad.tests.application.service
+                                .PublicacionVersionFormularioService.VersionIncompletaException(
+                                "Falta clave"));
+        mvc.perform(
+                        post("/api/v1/versiones/11/publicar")
+                                .header("Authorization", "Bearer " + TOKEN))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codigo").value("VERSION_NO_EDITABLE"));
+        mvc.perform(
+                        post("/api/v1/versiones/11/publicar")
+                                .header("Authorization", "Bearer " + TOKEN))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.codigo").value("VERSION_INCOMPLETA"));
+    }
 
     @BeforeEach
     void prepararAutenticacion() {

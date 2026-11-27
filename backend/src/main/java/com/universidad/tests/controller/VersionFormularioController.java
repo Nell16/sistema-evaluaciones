@@ -2,15 +2,18 @@ package com.universidad.tests.controller;
 
 import com.universidad.tests.application.service.VersionFormularioRestService;
 import com.universidad.tests.application.service.VersionFormularioRestService.ResumenVersion;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import java.net.URI;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.net.URI;
 
 @RestController
 public class VersionFormularioController {
@@ -32,6 +35,11 @@ public class VersionFormularioController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .location(URI.create("/api/v1/versiones/" + version.id()))
                 .body(version);
+    }
+
+    @PostMapping("/api/v1/versiones/{id}/publicar")
+    public ResumenVersion publicar(@PathVariable Long id) {
+        return servicio.publicar(id);
     }
 
     public record CrearVersionRequest(

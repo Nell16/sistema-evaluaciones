@@ -8,13 +8,15 @@ import com.universidad.tests.application.service.PublicacionVersionFormularioSer
 import com.universidad.tests.domain.model.*;
 import com.universidad.tests.domain.port.AutorizacionContenidoPort;
 import com.universidad.tests.domain.repository.*;
-import java.util.List;
-import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class PublicacionVersionFormularioServiceTest {
@@ -27,7 +29,9 @@ class PublicacionVersionFormularioServiceTest {
 
     @Mock private PreguntaRepository preguntaRepository;
 
-    @Mock private OpcionRespuestaRepository opcionRepository;
+    @Mock private OpcionRespuestaRepository.Edicion opcionRepository;
+    @Mock private VersionClaveBFARepository claves;
+    @Mock private EntradaClaveBFARepository entradas;
 
     @Mock private AutorizacionContenidoPort autorizacion;
 
@@ -115,6 +119,7 @@ class PublicacionVersionFormularioServiceTest {
         when(subpruebaRepository.buscarPorId(3L)).thenReturn(Optional.of(subprueba));
 
         when(subprueba.getIdTest()).thenReturn(2L);
+        when(configuracion.getInstruccionesRef()).thenReturn("demo/instrucciones");
 
         when(configuracion.getIdConfiguracionSubprueba()).thenReturn(4L);
 
@@ -131,8 +136,9 @@ class PublicacionVersionFormularioServiceTest {
         verify(versionRepository, never()).guardar(any());
     }
 
-    @Test
-    void debePublicarVersionConContenidoValido() {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(longs = {12L, 99L})
+    void verificaQueLaClaveCorrespondaALasOpcionesVigentes(long idCorrecta) {
 
         VersionFormulario version = crearVersionBorrador();
 
@@ -152,6 +158,7 @@ class PublicacionVersionFormularioServiceTest {
         when(subpruebaRepository.buscarPorId(3L)).thenReturn(Optional.of(subprueba));
 
         when(subprueba.getIdTest()).thenReturn(2L);
+        when(configuracion.getInstruccionesRef()).thenReturn("demo/instrucciones");
 
         when(configuracion.getIdConfiguracionSubprueba()).thenReturn(4L);
 
@@ -163,6 +170,22 @@ class PublicacionVersionFormularioServiceTest {
 
         when(opcionRepository.listarPorPregunta(6L)).thenReturn(List.of(opcion));
 
+        var clave = mock(VersionClaveBFA.class);
+        when(claves.buscarPorFormularioYVersion(5L, version.getCodigoVersion()))
+                .thenReturn(Optional.of(clave));
+        when(clave.getIdClave()).thenReturn(8L);
+        var entrada = mock(EntradaClaveBFA.class);
+        when(entradas.listarPorClave(8L)).thenReturn(List.of(entrada));
+        when(entrada.getIdPregunta()).thenReturn(6L);
+        when(entrada.getIdOpcionCorrecta()).thenReturn(idCorrecta);
+        when(opcion.getIdOpcion()).thenReturn(12L);
+        if (idCorrecta != 12L) {
+            assertThrows(
+                    PublicacionVersionFormularioService.VersionIncompletaException.class,
+                    () -> servicio.publicar(5L, "ACTA-001"));
+            verify(versionRepository, never()).guardar(any());
+            return;
+        }
         when(versionRepository.guardar(version)).thenReturn(version);
 
         VersionFormulario resultado = servicio.publicar(5L, "ACTA-001");

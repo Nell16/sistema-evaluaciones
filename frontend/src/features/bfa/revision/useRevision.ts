@@ -1,3 +1,4 @@
+import { RevisionSinIdentificadoresError } from '../../../services/revision';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { aErrorMostrable } from '../../evaluacion/mensajesError';
 import type { ErrorMostrable } from '../../evaluacion/tipos';
@@ -23,7 +24,18 @@ export function useRevision(cliente: ClienteRevision, evaluacionId: number) {
       const datos = await cliente.cargar(evaluacionId);
       if (id === contador.current) setCarga({ fase: 'listo', datos });
     } catch (e) {
-      if (id === contador.current) setCarga({ fase: 'error', error: aErrorMostrable(e) });
+      if (id !== contador.current) return;
+      const error: ErrorMostrable =
+        e instanceof RevisionSinIdentificadoresError
+          ? {
+              tipo: 'conflicto',
+              codigo: 'REVISION_SIN_IDENTIFICADORES',
+              mensaje:
+                'La API aún no devuelve los identificadores necesarios para revisar las palabras.',
+              detalles: [],
+            }
+          : aErrorMostrable(e);
+      setCarga({ fase: 'error', error });
     }
   }, [cliente, evaluacionId]);
 

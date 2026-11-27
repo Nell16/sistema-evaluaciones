@@ -200,6 +200,11 @@ abstract class DatosRevisionBfaService {
         }
 
         @Override
+        public String resolverReglas(Long resultado, String versionPedida) {
+            return versionPedida != null ? versionPedida : "DEMO-1";
+        }
+
+        @Override
         public boolean estaValidada(Long idRevision) {
             return java.util.Objects.equals(resultado.referenciaRevisionVigente(), idRevision);
         }

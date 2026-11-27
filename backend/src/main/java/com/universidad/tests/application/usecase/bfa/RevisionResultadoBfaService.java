@@ -162,7 +162,10 @@ public class RevisionResultadoBfaService {
 
         // Si no se indican versiones, se parte de las de la última revisión.
         var previa = revisiones.buscarUltima(resultado.idResultado());
-        var reglas = elegir(solicitud.versionReglas(), previa, r -> r.versionReglas());
+        var reglas =
+                revisiones.resolverReglas(
+                        resultado.idResultado(),
+                        elegir(solicitud.versionReglas(), previa, r -> r.versionReglas()));
         var calculo =
                 preparacion.preparar(
                         evaluacionId,

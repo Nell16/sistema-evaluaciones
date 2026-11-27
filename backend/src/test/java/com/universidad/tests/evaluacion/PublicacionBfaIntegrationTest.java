@@ -156,4 +156,35 @@ class PublicacionBfaIntegrationTest extends DatosPublicacionBfaIntegration {
                                 .content(solicitud("x".repeat(81))))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void primeraRevisionSinVersionExplicitaUsaLaUnicaReglaAprobada() throws Exception {
+        String cuerpo = solicitud("automatica").replace("\"versionReglas\":\"R-FICTICIA\",", "");
+        mvc.perform(
+                        post(base() + "/recalculos")
+                                .header("Authorization", "Bearer " + profesional)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(cuerpo))
+                .andExpect(status().isCreated());
+        assertThat(
+                        jdbc.queryForObject(
+                                "select r.id_baremo from revision_resultado r join resultado c using(id_resultado) where c.id_evaluacion=?",
+                                Long.class,
+                                evaluacion))
+                .isEqualTo(baremo);
+    }
+
+    @Test
+    void variasReglasAprobadasExigenSeleccionExplicita() throws Exception {
+        jdbc.update(
+                "insert into regla_calificacion(id_version_formulario,version,estado,referencia_especificacion,evidencia_aprobacion,referencia_implementacion) values (?,'OTRA','APROBADA','ficticia','ficticia','bfa-verbal-v1')",
+                version);
+        String cuerpo = solicitud("ambigua").replace("\"versionReglas\":\"R-FICTICIA\",", "");
+        mvc.perform(
+                        post(base() + "/recalculos")
+                                .header("Authorization", "Bearer " + profesional)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(cuerpo))
+                .andExpect(status().isBadRequest());
+    }
 }

@@ -4,9 +4,9 @@
 
 ## Diagrama y temas del modelo
 
-El diagrama físico representa las migraciones de `main` hasta `V202611251500`:
+El diagrama físico representa las migraciones de `main` hasta `V202611251600` (21 tablas, 31 FK):
 [editable en Draw.io](../diagramas/modelo-er.drawio) · [vista PNG](../diagramas/modelo-er.png).
-DOC-34-OTR reutiliza las tablas comunes de calificación para Thurstone y Allport. Orientación Vocacional no tiene calificación automática definida. Los temas conservan el diseño de calificación, claves y baremos de BFA pendiente de integración y la propuesta de baremos genéricos (OTR-05).
+DOC-34-OTR reutiliza las tablas comunes de calificación para Thurstone y Allport. Orientación Vocacional no tiene calificación automática definida. Las claves de corrección de BFA ya están en `main` (`V202611251600`). Los temas conservan el diseño de baremos de BFA, que sigue como propuesta, y la propuesta de baremos genéricos (OTR-05).
 
 - [Ítems y formularios](items-formularios.md)
 - [Aplicación y respuestas](aplicacion-respuestas.md)
@@ -110,7 +110,7 @@ Tarea DOC-42. Reúne las decisiones del modelo que tomaron los cuatro temas (DOC
 | `sujeto`, `periodo` | PR #91 (DOC-31) | E3, E8, E18–E23 |
 | `evaluacion`, `evaluacion_subprueba`, `respuesta_evaluacion`, `solicitud_calculo_subprueba` | PR #41 (DOC-31) | E3–E12, E22, E24 |
 | `resultado`, `evento_auditoria` | Nuevas del núcleo (DOC-31) | E3–E12, E22 |
-| `version_clave_bfa`, `entrada_clave_bfa` | PR #50 (DOC-32) | E8, E11, E29, E31 |
+| `version_clave_bfa`, `entrada_clave_bfa` | `V202611251600` (PR #155, continúa #50) | E8, E11, E29, E31 |
 | `baremo_bfa`, `rango_baremo_bfa` | PR #69 (DOC-34) | E8, E11, E30 |
 | `escala`, `regla_calificacion`, `revision_resultado`, `puntaje_subprueba`, `resultado_escala`, `conversion_resultado_escala` | Propuestas de DOC-34 | E8–E11 |
 
@@ -174,11 +174,11 @@ El origen indica `main` o la versión de la migración que crea la tabla.
 | `resultado` | V202611251400 | `id_resultado` | `id_evaluacion` → evaluacion (única: 0..1 por evaluación) | `estado` (CALCULANDO, PENDIENTE_VALIDACION, DISPONIBLE), `creado_en`, `referencia_revision_vigente` (obligatoria en DISPONIBLE; apunta a la revisión de cálculo del módulo, sin FK en el núcleo) |
 | `evento_auditoria` | V202611251204 | `id_evento_auditoria` | `id_cuenta` → cuenta (obligatoria); `id_evaluacion` → evaluacion (nula en eventos administrativos); `id_evaluacion_subprueba` → evaluacion_subprueba (nula) | `accion`, `entidad_tipo`, `entidad_id`, `ocurrido_en`, `detalle` |
 
-Extensiones de BFA descritas en sus PR y pendientes en las migraciones de `main`:
+Extensiones de BFA: las claves ya existen en `main` (`V202611251600`); los baremos siguen descritos en su PR y pendientes de migración:
 
 | Tabla | Origen | Entidad del diseño | Cuelga de |
 | --- | --- | --- | --- |
-| `version_clave_bfa`, `entrada_clave_bfa` | #50 (PK `id_clave`, `id_entrada_clave`) | clave de corrección de BFA | `version_formulario`, `pregunta`, `opcion_respuesta` |
+| `version_clave_bfa`, `entrada_clave_bfa` | `V202611251600` (PK `id_clave`, `id_entrada_clave`) | clave de corrección de BFA | `version_formulario`, `pregunta`, `opcion_respuesta` |
 | `baremo_bfa`, `rango_baremo_bfa` | #69 (PK `id_baremo`, `id_rango`) | NormaBaremo, EquivalenciaBaremo | `rango_baremo_bfa.id_factor` es texto (código del factor); aún sin tabla de factores |
 
 El diseño de aplicación BFA se describe en [Aplicación y respuestas](aplicacion-respuestas.md).

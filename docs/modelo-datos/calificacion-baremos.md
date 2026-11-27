@@ -15,9 +15,9 @@ El cálculo parte de la versión de formulario aplicada y de las respuestas guar
 | `resultado.id_resultado` | `id_evaluacion` → `evaluacion.id_evaluacion` con unicidad. Evaluación 1:0..1 resultado. | Contenedor y estado común. `referencia_revision_vigente` señala la revisión publicada del módulo; DOC-31 la define sin FK en el núcleo. |
 | `evento_auditoria.id_evento_auditoria`, `cuenta.id_cuenta` | `evento_auditoria.id_evaluacion` e `id_evaluacion_subprueba` son FK opcionales a sus PK del núcleo. Evaluación y aplicación 1:N eventos. | `id_cuenta` referencia obligatoriamente a `cuenta.id_cuenta` e identifica al actor del evento. La validación profesional de una revisión puede apuntar a una cuenta. Se reutilizan los roles y las consultas autorizadas del núcleo. |
 
-`resultado` se crea en `V202611251400` y `evento_auditoria` en `V202611251204`. `resultado` admite `CALCULANDO`, `PENDIENTE_VALIDACION` y `DISPONIBLE`. El estado `DISPONIBLE` exige `referencia_revision_vigente`, que se guarda sin FK en la migración. Las cuatro tablas BFA siguientes y las seis propuestas aún no tienen una migración en `main`.
+`resultado` se crea en `V202611251400` y `evento_auditoria` en `V202611251204`. `resultado` admite `CALCULANDO`, `PENDIENTE_VALIDACION` y `DISPONIBLE`. El estado `DISPONIBLE` exige `referencia_revision_vigente`, que se guarda sin FK en la migración. `version_clave_bfa` y `entrada_clave_bfa` se crean en `V202611251600`. `baremo_bfa`, `rango_baremo_bfa` y las seis tablas propuestas aún no tienen migración en `main`.
 
-**2. Diseño de claves y baremos de BFA**
+**2. Claves (en main) y baremos (propuesta) de BFA**
 
 | Tabla y PK | FK y cardinalidad verificadas en el PR | Atributos, unicidad y uso |
 |---|---|---|

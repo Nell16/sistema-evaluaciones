@@ -16,7 +16,7 @@ Recorrido común: `test` → `version_formulario` → `configuracion_subprueba` 
 
 ### Diseño de la clave de corrección de BFA
 
-El PR #50 no llegó a `main`. Las dos tablas de esta sección documentan el diseño pendiente de integrar.
+La migración `V202611251600__bfa_claves_versionadas.sql` (PR #155, continuación de #50) ya está en `main`. Las dos tablas de esta sección describen su diseño físico.
 
 **Por qué hace falta tabla propia:** la opción correcta no puede ser una columna (`es_correcta`) en `opcion_respuesta`, porque el evaluado recibe esa tabla y la clave debe estar protegida y versionarse aparte de la edición del contenido (Documento BFA §4.3, ENT-BFA-02 y 03; D03). Una clave puede corregirse sin cambiar las preguntas. Nombres y columnas son los ya fijados en el PR #50 (migración `V202611121500__bfa_claves_versionadas.sql`); no se renombran.
 

@@ -26,9 +26,9 @@ export const servicioGestion: ClienteGestion = {
   listarPeriodos: () => http<PeriodoResponse[]>('/periodos'),
 
   /** E22 */
-  listarEvaluaciones: (filtro = {}) => {
+  listarEvaluaciones: ({ sujetoId, testId, periodoId, estado } = {}) => {
     const consulta = new URLSearchParams();
-    for (const [clave, valor] of Object.entries(filtro))
+    for (const [clave, valor] of Object.entries({ sujetoId, testId, periodoId, estado }))
       if (valor !== undefined) consulta.set(clave, String(valor));
     const texto = consulta.toString();
     return http<EvaluacionResponse[]>(`/evaluaciones${texto ? `?${texto}` : ''}`);

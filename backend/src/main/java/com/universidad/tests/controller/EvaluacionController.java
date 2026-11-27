@@ -3,11 +3,11 @@ package com.universidad.tests.controller;
 import com.universidad.tests.application.service.ConsultaEvaluacionService;
 import com.universidad.tests.application.service.FinalizacionEvaluacionService;
 import com.universidad.tests.application.service.MotorSubpruebasService;
+import com.universidad.tests.application.service.MotorSubpruebasService.InstruccionesResponse;
 import com.universidad.tests.dto.request.RegistrarRespuestasRequest;
 import com.universidad.tests.dto.response.AvanceSubpruebaResponse;
 import com.universidad.tests.dto.response.EvaluacionResponse;
 import com.universidad.tests.dto.response.PreguntasSubpruebaResponse;
-import com.universidad.tests.dto.response.ResultadoResponse;
 import com.universidad.tests.dto.response.SubpruebaActivaResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,16 +40,16 @@ public class EvaluacionController {
         return finalizacion.finalizar(evaluacionId);
     }
 
-    // E9
-    @GetMapping("/{evaluacionId}/resultados")
-    public ResultadoResponse consultarResultados(@PathVariable Long evaluacionId) {
-        return finalizacion.consultarResultados(evaluacionId);
-    }
-
     // E4
     @GetMapping("/{evaluacionId}")
     public EvaluacionResponse consultarEvaluacion(@PathVariable Long evaluacionId) {
         return consultaService.consultar(evaluacionId);
+    }
+
+    @GetMapping("/{evaluacionId}/subpruebas/{codigo}/instrucciones")
+    public InstruccionesResponse consultarInstrucciones(
+            @PathVariable Long evaluacionId, @PathVariable String codigo) {
+        return motor.consultarInstrucciones(evaluacionId, codigo);
     }
 
     @PostMapping("/{evaluacionId}/subpruebas/{codigo}/iniciar")

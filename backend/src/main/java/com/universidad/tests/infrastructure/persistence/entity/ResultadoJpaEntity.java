@@ -32,6 +32,17 @@ public class ResultadoJpaEntity {
     @Column(name = "creado_en", nullable = false)
     private Instant creadoEn;
 
+    @Column(name = "id_clave_calculo")
+    private Long idClaveCalculo;
+
+    public Long getIdClaveCalculo() {
+        return idClaveCalculo;
+    }
+
+    public void registrarClaveCalculo(Long idClave) {
+        this.idClaveCalculo = idClave;
+    }
+
     protected ResultadoJpaEntity() {
         // Constructor requerido por JPA
     }
@@ -47,6 +58,12 @@ public class ResultadoJpaEntity {
         this.versionFormularioId = versionFormularioId;
         this.creadoEn = creadoEn;
         this.referenciaRevisionVigente = referenciaRevisionVigente;
+    }
+
+    /** Actualiza el cálculo conservando la identidad y la publicación del contenedor. */
+    public void actualizarCalculo(String estado, Long versionFormularioId) {
+        this.estado = estado;
+        this.versionFormularioId = versionFormularioId;
     }
 
     public Long getIdResultado() {

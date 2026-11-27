@@ -2,7 +2,6 @@ package com.universidad.tests.application.service;
 
 import com.universidad.tests.application.evaluator.bfa.BfaTestEvaluator;
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
-import com.universidad.tests.domain.exception.EvaluacionNoFinalizadaException;
 import com.universidad.tests.domain.exception.SinPermisoException;
 import com.universidad.tests.domain.model.EstadoEvaluacion;
 import com.universidad.tests.domain.model.Resultado;
@@ -12,7 +11,6 @@ import com.universidad.tests.domain.port.FinalizacionEvaluacionPort;
 import com.universidad.tests.domain.repository.EvaluacionRepository;
 import com.universidad.tests.domain.repository.ResultadoRepository;
 import com.universidad.tests.dto.response.EvaluacionResponse;
-import com.universidad.tests.dto.response.ResultadoResponse;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -36,6 +34,7 @@ public class FinalizacionEvaluacionService {
     private final FinalizacionEvaluacionPort cierre;
     private final RegistroAuditoria auditoria;
     private final ResultadoRepository resultadoRepository;
+    private final CalculoPuntuacionesBfaService calculoPuntuaciones;
 
     public FinalizacionEvaluacionService(
             AutorizacionService auth,
@@ -44,7 +43,8 @@ public class FinalizacionEvaluacionService {
             PreparacionFinalizacionService preparacion,
             FinalizacionEvaluacionPort cierre,
             RegistroAuditoria auditoria,
-            ResultadoRepository resultadoRepository) {
+            ResultadoRepository resultadoRepository,
+            CalculoPuntuacionesBfaService calculoPuntuaciones) {
         this.auth = auth;
         this.alcance = alcance;
         this.evaluaciones = evaluaciones;
@@ -52,11 +52,12 @@ public class FinalizacionEvaluacionService {
         this.cierre = cierre;
         this.auditoria = auditoria;
         this.resultadoRepository = resultadoRepository;
+        this.calculoPuntuaciones = calculoPuntuaciones;
     }
 
     @Transactional
     public EvaluacionResponse finalizar(Long id) {
-        return finalizar(id, Map.of());
+        return finalizar(id, null);
     }
 
     @Transactional
@@ -80,12 +81,22 @@ public class FinalizacionEvaluacionService {
             auditoria.registrar(sesion.idCuenta(), "FINALIZAR_EVALUACION", "EVALUACION", id);
 
             // BFA-BE-38: Consolidar y persistir factores psicométricos BFA
-            consolidarYPersistirFactoresBfa(
-                    resultado.resultadoId(),
-                    original.idEvaluacion(),
-                    original.idVersionFormulario(),
-                    puntuacionesDirectas,
-                    ahora);
+            var puntuaciones =
+                    puntuacionesDirectas != null
+                            ? java.util.Optional.of(
+                                    new CalculoPuntuacionesBfaService.Calculo(
+                                            puntuacionesDirectas, null))
+                            : calculoPuntuaciones.calcular(
+                                    original.idEvaluacion(), original.idVersionFormulario());
+            puntuaciones.ifPresent(
+                    insumos ->
+                            consolidarYPersistirFactoresBfa(
+                                    resultado.resultadoId(),
+                                    original.idEvaluacion(),
+                                    original.idVersionFormulario(),
+                                    insumos.puntuaciones(),
+                                    ahora,
+                                    insumos.idClave()));
         }
 
         var e =
@@ -112,73 +123,13 @@ public class FinalizacionEvaluacionService {
                 resultado.estadoResultado());
     }
 
-    @Transactional(readOnly = true)
-    public ResultadoResponse consultarResultados(Long id) {
-        var sesion = auth.exigirSesion();
-        var evaluacion =
-                evaluaciones
-                        .buscarPorId(id)
-                        .orElseThrow(() -> new EvaluacionNoEncontradaException(id));
-
-        if (!alcance.estaAsignado(sesion.idCuenta(), evaluacion.idSujeto())) {
-            throw new SinPermisoException();
-        }
-
-        if (evaluacion.estado() != EstadoEvaluacion.FINALIZADA) {
-            throw new EvaluacionNoFinalizadaException(id);
-        }
-
-        var resultado =
-                resultadoRepository
-                        .buscarPorEvaluacion(id)
-                        .orElseThrow(() -> new EvaluacionNoEncontradaException(id));
-
-        // OpenAPI: Sin revisión publicada, calificacionId y revision son nulos, factores está vacío
-        if (resultado.referenciaRevisionVigente() == null) {
-            return new ResultadoResponse(
-                    evaluacion.idEvaluacion(),
-                    resultado.idResultado(),
-                    resultado.estadoResultado(),
-                    evaluacion.idVersionFormulario(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    List.of());
-        }
-
-        // Con revisión vigente publicada
-        return new ResultadoResponse(
-                evaluacion.idEvaluacion(),
-                resultado.idResultado(),
-                resultado.estadoResultado(),
-                evaluacion.idVersionFormulario(),
-                resultado.referenciaRevisionVigente(),
-                1,
-                null,
-                null,
-                null,
-                resultado.factores().stream()
-                        .map(
-                                f ->
-                                        new ResultadoResponse.FactorResponse(
-                                                f.codigo(),
-                                                f.puntuacionDirecta(),
-                                                f.estadoCalculo(),
-                                                f.percentil(),
-                                                f.idRango(),
-                                                f.estadoNormativo(),
-                                                f.motivo()))
-                        .toList());
-    }
-
     private void consolidarYPersistirFactoresBfa(
             Long resultadoId,
             Long evaluacionId,
             Long versionFormularioId,
             Map<String, Integer> puntuacionesDirectas,
-            Instant ahora) {
+            Instant ahora,
+            Long idClaveCalculo) {
         List<String> subpruebasBfa =
                 List.of("VOC1", "VOC2", "CV", "S1", "S2", "R1", "R2", "N1", "N2", "FV");
         Map<String, Integer> insumos = new LinkedHashMap<>();
@@ -219,6 +170,7 @@ public class FinalizacionEvaluacionService {
                         versionFormularioId,
                         ahora,
                         null,
+                        idClaveCalculo,
                         factores);
 
         resultadoRepository.guardar(resultadoObj);

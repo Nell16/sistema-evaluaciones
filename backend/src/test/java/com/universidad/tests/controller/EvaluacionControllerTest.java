@@ -14,7 +14,6 @@ import com.universidad.tests.application.service.ConsultaEvaluacionService;
 import com.universidad.tests.application.service.FinalizacionEvaluacionService;
 import com.universidad.tests.application.service.MotorSubpruebasService;
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
-import com.universidad.tests.domain.exception.EvaluacionNoFinalizadaException;
 import com.universidad.tests.domain.exception.MotorSubpruebasException;
 import com.universidad.tests.domain.exception.MotorSubpruebasException.Codigo;
 import com.universidad.tests.domain.exception.NoAutenticadoException;
@@ -23,7 +22,6 @@ import com.universidad.tests.domain.exception.SubpruebasPendientesException;
 import com.universidad.tests.dto.response.AvanceSubpruebaResponse;
 import com.universidad.tests.dto.response.EvaluacionResponse;
 import com.universidad.tests.dto.response.PreguntasSubpruebaResponse;
-import com.universidad.tests.dto.response.ResultadoResponse;
 import com.universidad.tests.dto.response.SubpruebaActivaResponse;
 import java.time.Instant;
 import java.util.List;
@@ -255,39 +253,5 @@ class EvaluacionControllerTest {
         mvc.perform(post("/api/v1/evaluaciones/15/finalizar"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.codigo").value("SUBPRUEBAS_PENDIENTES"));
-    }
-
-    @Test
-    void e9DevuelveResultadosCalculadosDeEvaluacionFinalizada() throws Exception {
-        when(finalizacion.consultarResultados(15L))
-                .thenReturn(
-                        new ResultadoResponse(
-                                15L,
-                                101L,
-                                "PENDIENTE_VALIDACION",
-                                10L,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                List.of()));
-
-        mvc.perform(get("/api/v1/evaluaciones/15/resultados"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.evaluacionId").value(15))
-                .andExpect(jsonPath("$.resultadoId").value(101))
-                .andExpect(jsonPath("$.estadoResultado").value("PENDIENTE_VALIDACION"))
-                .andExpect(jsonPath("$.factores").isEmpty());
-    }
-
-    @Test
-    void e9Responde409CuandoEvaluacionNoEstaFinalizada() throws Exception {
-        when(finalizacion.consultarResultados(15L))
-                .thenThrow(new EvaluacionNoFinalizadaException(15L));
-
-        mvc.perform(get("/api/v1/evaluaciones/15/resultados"))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.codigo").value("EVALUACION_NO_FINALIZADA"));
     }
 }

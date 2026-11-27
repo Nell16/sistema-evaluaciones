@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import com.universidad.tests.application.service.AutorizacionService;
 import com.universidad.tests.application.service.FinalizacionEvaluacionService;
 import com.universidad.tests.application.service.IdentidadSesion;
-import com.universidad.tests.domain.exception.EvaluacionNoFinalizadaException;
 import com.universidad.tests.domain.exception.SinPermisoException;
 import com.universidad.tests.domain.model.EstadoEvaluacion;
 import com.universidad.tests.domain.model.EstadoSubprueba;
@@ -17,11 +16,11 @@ import com.universidad.tests.domain.model.Evaluacion;
 import com.universidad.tests.domain.model.EvaluacionSubprueba;
 import com.universidad.tests.domain.model.Resultado;
 import com.universidad.tests.domain.model.ResultadoFactor;
+import com.universidad.tests.domain.model.TipoRespuesta;
 import com.universidad.tests.domain.port.AlcanceSujetoPort;
 import com.universidad.tests.domain.repository.EvaluacionRepository;
 import com.universidad.tests.domain.repository.ResultadoRepository;
 import com.universidad.tests.dto.response.EvaluacionResponse;
-import com.universidad.tests.dto.response.ResultadoResponse;
 import com.universidad.tests.infrastructure.persistence.entity.ConfiguracionSubpruebaJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.PeriodoJpaEntity;
 import com.universidad.tests.infrastructure.persistence.entity.SubpruebaJpaEntity;
@@ -47,6 +46,11 @@ import org.springframework.transaction.annotation.Transactional;
 class FinalizarEvaluacionIntegrationTest {
 
     @Autowired private FinalizacionEvaluacionService finalizacionService;
+
+    @Autowired
+    private com.universidad.tests.application.usecase.resultados.ConsultarResultadosUseCase
+            consultaResultados;
+
     @Autowired private EvaluacionRepository evaluacionRepository;
     @Autowired private ResultadoRepository resultadoRepository;
     @Autowired private EntityManager entityManager;
@@ -94,10 +98,24 @@ class FinalizarEvaluacionIntegrationTest {
 
         ConfiguracionSubpruebaJpaEntity c1 =
                 new ConfiguracionSubpruebaJpaEntity(
-                        version, spVoc1, 1, 300, null, "Instrucciones VOC1", null, null);
+                        version,
+                        spVoc1,
+                        1,
+                        300,
+                        TipoRespuesta.SELECCION,
+                        "Instrucciones VOC1",
+                        null,
+                        null);
         ConfiguracionSubpruebaJpaEntity c2 =
                 new ConfiguracionSubpruebaJpaEntity(
-                        version, spVoc2, 2, 300, null, "Instrucciones VOC2", null, null);
+                        version,
+                        spVoc2,
+                        2,
+                        300,
+                        TipoRespuesta.SELECCION,
+                        "Instrucciones VOC2",
+                        null,
+                        null);
         entityManager.persist(c1);
         entityManager.persist(c2);
 
@@ -179,8 +197,10 @@ class FinalizarEvaluacionIntegrationTest {
         Long evaluacionId = guardada.idEvaluacion();
 
         // Antes de finalizar, E9 debe fallar con 409 EVALUACION_NO_FINALIZADA
-        assertThatThrownBy(() -> finalizacionService.consultarResultados(evaluacionId))
-                .isInstanceOf(EvaluacionNoFinalizadaException.class);
+        assertThatThrownBy(() -> consultaResultados.consultar(evaluacionId))
+                .isInstanceOf(
+                        com.universidad.tests.domain.exception.resultados.ConsultaResultadoException
+                                .class);
 
         // Finalizar con puntuaciones conocidas (E8)
         Map<String, Integer> puntuacionesDirectas = Map.of("VOC1", 12, "VOC2", 18);
@@ -193,7 +213,7 @@ class FinalizarEvaluacionIntegrationTest {
         assertThat(responseE8.fechaFin()).isNotNull();
 
         // Consultar resultados (E9)
-        ResultadoResponse responseE9 = finalizacionService.consultarResultados(evaluacionId);
+        var responseE9 = consultaResultados.consultar(evaluacionId);
         assertThat(responseE9.evaluacionId()).isEqualTo(evaluacionId);
         assertThat(responseE9.estadoResultado()).isEqualTo("PENDIENTE_VALIDACION");
         assertThat(responseE9.calificacionId()).isNull();
@@ -222,6 +242,28 @@ class FinalizarEvaluacionIntegrationTest {
         assertThat(factoresBd.get("CV").puntuacionDirecta()).isNull();
         assertThat(factoresBd.get("CV").estadoCalculo()).isEqualTo("NO_CALCULABLE");
         assertThat(factoresBd.get("CV").motivo()).isEqualTo("FALTA_PUNTUACION_CV");
+
+        // El adaptador actualiza el mismo contenedor y reemplaza factores sin INSERT duplicado.
+        Long contenedorOriginal = resultadoBd.idResultado();
+        Instant creadoOriginal = resultadoBd.creadoEn();
+        Resultado actualizado = resultadoRepository.guardar(resultadoBd);
+        entityManager.flush();
+        entityManager.clear();
+        Resultado releido = resultadoRepository.buscarPorEvaluacion(evaluacionId).orElseThrow();
+        assertThat(actualizado.idResultado()).isEqualTo(contenedorOriginal);
+        assertThat(releido.idResultado()).isEqualTo(contenedorOriginal);
+        assertThat(releido.creadoEn()).isEqualTo(creadoOriginal);
+        assertThat(releido.factores())
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("idResultadoFactor")
+                .containsExactlyInAnyOrderElementsOf(resultadoBd.factores());
+        assertThat(
+                        entityManager
+                                .createNativeQuery(
+                                        "select count(*) from resultado where id_evaluacion = :id",
+                                        Long.class)
+                                .setParameter("id", evaluacionId)
+                                .getSingleResult())
+                .isEqualTo(1L);
 
         // Idempotencia: repetir E8 devuelve el resultado existente sin recalcular
         EvaluacionResponse repeticionE8 = finalizacionService.finalizar(evaluacionId);

@@ -10,7 +10,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.universidad.tests.domain.exception.EvaluacionNoFinalizadaException;
 import com.universidad.tests.domain.exception.SinPermisoException;
 import com.universidad.tests.domain.model.EstadoEvaluacion;
 import com.universidad.tests.domain.model.EstadoSubprueba;
@@ -23,7 +22,6 @@ import com.universidad.tests.domain.port.FinalizacionEvaluacionPort;
 import com.universidad.tests.domain.repository.EvaluacionRepository;
 import com.universidad.tests.domain.repository.ResultadoRepository;
 import com.universidad.tests.dto.response.EvaluacionResponse;
-import com.universidad.tests.dto.response.ResultadoResponse;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -80,7 +78,10 @@ class FinalizacionEvaluacionServiceTest {
                         preparacion,
                         cierre,
                         auditoria,
-                        resultadoRepository);
+                        resultadoRepository,
+                        mock(
+                                com.universidad.tests.application.service
+                                        .CalculoPuntuacionesBfaService.class));
     }
 
     @Test
@@ -149,49 +150,6 @@ class FinalizacionEvaluacionServiceTest {
         when(evaluaciones.buscarPorIdParaActualizar(1L)).thenReturn(Optional.of(enCurso));
 
         assertThatThrownBy(() -> servicio.finalizar(1L)).isInstanceOf(SinPermisoException.class);
-    }
-
-    @Test
-    void e9DevuelveRespuestaVaciaDeFactoresAntesDePublicacionVigente() {
-        Evaluacion finalizada = crearEvaluacion(1L, EstadoEvaluacion.FINALIZADA);
-        when(evaluaciones.buscarPorId(1L)).thenReturn(Optional.of(finalizada));
-
-        resultadoRepository.guardar(
-                new Resultado(
-                        100L,
-                        1L,
-                        "PENDIENTE_VALIDACION",
-                        10L,
-                        ahora,
-                        null,
-                        List.of(ResultadoFactor.calculado("VOCT", 25, null, null))));
-
-        ResultadoResponse r = servicio.consultarResultados(1L);
-        assertThat(r.evaluacionId()).isEqualTo(1L);
-        assertThat(r.resultadoId()).isEqualTo(100L);
-        assertThat(r.estadoResultado()).isEqualTo("PENDIENTE_VALIDACION");
-        assertThat(r.calificacionId()).isNull();
-        assertThat(r.revision()).isNull();
-        assertThat(r.factores()).isEmpty();
-    }
-
-    @Test
-    void e9FallaCon409CuandoEvaluacionNoEstaFinalizada() {
-        Evaluacion enCurso = crearEvaluacion(1L, EstadoEvaluacion.EN_CURSO);
-        when(evaluaciones.buscarPorId(1L)).thenReturn(Optional.of(enCurso));
-
-        assertThatThrownBy(() -> servicio.consultarResultados(1L))
-                .isInstanceOf(EvaluacionNoFinalizadaException.class);
-    }
-
-    @Test
-    void e9FallaConSinPermisoCuandoSujetoNoEstaAsignado() {
-        when(alcance.estaAsignado(anyLong(), anyLong())).thenReturn(false);
-        Evaluacion finalizada = crearEvaluacion(1L, EstadoEvaluacion.FINALIZADA);
-        when(evaluaciones.buscarPorId(1L)).thenReturn(Optional.of(finalizada));
-
-        assertThatThrownBy(() -> servicio.consultarResultados(1L))
-                .isInstanceOf(SinPermisoException.class);
     }
 
     private Evaluacion crearEvaluacion(Long id, EstadoEvaluacion estado) {

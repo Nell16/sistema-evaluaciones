@@ -20,8 +20,10 @@ export interface ConfiguracionSubprueba {
   codigo?: string;
   nombre?: string;
   orden?: number;
-  factor?: string;
-  tiempoLimiteSegundos?: number;
+  /** Nulo si aún no se cargó (contrato: nullable). */
+  factor?: string | null;
+  /** Nulo si la subprueba no tiene límite (contrato: nullable). */
+  tiempoLimiteSegundos?: number | null;
   tipoRespuesta?: 'SELECCION' | 'TEXTO_LIBRE';
   opciones?: number | null;
   numeroPreguntas?: number;

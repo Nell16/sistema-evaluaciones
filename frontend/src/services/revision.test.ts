@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { servicioRevision } from './revision';
+import { RevisionSinIdentificadoresError, servicioRevision } from './revision';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -12,6 +12,22 @@ const llamada = (f: ReturnType<typeof simular>) =>
   f.mock.calls[0] as unknown as [string, RequestInit];
 
 describe('cliente real de E10, E11 y E12', () => {
+  it('no usa el orden de entrada como identificador de respuesta', async () => {
+    const fetch = vi.fn(async (ruta: string) =>
+      Response.json(
+        ruta.endsWith('/resultados')
+          ? { calificacionId: 31, revision: 1 }
+          : { palabras: [{ ordenEntrada: 1, texto: 'mesa' }] },
+      ),
+    );
+    vi.stubGlobal('fetch', fetch);
+
+    await expect(servicioRevision.cargar(15)).rejects.toBeInstanceOf(
+      RevisionSinIdentificadoresError,
+    );
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
   it('E10: PUT a la revisión de la palabra', async () => {
     const f = simular({});
     await servicioRevision.revisarPalabra(15, 31, 7, { decision: 'VALIDA', motivo: 'ok' });

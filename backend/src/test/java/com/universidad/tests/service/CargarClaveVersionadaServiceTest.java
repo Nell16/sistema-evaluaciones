@@ -38,7 +38,7 @@ class CargarClaveVersionadaServiceTest {
     @Mock private VersionFormularioRepository versiones;
     @Mock private ConfiguracionSubpruebaRepository configuraciones;
     @Mock private PreguntaRepository preguntas;
-    @Mock private OpcionRespuestaRepository opciones;
+    @Mock private OpcionRespuestaRepository.Edicion opciones;
     @Mock private VersionClaveBFARepository claves;
     @Mock private EntradaClaveBFARepository entradas;
     @Mock private AutorizacionContenidoPort autorizacion;

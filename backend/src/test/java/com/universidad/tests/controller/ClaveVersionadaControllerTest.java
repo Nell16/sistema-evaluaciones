@@ -59,11 +59,12 @@ class ClaveVersionadaControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"entradas\":[{\"preguntaId\":10}]}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.codigo").value("SOLICITUD_INVALIDA"));
+                .andExpect(jsonPath("$.codigo").value("SOLICITUD_INVALIDA"))
+                .andExpect(jsonPath("$.detalles[0].campo").value("entradas[0].opcion"));
     }
 
     @Test
-    void e29DistinguePermisoVersionYConflicto() throws Exception {
+    void e29DistinguePermisoIdentificadorInvalidoYConflicto() throws Exception {
         String ruta = "/api/v1/versiones/5/clave";
         String cuerpo = "{\"entradas\":[{\"preguntaId\":10,\"opcion\":\"B\"}]}";
         when(servicio.cargar(eq(5L), anyList())).thenThrow(new SecurityException("sin permiso"));
@@ -82,11 +83,12 @@ class ClaveVersionadaControllerTest {
                                 .header("Authorization", BEARER)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(cuerpo))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.codigo").value("VERSION_NO_ENCONTRADA"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("SOLICITUD_INVALIDA"))
+                .andExpect(jsonPath("$.detalles[0].campo").value("versionFormularioId"));
 
         when(servicio.cargar(eq(5L), anyList()))
-                .thenThrow(new IllegalStateException("VERSION_NO_EDITABLE"));
+                .thenThrow(new IllegalStateException("CLAVE_NO_EDITABLE"));
         mvc.perform(
                         put(ruta)
                                 .header("Authorization", BEARER)

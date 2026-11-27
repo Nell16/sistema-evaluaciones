@@ -27,7 +27,7 @@ public class CargarClaveVersionadaService {
     private final VersionFormularioRepository versiones;
     private final ConfiguracionSubpruebaRepository configuraciones;
     private final PreguntaRepository preguntas;
-    private final OpcionRespuestaRepository opciones;
+    private final OpcionRespuestaRepository.Edicion opciones;
     private final VersionClaveBFARepository claves;
     private final EntradaClaveBFARepository entradas;
     private final AutorizacionContenidoPort autorizacion;
@@ -36,7 +36,7 @@ public class CargarClaveVersionadaService {
             VersionFormularioRepository versiones,
             ConfiguracionSubpruebaRepository configuraciones,
             PreguntaRepository preguntas,
-            OpcionRespuestaRepository opciones,
+            OpcionRespuestaRepository.Edicion opciones,
             VersionClaveBFARepository claves,
             EntradaClaveBFARepository entradas,
             AutorizacionContenidoPort autorizacion) {
@@ -51,10 +51,14 @@ public class CargarClaveVersionadaService {
 
     @Transactional
     public Long cargar(Long idVersion, List<DatoClave> datos) {
-        if (idVersion == null || idVersion <= 0 || datos == null || datos.isEmpty()) {
+        if (datos == null || datos.isEmpty()) {
             throw new IllegalArgumentException("La version y las entradas son obligatorias");
         }
         autorizacion.exigirPermisoEditarOpciones(idVersion);
+        if (idVersion == null || idVersion <= 0) {
+            throw new NoSuchElementException("Version no encontrada");
+        }
+        opciones.bloquearVersion(idVersion);
         VersionFormulario version =
                 versiones
                         .buscarPorId(idVersion)

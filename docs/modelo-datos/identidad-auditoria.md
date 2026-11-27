@@ -92,7 +92,7 @@ Registra quién hizo qué, sobre qué y cuándo. El nombre físico `evento_audit
 | Contexto | `id_evaluacion`, `id_evaluacion_subprueba` | FK opcionales | No | Evaluación y ejecución afectadas; obligatoria la evaluación en eventos de ejecución o resultado, no en los administrativos globales. Las FK apuntan a las PK de `evaluacion` y `evaluacion_subprueba`. |
 | Detalle | `detalle` | — | No | Motivo y referencias. Nunca imágenes, claves ni respuestas completas. |
 
-El atributo lógico `actorRef` de ENT-COM-11 («cuenta o identidad técnica») se reemplaza por `id_cuenta`, que sí puede ser clave foránea y es lo que sostiene la cardinalidad 1 / 0..N de la sección 4. El uso de una cuenta técnica para eventos automáticos sigue pendiente de confirmación.
+El atributo lógico `actorRef` de ENT-COM-11 («cuenta o identidad técnica») se reemplaza por `id_cuenta`, que sí puede ser clave foránea y es lo que sostiene la cardinalidad 1 / 0..N de la sección 4. Según D-09, si se registran acciones automáticas del sistema sin persona, se usa una cuenta técnica en `cuenta`; no se crea ninguna estructura distinta.
 
 ## 4. Cardinalidades
 

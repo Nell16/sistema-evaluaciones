@@ -27,7 +27,7 @@ La migración `V202611251600__bfa_claves_versionadas.sql` (PR #155, continuació
 | PK | `id_clave` (BIGINT) |
 | FK | `id_version_formulario` → `version_formulario(id_version_formulario)`, obligatoria |
 | Atributos | `version` (única por formulario), `estado` (BORRADOR, APROBADA, RETIRADA), `referencia_fuente` (obligatoria, ubicación del material autorizado, nunca las respuestas), `evidencia_aprobacion` (obligatoria si el estado no es BORRADOR) |
-| Cardinalidad | `version_formulario` 1 : 0..N `version_clave_bfa`. Regla de diseño: a lo sumo 1 clave APROBADA por versión; para aprobar otra se retira la anterior. |
+| Cardinalidad | `version_formulario` 1 : 0..N `version_clave_bfa`. Regla de diseño: a lo sumo 1 clave APROBADA por versión; para aprobar otra se retira la anterior. La migración `V202611251600` no la garantiza (no hay índice único parcial para `APROBADA`): queda como regla pendiente de garantía (I-11). |
 
 #### `entrada_clave_bfa` (ENT-BFA-03)
 
@@ -37,7 +37,7 @@ La migración `V202611251600__bfa_claves_versionadas.sql` (PR #155, continuació
 | FK | `id_clave` → `version_clave_bfa(id_clave)`; `id_pregunta` → `pregunta(id_pregunta)`; `id_opcion_correcta` → `opcion_respuesta(id_opcion)`; las tres obligatorias |
 | Atributos | Solo las tres referencias. Único `(id_clave, id_pregunta)`: una sola opción correcta por pregunta y clave. |
 | Cardinalidad | `version_clave_bfa` 1 : 0..N `entrada_clave_bfa`; `pregunta` 1 : 0..N `entrada_clave_bfa` (máximo 1 por clave); `opcion_respuesta` 1 : 0..N `entrada_clave_bfa`. |
-| Regla de integridad | La pregunta debe pertenecer a la versión de la clave, y la opción a esa pregunta (se valida en aplicación o con restricción compuesta; las dos migraciones posteriores de #50 refuerzan esto). No aplica a Fluidez Verbal ni a la entrevista. |
+| Regla de integridad | La pregunta debe pertenecer a la versión de la clave, y la opción a esa pregunta. `V202611251600__bfa_claves_versionadas.sql` solo define las tres FK y la unicidad `(id_clave, id_pregunta)`; la pertenencia de pregunta y opción es validación de aplicación, no restricción de la migración. No aplica a Fluidez Verbal ni a la entrevista. |
 
 Relaciones entre las dos tablas y el núcleo: `version_formulario` 1:N `version_clave_bfa` 1:N `entrada_clave_bfa` N:1 `pregunta` 1:N `opcion_respuesta`. Entre `pregunta` y `opcion_respuesta` por medio de la entrada es una relación N:M resuelta con `entrada_clave_bfa` (con la restricción de que la opción pertenezca a la pregunta).
 

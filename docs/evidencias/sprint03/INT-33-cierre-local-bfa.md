@@ -1,12 +1,12 @@
 # cierre local de integración bfa
 
-base verificada: main `6b77b2a`. la entrega está preparada localmente; todavía no acredita fusión, despliegue ni testing independiente.
+base verificada: main `697c3bb7718ee0ad7deb3960ac945ff22cce3e9d`. la entrega está preparada localmente; todavía no acredita fusión, despliegue ni testing independiente.
 
 ## resultado
 
 - integración de #135 sobre las claves de #155, conservando las cuatro correcciones de claves que estaban en main.
 - esquema común de revisiones de #163 activado con flyway y referencias físicas a claves, baremos y rangos. se retiran las cargas manuales de ddl de las pruebas.
-- e8 de #153 calcula desde respuestas persistidas y conserva el id de clave, el contenedor y la idempotencia.
+- e8 de #175 (continúa #153) calcula desde respuestas persistidas y conserva el id de clave, el contenedor y la idempotencia.
 - e10–e12 de #166 adaptados al mismo esquema: decisiones de palabras, recálculo real, snapshots de factores y conversiones, publicación validada y lectura exacta mediante e9.
 - alcance explícito cuenta–sujeto, bloqueo por evaluación, idempotencia de solicitudes, comprobación de la revisión esperada y auditoría con la evaluación asociada.
 - una revisión validada permanece inmutable aunque deje de ser la vigente. los metadatos de sus reglas tampoco se reescriben; retirar la regla conserva su identidad.
@@ -14,13 +14,13 @@ base verificada: main `6b77b2a`. la entrega está preparada localmente; todavía
 
 ## validación final
 
-jdk 17 y postgres 16 aislado. comando final:
+jdk 17 y postgres 16 aislado. se repitió la suite tras incorporar ese main y la continuación actual de #175. comando de la compilación limpia previa:
 
 ```sh
 mvn -f backend/pom.xml -Dspring.datasource.hikari.maximum-pool-size=2 -Dspring.test.context.cache.maxSize=4 clean verify
 ```
 
-resultado: **586 pruebas, cero fallos, errores y omisiones**. las propiedades limitan únicamente los recursos del proceso local de pruebas. se usaron variables de conexión a una base ficticia; no se escribió en el vps.
+resultado: **586 pruebas, cero fallos, errores y omisiones**, tanto en la compilación limpia previa como en `verify` después de sincronizar main. las propiedades limitan únicamente los recursos del proceso local de pruebas. se usaron variables de conexión a una base ficticia; no se escribió en el vps.
 
 frontend idéntico al de la integración e8 verificada: lint, prettier, tipos, **148 pruebas** y build correctos. las dependencias reutilizadas tenían el mismo package.json y lockfile; ci debe repetir npm ci en el sha publicado.
 
@@ -52,4 +52,4 @@ esto no acredita una batería psicométrica completa: fluidez y las familias sin
 
 faltan push autorizado, ci en github sobre los sha publicados, revisión de otro code owner, testing independiente y comprobación en la url desplegada. #166 solo debe cerrarse como sustituido cuando las entregas de reemplazo estén identificadas e integradas. #144 y #145 conservan sus requisitos de qa independiente.
 
-se preservan el historial y los aportes originales de fernando, nelson, daysi, davide y rodrigo. el aporte de kisnner es la resolución de dependencias, las correcciones de integridad y autorización, la conexión del flujo común y las nuevas regresiones. también están preparadas las correcciones documentales de #146 y #170 en sus ramas locales.
+se preservan el historial y los aportes originales de fernando, nelson, daysi, davide y rodrigo. el aporte de kisnner es la resolución de dependencias, las correcciones de integridad y autorización, la conexión del flujo común y las nuevas regresiones. las correcciones de codificación e i-11 ya entraron por #177 y #178; las ramas locales anteriores se conservan como evidencia y no deben publicarse como duplicados. la fundación actualizada se preparó en `feature/kisnner-esquema-comun-INT-33` sobre el sha `7c2d523` del #135, con 23 pruebas de esquema y e9 correctas.

@@ -174,6 +174,17 @@ class SujetoApiIntegrationTest {
     }
 
     @Test
+    void busquedaConIdentificadorVacioDevuelveListaVaciaSegunContrato() throws Exception {
+        permisos("SUJETO_LEER");
+        mvc.perform(
+                        get(RUTA)
+                                .header("Authorization", "Bearer " + TOKEN)
+                                .param("identificadorInstitucional", "  "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
     void datosInvalidosNoCreanSujeto() throws Exception {
         permisos("SUJETO_CREAR");
         mvc.perform(

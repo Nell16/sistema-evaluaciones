@@ -8,7 +8,6 @@ import com.universidad.tests.dto.request.SujetoRequest;
 import com.universidad.tests.dto.response.SujetoResponse;
 import com.universidad.tests.mapper.EvaluacionMapper;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import java.net.URI;
 import java.util.List;
@@ -59,8 +58,7 @@ public class SujetoController {
 
     @GetMapping
     public List<SujetoResponse> buscar(
-            @RequestParam(name = "identificadorInstitucional") @NotBlank
-                    String identificadorInstitucional) {
+            @RequestParam(name = "identificadorInstitucional") String identificadorInstitucional) {
         return buscarSujeto.buscarPorIdentificador(identificadorInstitucional).stream()
                 .map(mapper::aResponse)
                 .toList();

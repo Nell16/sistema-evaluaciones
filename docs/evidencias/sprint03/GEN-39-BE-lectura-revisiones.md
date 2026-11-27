@@ -22,3 +22,9 @@ Base actualizada sin conflictos a main `12138f1003f06faf080a024284d5888a2bc1f042
 El SQL permanece en `docs/modelo-datos/propuestas/`: no hay nombre Flyway reservado ni migración instalada. Requiere revisión del custodio y coordinación con BFA-BE-31. No activar ni declarar operativo el resultado publicado hasta resolverlo.
 
 La publicación E12, los calificadores E8 y los módulos de claves/baremos mantienen sus tareas y criterios propios. No se ha probado E9 publicado en el VPS ni se ha concedido testing-ok por esta evidencia. GEN-39 requiere además la revisión de Oliver indicada en su ficha.
+
+## Rescate sobre main 479a575
+
+- PostgreSQL 17 y JDK 17 con Maven verify y Spotless: 439 pruebas, 14 de persistencia de E9, sin fallos ni omisiones. Frontend: lint, formato, tipos, 148 pruebas y build correctos.
+- Las regresiones reproducen el 500 para Weill y la falta de la PK de revisión en auditoría. Ahora E9 devuelve el bruto verificado de Weill sin consultar las tablas BFA. Dos lecturas de revisiones publicadas distintas dejan dos eventos con la misma evaluación y distintas PK de revisión.
+- En una copia aislada, Flyway aplicó la propuesta con una versión temporal y el SQL de baremos de #135. Se ejecutaron 15 pruebas sin cargar el DDL desde el test. Incluyeron pendiente, publicada y BFA con una asignación aprobada ficticia, intervalo exacto y percentil 50. La versión temporal solo se usó en esta comprobación. Sigue pendiente la aprobación y reserva de la migración que se integrará a main.

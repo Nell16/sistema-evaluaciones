@@ -54,6 +54,7 @@ class FinalizarEvaluacionIntegrationTest {
     @Autowired private EvaluacionRepository evaluacionRepository;
     @Autowired private ResultadoRepository resultadoRepository;
     @Autowired private EntityManager entityManager;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @MockitoBean private AutorizacionService auth;
     @MockitoBean private AlcanceSujetoPort alcance;
@@ -67,17 +68,22 @@ class FinalizarEvaluacionIntegrationTest {
 
     @BeforeEach
     void prepararDatos() {
+        long cuenta =
+                jdbc.queryForObject(
+                        "insert into cuenta(correo,resumen_contrasena,nombres,apellidos,estado) values (?,'resumen-ficticio','persona','ficticia','ACTIVA') returning id_cuenta",
+                        Long.class,
+                        "finalizar-" + UUID.randomUUID() + "@ejemplo.test");
         when(auth.exigirPermiso(anyString()))
                 .thenReturn(
                         new IdentidadSesion(
-                                1L,
+                                cuenta,
                                 1L,
                                 "SUJETO",
                                 Set.of("EVALUACION_FINALIZAR", "RECUPERAR_INTENTO")));
         when(auth.exigirSesion())
                 .thenReturn(
                         new IdentidadSesion(
-                                1L,
+                                cuenta,
                                 1L,
                                 "SUJETO",
                                 Set.of("EVALUACION_FINALIZAR", "RECUPERAR_INTENTO")));

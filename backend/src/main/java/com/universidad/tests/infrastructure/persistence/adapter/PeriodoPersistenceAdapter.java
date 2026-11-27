@@ -26,12 +26,31 @@ public class PeriodoPersistenceAdapter implements PeriodoRepository {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<Periodo> buscarPorCodigo(String codigo) {
+        return periodoJpaRepository.findByCodigo(codigo).map(this::aDominio);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Periodo> listar(boolean soloDisponibles) {
         List<PeriodoJpaEntity> entidades =
                 soloDisponibles
                         ? periodoJpaRepository.findByActivoTrueOrderByCodigoDesc()
                         : periodoJpaRepository.findAllByOrderByCodigoDesc();
         return entidades.stream().map(this::aDominio).toList();
+    }
+
+    @Override
+    @Transactional
+    public Periodo guardar(Periodo periodo) {
+        PeriodoJpaEntity entidad =
+                new PeriodoJpaEntity(
+                        periodo.codigo(),
+                        periodo.nombre(),
+                        periodo.fechaInicio(),
+                        periodo.fechaFin(),
+                        periodo.activo());
+        return aDominio(periodoJpaRepository.saveAndFlush(entidad));
     }
 
     private Periodo aDominio(PeriodoJpaEntity e) {

@@ -1,6 +1,7 @@
 package com.universidad.tests.infrastructure.persistence.adapter;
 
 import com.universidad.tests.domain.port.EventoAuditoriaPort;
+import java.sql.Types;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -15,6 +16,12 @@ public class EventoAuditoriaPersistenceAdapter implements EventoAuditoriaPort {
 
     @Override
     public void insertar(long idCuenta, String tipo, String entidad, long idEntidad) {
+        insertar(idCuenta, tipo, entidad, idEntidad, null);
+    }
+
+    @Override
+    public void insertar(
+            long idCuenta, String tipo, String entidad, long idEntidad, Long idEvaluacion) {
         jdbc.sql(
                         """
                         INSERT INTO evento_auditoria (
@@ -22,13 +29,13 @@ public class EventoAuditoriaPersistenceAdapter implements EventoAuditoriaPort {
                             id_evaluacion, id_evaluacion_subprueba
                         ) VALUES (
                             :idCuenta, :tipo, :entidad, :idEntidad,
-                            CASE :entidad
+                            COALESCE(:idEvaluacion, CASE :entidad
                                 WHEN 'EVALUACION' THEN :idEntidad
                                 WHEN 'EVALUACION_SUBPRUEBA' THEN (
                                     SELECT id_evaluacion FROM evaluacion_subprueba
                                     WHERE id_evaluacion_subprueba = :idEntidad
                                 )
-                            END,
+                            END),
                             CASE WHEN :entidad = 'EVALUACION_SUBPRUEBA' THEN :idEntidad END
                         )
                         """)
@@ -36,6 +43,7 @@ public class EventoAuditoriaPersistenceAdapter implements EventoAuditoriaPort {
                 .param("tipo", tipo)
                 .param("entidad", entidad)
                 .param("idEntidad", idEntidad)
+                .param("idEvaluacion", idEvaluacion, Types.BIGINT)
                 .update();
     }
 }

@@ -13,8 +13,14 @@ public class AuditoriaResultadoService implements AuditoriaResultadoPort {
         this.registro = registro;
     }
 
+    @Override
     public void registrarConsulta(Long evaluacion, Long resultado, Long revision) {
-        registro.registrar(
-                auth.exigirSesion().idCuenta(), "CONSULTAR_RESULTADO", "EVALUACION", evaluacion);
+        long cuenta = auth.exigirSesion().idCuenta();
+        if (revision == null) {
+            registro.registrar(cuenta, "CONSULTAR_RESULTADO", "EVALUACION", evaluacion);
+        } else {
+            registro.registrar(
+                    cuenta, "CONSULTAR_RESULTADO", "REVISION_RESULTADO", revision, evaluacion);
+        }
     }
 }

@@ -11,8 +11,6 @@ import com.universidad.tests.domain.model.EstadoCuenta;
 import com.universidad.tests.domain.model.Rol;
 import com.universidad.tests.domain.port.HashContrasenasPort;
 import com.universidad.tests.domain.repository.CuentaRepository;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,14 +18,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Sesiones reales, PostgreSQL y propuesta DDL aislada; no instala migraciones en el VPS. */
+/** sesiones reales y PostgreSQL con el esquema instalado exclusivamente por Flyway. */
 @SpringBootTest
 @AutoConfigureMockMvc(
         print = org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint.NONE)
@@ -44,16 +39,6 @@ class ResultadosPersistenciaIntegrationTest {
 
     @BeforeEach
     void preparar() {
-        Path ddl = Path.of("../docs/modelo-datos/propuestas/comun_revisiones_resultado.sql");
-        if (!Files.exists(ddl))
-            ddl = Path.of("docs/modelo-datos/propuestas/comun_revisiones_resultado.sql");
-        var recurso = new FileSystemResource(ddl);
-        jdbc.execute(
-                (ConnectionCallback<Void>)
-                        c -> {
-                            ScriptUtils.executeSqlScript(c, recurso);
-                            return null;
-                        });
         profesional = cuenta(Rol.PSICOLOGO);
         token = sesion(profesional);
         long test =
@@ -166,12 +151,22 @@ class ResultadosPersistenciaIntegrationTest {
                 .andExpect(jsonPath("$.revision").value(2))
                 .andExpect(jsonPath("$.versionReglas").value("R-2"))
                 .andExpect(jsonPath("$.factores[0].puntuacionDirecta").value(0));
+    }
+
+    @Test
+    void auditoriaDistingueDosRevisionesDeLaMismaEvaluacion() throws Exception {
+        long primera = publicar(2, "PSICOLOGO", 12);
+        mvc.perform(get(ruta()).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+        long segunda = publicar(3, "PSICOLOGO", 13);
+        mvc.perform(get(ruta()).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
         assertThat(
-                        jdbc.queryForObject(
-                                "select count(*) from evento_auditoria where entidad_id=? and accion='CONSULTAR_RESULTADO'",
+                        jdbc.queryForList(
+                                "select entidad_id from evento_auditoria where id_evaluacion=? and accion='CONSULTAR_RESULTADO' and entidad_tipo='REVISION_RESULTADO' order by id_evento_auditoria",
                                 Long.class,
                                 evaluacion))
-                .isEqualTo(1);
+                .containsExactly(primera, segunda);
     }
 
     @Test
@@ -268,22 +263,75 @@ class ResultadosPersistenciaIntegrationTest {
     }
 
     @Test
-    void conversionSinBaremoValidadoNoSeEntrega() throws Exception {
-        long rev = publicar(2, "PSICOLOGO", 12);
-        Long factor =
-                jdbc.queryForObject(
-                        "select id_resultado_escala from resultado_escala where id_revision_resultado=?",
-                        Long.class,
-                        rev);
-        jdbc.update(
-                "update resultado_escala set estado_normativo='CONVERTIDO' where id_resultado_escala=?",
-                factor);
-        jdbc.update(
-                "insert into conversion_resultado_escala(id_resultado_escala,tipo_salida,puntaje_convertido,id_rango) values (?,'PERCENTIL',50,999)",
-                factor);
+    void conversionBfaSinBaremoValidadoNoSeEntrega() throws Exception {
+        identificarInstrumento("BFA");
+        convertir(publicar(2, "PSICOLOGO", 12));
         mvc.perform(get(ruta()).header("Authorization", "Bearer " + token))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.factores").doesNotExist());
+    }
+
+    @Test
+    void conversionWeillNoUsaBaremoBfaNiExponePercentilSinVerificar() throws Exception {
+        identificarInstrumento("WEILL");
+        convertir(publicar(2, "PSICOLOGO", 12));
+        mvc.perform(get(ruta()).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.factores[0].puntuacionDirecta").value(12))
+                .andExpect(jsonPath("$.factores[0].estadoNormativo").value("CONVERTIDO"))
+                .andExpect(jsonPath("$.factores[0].percentil").isEmpty())
+                .andExpect(jsonPath("$.factores[0].idRango").isEmpty());
+    }
+
+    private void identificarInstrumento(String codigo) {
+        jdbc.update(
+                "update test set codigo=? where id_test=(select id_test from version_formulario where id_version_formulario=?)",
+                codigo,
+                version);
+    }
+
+    private long convertir(long revision) {
+        long baremo =
+                jdbc.queryForObject(
+                        "insert into baremo_bfa(nombre,version,anio_norma) values (?, '1', 2026) returning id_baremo",
+                        Long.class,
+                        "ficticio-" + UUID.randomUUID());
+        long rango =
+                jdbc.queryForObject(
+                        "insert into rango_baremo_bfa(id_baremo,id_factor,percentil,limite_inferior,limite_superior,estado_celda) values (?, 'F-2', 50, 10, 20, 'RANGO') returning id_rango",
+                        Long.class,
+                        baremo);
+        Long factor =
+                jdbc.queryForObject(
+                        "update resultado_escala set estado_normativo='CONVERTIDO' where id_revision_resultado=? returning id_resultado_escala",
+                        Long.class,
+                        revision);
+        jdbc.update(
+                "insert into conversion_resultado_escala(id_resultado_escala,tipo_salida,puntaje_convertido,id_rango) values (?,'PERCENTIL',50,?)",
+                factor,
+                rango);
+        return baremo;
+    }
+
+    @Test
+    void conversionBfaPublicadaUsaAsignacionAprobadaYRangoExacto() throws Exception {
+        identificarInstrumento("BFA");
+        long revision = publicar(2, "PSICOLOGO", 12);
+        long baremo = convertir(revision);
+        jdbc.update(
+                "update revision_resultado set id_baremo=? where id_revision_resultado=?",
+                baremo,
+                revision);
+        jdbc.update(
+                "insert into asignacion_baremo_bfa(id_baremo,id_version_formulario,version_reglas,estado,evidencia_aprobacion) values (?,?,'R-2','APROBADO','ficticia')",
+                baremo,
+                version);
+        mvc.perform(get(ruta()).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.calificacionId").value(revision))
+                .andExpect(jsonPath("$.idBaremo").value(baremo))
+                .andExpect(jsonPath("$.factores[0].puntuacionDirecta").value(12))
+                .andExpect(jsonPath("$.factores[0].percentil").value(50));
     }
 
     @Test

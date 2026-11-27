@@ -17,14 +17,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Clave y respuestas ficticias; usa la estructura exacta del PR #95 solo dentro de la prueba. */
+/** clave y respuestas ficticias con las migraciones reales instaladas por Flyway. */
 @SpringBootTest
 @AutoConfigureMockMvc(
         print = org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint.NONE)
@@ -40,13 +37,6 @@ class CalculoBfaDesdeRespuestasIntegrationTest {
 
     @BeforeEach
     void preparar() {
-        jdbc.execute(
-                (ConnectionCallback<Void>)
-                        c -> {
-                            ScriptUtils.executeSqlScript(
-                                    c, new ClassPathResource("bfa/clave-pr95.sql"));
-                            return null;
-                        });
         var cuenta =
                 cuentas.guardar(
                         new Cuenta(

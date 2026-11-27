@@ -96,4 +96,3 @@ CREATE INDEX idx_entrada_pregunta
 
 CREATE INDEX idx_entrada_opcion
   ON entrada_clave_bfa(id_opcion_correcta);
-

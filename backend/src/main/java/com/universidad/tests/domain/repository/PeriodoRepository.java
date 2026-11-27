@@ -8,5 +8,9 @@ public interface PeriodoRepository {
 
     Optional<Periodo> buscarPorId(Long idPeriodo);
 
+    Optional<Periodo> buscarPorCodigo(String codigo);
+
     List<Periodo> listar(boolean soloDisponibles);
+
+    Periodo guardar(Periodo periodo);
 }

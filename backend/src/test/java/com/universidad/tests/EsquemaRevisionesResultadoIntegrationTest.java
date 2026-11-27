@@ -207,4 +207,42 @@ class EsquemaRevisionesResultadoIntegrationTest {
                                         rev))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
+
+    long reglaUtilizada() {
+        long regla =
+                jdbc.queryForObject(
+                        "insert into regla_calificacion(id_version_formulario,version,estado,referencia_especificacion,evidencia_aprobacion) values (?,'R-FICTICIA','APROBADA','ficticia','ficticia') returning id_regla_calificacion",
+                        Long.class,
+                        version);
+        jdbc.update(
+                "insert into revision_resultado(id_resultado,id_regla_calificacion,numero_revision,estado_revision) values (?,?,1,'CALCULADA')",
+                resultado,
+                regla);
+        return regla;
+    }
+
+    @Test
+    void reglaUtilizadaNoPuedeCambiarSuVersionHistorica() {
+        long regla = reglaUtilizada();
+        assertThatThrownBy(
+                        () ->
+                                jdbc.update(
+                                        "update regla_calificacion set version='otra' where id_regla_calificacion=?",
+                                        regla))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void retirarReglaUtilizadaConservaSuIdentidad() {
+        long regla = reglaUtilizada();
+        jdbc.update(
+                "update regla_calificacion set estado='RETIRADA' where id_regla_calificacion=?",
+                regla);
+        assertThat(
+                        jdbc.queryForObject(
+                                "select version from regla_calificacion where id_regla_calificacion=?",
+                                String.class,
+                                regla))
+                .isEqualTo("R-FICTICIA");
+    }
 }

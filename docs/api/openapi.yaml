@@ -664,7 +664,9 @@ paths:
       tags: [Sujetos y periodos]
       operationId: buscarSujeto
       summary: E23 — Buscar un Sujeto por identificador institucional
-      description: Devuelve 0 o 1 elemento. CU-GEN-20. Permiso SUJETO_LEER.
+      description: >-
+        Devuelve 0 o 1 elemento; un identificador vacío o solo espacios devuelve lista vacía. Si se omite
+        el parámetro, 400 SOLICITUD_INVALIDA con el parámetro en `detalles`. CU-GEN-20. Permiso SUJETO_LEER.
       parameters:
         - { name: identificadorInstitucional, in: query, required: true, schema: { type: string }, example: 2026-0153 }
       responses:
@@ -676,6 +678,7 @@ paths:
                 type: array
                 maxItems: 1
                 items: { $ref: '#/components/schemas/SujetoResponse' }
+        '400': { $ref: '#/components/responses/SolicitudInvalida' }
         '401': { $ref: '#/components/responses/NoAutenticado' }
         '403': { $ref: '#/components/responses/SinPermiso' }
         '500': { $ref: '#/components/responses/ErrorInterno' }

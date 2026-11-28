@@ -21,7 +21,8 @@ export function usePeticion<A extends unknown[], T>(
       setEstado({ fase: 'cargando' });
       try {
         const datos = await operacion(...args);
-        if (id === ultima.current) setEstado({ fase: 'exito', datos });
+        if (id !== ultima.current) return null;
+        setEstado({ fase: 'exito', datos });
         return datos;
       } catch (error: unknown) {
         if (id === ultima.current) setEstado({ fase: 'error', error: traducirError(error) });

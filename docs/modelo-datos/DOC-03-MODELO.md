@@ -58,6 +58,41 @@ Tarea DOC-42. Reúne las decisiones del modelo que tomaron los cuatro temas (DOC
 | I-12 | Formato de `recurso_ref` (ya existe en `pregunta` y en `opcion_respuesta`) y dónde se guardan las imágenes de BFA y Weill; E28 todavía no permite cargar el recurso de una opción. | Seguimiento técnico: en `main`, `recurso_ref` es `TEXT` no vacío; falta decidir el almacenamiento de las imágenes. | DOC-32 y Backend |
 | I-13 | Catálogo de valores de `accion` y `entidad_tipo` en `evento_auditoria`. | Resuelta con fuente técnica: la migración `V202611251204__comun_evento_auditoria.sql` los define como texto no vacío, sin catálogo en la base; los valores los fija el servidor (hoy `INICIAR_EVALUACION` y `FINALIZAR_EVALUACION` sobre `EVALUACION`; `INICIAR_SUBPRUEBA` sobre `EVALUACION_SUBPRUEBA`). | DOC-35 y Backend |
 
+### Consulta al docente (DOC-44)
+
+**Responsable del aporte:** Javier Josué Espinoza Blandón.  
+**Canal:** Davide Patiño remite al docente las preguntas funcionales acordadas con Iván.  
+**Evidencia disponible:** la consulta del 21/11/2026 por Google Chat se registra según la [revisión de Iván](https://github.com/Nell16/sistema-evaluaciones/pull/106#pullrequestreview-6058635309) y su [aclaración](https://github.com/Nell16/sistema-evaluaciones/pull/106#issuecomment-7164087416). Falta el enlace directo al hilo de Google Chat. La evidencia revisada no acredita un nuevo envío el 25/11/2026 ni respuestas posteriores.
+
+#### Weill — preguntas para seguimiento con el docente
+
+En la consulta del 21/11 el docente indicó que Weill no tiene límite de tiempo (configurable), que la clave es la misma en las cinco láminas, que el baremo se toma como está y es configurable, y que las omisiones valen cero. Conservar esos antecedentes sin repetir las preguntas ya resueltas.
+
+| ID de DOC-42 | Pregunta de seguimiento | Evidencia del 21/11 | Estado y siguiente paso |
+| --- | --- | --- | --- |
+| I-06 | ¿Cómo se conserva el baremo oficial de 7 y 9 años si E30 rechaza sus rangos superpuestos? | Según Iván, el docente pidió conservar la tabla tal como está. Falta una instrucción específica para los rangos superpuestos. | Aclaración pendiente. Preservar el baremo de origen y coordinar con Backend el tratamiento autorizado. |
+| I-07 | ¿Cómo se obtiene el percentil y el CI cuando el puntaje queda fuera de la tabla de Weill? | El docente indicó que no sabía y remitió a quienes trabajaron el test. | Derivada al equipo que trabajó Weill. Sin criterio confirmado para extrapolar. |
+| I-08 | ¿Cuándo corresponde AD y cuándo UN para una persona mayor de 16 años? | Se consultó. La respuesta aclaró que el instrumento no se usa para admisión y dejó pendiente la regla AD/UN. | Respuesta parcial. Solicitar solo el criterio AD/UN. |
+| I-09 | ¿Cuál es el listado autorizado de categorías, dado que la tabla tiene siete y F-01 registra seis? | Iván aclaró que esta pregunta no se formuló el 21/11. | Pregunta nueva, sin evidencia de envío. |
+
+#### Otras incógnitas funcionales registradas
+
+Estas filas conservan sus IDs de origen para conciliación con Iván. El seguimiento inmediato indicado en la revisión es I-06 a I-09. Para las filas siguientes, las fuentes acreditan el hallazgo, pero faltan constancia de envío al docente y respuesta.
+
+| ID | Consulta por confirmar | Fuente | Estado |
+| --- | --- | --- | --- |
+| ALL-01 | Confirmar la numeración canónica de la segunda parte de Allport y cómo se aplica la variante por sexo. | [DOC-38](nota-allport.md), F1 pp. 9–10. | Abierta. |
+| ALL-02 | Confirmar cómo calificar Allport si la persona omite una respuesta permitida por las instrucciones. | [DOC-38](nota-allport.md), F1 pp. 1, 6 y 10. | Abierta. |
+| ALL-03 | Identificar el manual y el baremo de Allport aplicables a esta edición y población. | [DOC-38](nota-allport.md), F1 pp. 1–11. | Abierta. |
+| OTR-01 | Confirmar la corrección de Thurstone, el tratamiento de omisiones, el significado del índice y la fuente normativa. | [DOC-34-OTR, PR #119](https://github.com/Nell16/sistema-evaluaciones/pull/119). | Abierta. |
+| OTR-02 | Confirmar los criterios funcionales de Allport y la edición aplicable. Mantener el vínculo con ALL-01 a ALL-03 y las demás filas de DOC-38 para evitar duplicar consultas. | [DOC-34-OTR, PR #119](https://github.com/Nell16/sistema-evaluaciones/pull/119) y [DOC-38](nota-allport.md). | Abierta. |
+| OTR-03 | Confirmar la versión autorizada de la entrevista y si existe un informe cualitativo digital, así como su revisión y publicación. | [DOC-34-OTR, PR #119](https://github.com/Nell16/sistema-evaluaciones/pull/119). | Abierta. |
+| OV-01 | Confirmar si el cuestionario o entrevista de Orientación vocacional se aplica sin límite de tiempo. | [Registro DOC-39](https://app.clickup.com/t/90141806675/1k5fzqb0ft4), F1 p. 1 y F2 pp. 1–4. | Abierta. |
+| OV-02 | Confirmar si la salida de Orientación vocacional es exclusivamente cualitativa, dado que los formatos no definen puntaje ni escalas cuantitativas. | [Registro DOC-39](https://app.clickup.com/t/90141806675/1k5fzqb0ft4), F1 p. 1 y F2 pp. 1–4. | Abierta. |
+| OV-03 | Confirmar si la interpretación de Orientación vocacional es cualitativa o si existe una fuente normativa autorizada. | [Registro DOC-39](https://app.clickup.com/t/90141806675/1k5fzqb0ft4), F1 p. 1 y F2 pp. 1–4. | Abierta. |
+
+Las filas I-01 a I-05, I-10 a I-13 y los cinco huecos de DOC-41 se mantienen en el seguimiento técnico de Backend e Integración. Para cada consulta pendiente, registrar su fecha real de envío, quién la envió, el enlace de evidencia y la respuesta o su estado. Si una respuesta afecta el diagrama, trasladar el cambio con su evidencia a DOC-45.
+
 ## Endpoints y tablas
 
 **Tarea:** DOC-41 · **Autores:** Diego Martínez (E1–E15) y Daysi Miranda (E16–E31). Muestra qué tablas lee y escribe cada uno de los 31 endpoints del contrato (`docs/api/openapi.yaml`) y, con ello, cómo el modelo respalda la API.

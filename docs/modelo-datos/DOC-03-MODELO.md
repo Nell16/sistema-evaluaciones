@@ -222,3 +222,44 @@ Un test agrega tablas propias con FK a estas tablas del núcleo, sin modificar s
 - Nombres definitivos de las PK de `evaluacion_subprueba`, `respuesta_evaluacion` y `solicitud_calculo_subprueba`: #41 hoy usa `id` y, en `solicitud_calculo_subprueba`, `id_subprueba` (que choca con la PK de `subprueba`). Este documento fija `id_evaluacion_subprueba`, `id_respuesta_evaluacion` y `id_evaluacion_subprueba`.
 - #41 repite en `evaluacion_subprueba` datos que ya están en la configuración (`codigo`, `nombre`, `orden`, `duracion_segundos`, `instrucciones`); no son atributos del núcleo.
 - `id_sujeto` e `id_periodo` entran en `evaluacion` sin FK hasta que GEN-35-BE cree `sujeto` y `periodo`.
+
+## Cómo el modelo respalda la API
+
+**Tarea:** DOC-46 · **Responsable del aporte:** Javier Josué Espinoza Blandón  
+**Estado:** guion contrastado con las migraciones fusionadas para E3 y el soporte de E7. E9 se explica como diseño pendiente de validación física con DOC-45.
+
+### Guion oral
+
+**0:00–0:40 · Núcleo del diagrama**
+
+> En el diagrama, cada test tiene versiones de formulario y subpruebas. La configuración une una versión con una subprueba y fija su orden, tiempo y tipo de respuesta. Desde esa configuración se llega a las preguntas y a sus opciones. Cada evaluación queda ligada a una edición concreta, de modo que el sistema puede identificar qué contenido se aplicó.
+
+**0:40–1:05 · Extensiones por instrumento**
+
+> El núcleo se comparte entre instrumentos. Las diferencias se anclan a sus entidades comunes. Por ejemplo, BFA documenta una clave asociada a la versión del formulario y entradas que identifican la pregunta y su opción. Así se puede extender la corrección sin duplicar el catálogo.
+
+**1:05–1:40 · E3, crear una evaluación**
+
+> En E3 se selecciona el test y su versión vigente. El catálogo usa `test`, `version_formulario` y `configuracion_subprueba`. La creación vincula al sujeto y al período y registra la evaluación y sus aplicaciones de subprueba. Así queda registrada la edición aplicable desde el inicio.
+
+**1:40–2:15 · E7, registrar respuestas**
+
+> En E7, al guardar una respuesta de selección, se consulta la aplicación de subprueba y se comprueba que la opción corresponda a la pregunta. Las tablas de catálogo son `pregunta` y `opcion_respuesta`. El esquema admite guardar el valor en `respuesta_evaluacion`, ligado a la aplicación correspondiente. Esa relación permite recuperar lo contestado para el cálculo.
+
+**2:15–2:45 · E9, consultar resultados**
+
+> En E9, el diseño consulta el `resultado` de la evaluación y la referencia a su revisión vigente. El estado permite distinguir un cálculo en curso, un resultado pendiente de validación y uno disponible. La consulta propuesta devuelve la revisión vigente según los permisos del rol.
+
+### Contraste con el contrato y las migraciones
+
+| Caso | Contrato | Tablas físicas confirmadas en `main` | Alcance verificado |
+| --- | --- | --- | --- |
+| E3 | `POST /api/v1/evaluaciones` | `sujeto`, `periodo`, `test`, `version_formulario`, `configuracion_subprueba`, `evaluacion`, `evaluacion_subprueba` | El rescate GEN-35-BE (#125) incorpora E3, crea sujeto y período y establece sus FK desde evaluación. El motor (#104) crea evaluación y las aplicaciones de subprueba. |
+| E7 | `PUT /api/v1/evaluaciones/{evaluacionId}/subpruebas/{codigo}/respuestas` | `evaluacion_subprueba`, `pregunta`, `opcion_respuesta`, `respuesta_evaluacion` | El motor (#104) vincula la respuesta a la aplicación mediante una FK compuesta y referencia la pregunta y la opción con FK separadas. La comprobación de que la opción pertenece a la pregunta se debe verificar en la implementación final de E7. |
+| E9 | `GET /api/v1/evaluaciones/{evaluacionId}/resultados` | Las migraciones revisadas de `main` todavía no confirman `resultado` ni `revision_resultado`. | DOC-41 (#120) y el diagrama documentan el diseño. La revisión vigente se selecciona mediante `resultado.referencia_revision_vigente`. Verificar las tablas físicas con DOC-45 y el backend de E9 (#73) antes del cierre. |
+
+- [Contrato OpenAPI](../api/openapi.yaml)
+- [Motor de evaluación, PR #104](https://github.com/Nell16/sistema-evaluaciones/pull/104) · [Migración V202611240800](../../database/migrations/V202611240800__comun_motor_evaluacion.sql)
+- [Sujeto, período y E3, PR #125](https://github.com/Nell16/sistema-evaluaciones/pull/125) · [Migración V202611240830](../../database/migrations/V202611240830__comun_sujeto_periodo.sql)
+- [Mapa DOC-41, PR #98](https://github.com/Nell16/sistema-evaluaciones/pull/98) · [Ampliación del mapa, PR #120](https://github.com/Nell16/sistema-evaluaciones/pull/120)
+- [Diagrama ER](../diagramas/modelo-er.drawio) · [DOC-45](https://app.clickup.com/t/90141806675/1k5fzqb0fte) · [Backend de E9, PR #73](https://github.com/Nell16/sistema-evaluaciones/pull/73)

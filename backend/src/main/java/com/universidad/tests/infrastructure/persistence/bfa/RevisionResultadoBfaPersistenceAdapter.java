@@ -198,6 +198,34 @@ public class RevisionResultadoBfaPersistenceAdapter
     }
 
     @Override
+    public String resolverReglas(Long resultado, String versionPedida) {
+        var versiones =
+                jdbc.sql(
+                                """
+            select g.version from resultado r join evaluacion e using(id_evaluacion)
+            join test t using(id_test) join regla_calificacion g on g.id_version_formulario=e.id_version_formulario
+            where r.id_resultado=:resultado and t.codigo='BFA' and g.estado='APROBADA'
+              and nullif(btrim(g.evidencia_aprobacion),'') is not null
+              and g.referencia_implementacion=:implementacion
+              and (cast(:version as text) is null or g.version=:version)
+            """)
+                        .param("resultado", resultado)
+                        .param("version", versionPedida)
+                        .param(
+                                "implementacion",
+                                com.universidad.tests.domain.port.PreparacionRevisionBfaPort
+                                        .IMPLEMENTACION)
+                        .query(String.class)
+                        .list();
+        if (versiones.size() != 1)
+            throw new com.universidad.tests.domain.exception.bfa.RevisionBfaException(
+                    com.universidad.tests.domain.exception.bfa.RevisionBfaException.Codigo
+                            .SOLICITUD_INVALIDA,
+                    "Debe existir una única versión de reglas aprobada y compatible con el cálculo solicitado.");
+        return versiones.get(0);
+    }
+
+    @Override
     public boolean estaValidada(Long idRevision) {
         return jdbc.sql(
                         "select exists(select 1 from revision_resultado where id_revision_resultado=:id and estado_revision='VALIDADA')")

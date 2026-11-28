@@ -12,6 +12,8 @@ public interface RevisionResultadoRepository {
     /** Última revisión creada del resultado (mayor número), no la vigente. */
     Optional<RevisionResultado> buscarUltima(Long idResultado);
 
+    String resolverReglas(Long idResultado, String versionPedida);
+
     boolean estaValidada(Long idRevision);
 
     void guardarFactores(

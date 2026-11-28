@@ -1,5 +1,7 @@
 # GEN-39-BE: lectura integrada de E9
 
+actualización de integración: los apartados siguientes conservan evidencia histórica. en la rama de cierre, el esquema se instala con flyway y se retiraron las cargas manuales de ddl. el estado y la validación final están en `INT-33-cierre-local-bfa.md`; esta nota no acredita el vps ni testing independiente.
+
 Comprobación del 25-nov-2026, Nicaragua. Base main: `8c0014ba91869a5f7659c58ea1826f7c24d63e3c`.
 
 Se recupera el caso de uso, modelos, DTO y pruebas de Daysi (PR #73) y su preparación local de GEN-39, y se conectan con la autenticación Bearer, alcance cuenta–sujeto, PostgreSQL y auditoría reales del main actual. Se conserva su aporte; no se reclaman como nuevos los componentes recuperados.

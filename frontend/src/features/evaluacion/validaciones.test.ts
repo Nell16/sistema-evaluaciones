@@ -39,6 +39,17 @@ describe('validarId', () => {
   it('acepta un entero positivo con espacios', () => {
     expect(validarId(' 25 ', 'del evaluado')).toBeNull();
   });
+
+  it('acepta el mayor entero representable sin pérdida', () => {
+    expect(validarId('9007199254740991', 'de la evaluación')).toBeNull();
+  });
+
+  it.each(['9007199254740992', '9007199254740993', '9'.repeat(400)])(
+    'rechaza el identificador que no se puede representar con seguridad: %s',
+    (texto) => {
+      expect(validarId(texto, 'de la evaluación')).not.toBeNull();
+    },
+  );
 });
 
 describe('validarInicio', () => {
@@ -52,6 +63,15 @@ describe('validarInicio', () => {
 
   it('exige que el evaluado esté confirmado y sea el mismo ID', () => {
     const r = validarInicio({ ...base, letraInicial: 'm' }, test, 26);
+    expect(r).toMatchObject({ valido: false, errores: { sujetoId: expect.any(String) } });
+  });
+
+  it('no acepta un evaluado distinto cuyo ID se redondea al ID confirmado', () => {
+    const r = validarInicio(
+      { ...base, sujetoId: '9007199254740993', letraInicial: 'M' },
+      test,
+      9007199254740992,
+    );
     expect(r).toMatchObject({ valido: false, errores: { sujetoId: expect.any(String) } });
   });
 

@@ -32,6 +32,8 @@ export function validarId(texto: string, nombre: string): string | null {
   const limpio = texto.trim();
   if (limpio === '') return `Ingrese el ID ${nombre}.`;
   if (!ENTERO_POSITIVO.test(limpio)) return `El ID ${nombre} debe ser un número entero positivo.`;
+  if (!Number.isSafeInteger(Number(limpio)))
+    return `El ID ${nombre} es demasiado grande para procesarse con precisión.`;
   return null;
 }
 

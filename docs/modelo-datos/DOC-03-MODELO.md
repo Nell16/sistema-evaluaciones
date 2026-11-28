@@ -4,12 +4,12 @@
 
 ## Diagrama y temas del modelo
 
-El diagrama reúne el núcleo común aprobado en DOC-40, las tablas de claves y baremos de BFA y las propuestas de calificación de DOC-34-BFAW:
+El diagrama físico representa las migraciones de `main` hasta `V202611251600` (21 tablas, 31 FK):
 [editable en Draw.io](../diagramas/modelo-er.drawio) · [vista PNG](../diagramas/modelo-er.png).
-DOC-34-OTR reutiliza las tablas comunes de calificación para Thurstone y Allport. Orientación Vocacional no tiene calificación automática definida. La propuesta de baremos genéricos (OTR-05) y la diferencia de auditoría entre DOC-31 y DOC-35-COM quedan pendientes de decisión.
+DOC-34-OTR reutiliza las tablas comunes de calificación para Thurstone y Allport. Orientación Vocacional no tiene calificación automática definida. Las claves de corrección de BFA ya están en `main` (`V202611251600`). Los temas conservan el diseño de baremos de BFA, que sigue como propuesta, y la propuesta de baremos genéricos (OTR-05).
 
 - [Ítems y formularios](items-formularios.md)
-- [Aplicación y respuestas (DOC-33, seguimiento en ClickUp)](https://app.clickup.com/t/1k5fzqb0ft6): el documento del tema aún no está en el repositorio.
+- [Aplicación y respuestas](aplicacion-respuestas.md)
 - [Calificación, escalas y baremos](calificacion-baremos.md)
 - [Identidad, periodos y auditoría](identidad-auditoria.md)
 
@@ -86,13 +86,13 @@ Tarea DOC-42. Reúne las decisiones del modelo que tomaron los cuatro temas (DOC
 | E13 | `POST /api/v1/auth/registro` | `cuenta` | `cuenta`, `cuenta_rol` | Comprueba que el correo sea único; guarda solo `resumen_contrasena`. El rol inicial lo define la regla de registro (por confirmar). |
 | E14 | `POST /api/v1/auth/sesion` | `cuenta`, `cuenta_rol` | `sesion` | Abre sesión; guarda `resumen_token`, `rol_activo` y `expira_en`. |
 | E15 | `DELETE /api/v1/auth/sesion` | `sesion` | `sesion` | Cierra la sesión actual escribiendo `cerrada_en`; no borra la fila. |
-| E16 | `POST /api/v1/auth/recuperacion` | `cuenta` | Token de recuperación: **sin tabla en el modelo** | Sin sesión. Busca la cuenta por `correo` (sin distinguir mayúsculas) y responde igual exista o no. El token de un solo uso debe guardarse solo como resumen, con vencimiento y uso, como `sesion.resumen_token`; esa tabla falta en el modelo. Si el correo falla (503), la incidencia tampoco tiene tabla definida. |
-| E17 | `POST /api/v1/auth/recuperacion/confirmar` | Token de recuperación (**sin tabla en el modelo**), `cuenta` | `cuenta`; token (**sin tabla**) | Sin sesión. Valida el token (vigente y sin usar), reemplaza `cuenta.resumen_contrasena` y deja el token inutilizado. No abre sesión: después se usa E14. |
+| E16 | `POST /api/v1/auth/recuperacion` | `cuenta` | `cuenta`, `recuperacion_cuenta` | Sin sesión. Busca la cuenta por `correo` (sin distinguir mayúsculas) y responde igual exista o no. Inserta en `recuperacion_cuenta` el token de un solo uso solo como `resumen_token`, con `creada_en`, `expira_en` y `usada_en`. Si el correo falla (503), la incidencia no tiene tabla definida. |
+| E17 | `POST /api/v1/auth/recuperacion/confirmar` | `recuperacion_cuenta`, `cuenta` | `cuenta`, `recuperacion_cuenta` | Sin sesión. Valida el token (vigente y sin usar), reemplaza `cuenta.resumen_contrasena` y marca `recuperacion_cuenta.usada_en`. No abre sesión: después se usa E14. |
 | E18 | `POST /api/v1/sujetos` | `sujeto` | `sujeto` | `identificadorInstitucional` → `codigo_institucional` (único: SUJETO_DUPLICADO). `fecha_nacimiento` solo si la aplicación la requiere. No crea `cuenta` ni `evaluacion`. |
 | E19 | `GET /api/v1/sujetos/{sujetoId}` | `sujeto` | — | Solo lectura; nunca crea el registro. Al Decano solo se le devuelve `codigo_institucional`. |
 | E20 | `POST /api/v1/periodos` | `periodo` | `periodo` | `denominacion` → `nombre`, `inicio`/`fin` → `fecha_inicio`/`fecha_fin`. `codigo` único (PERIODO_DUPLICADO); fin ≥ inicio (PERIODO_INVALIDO, también como restricción `chk_periodo_fechas`). |
 | E21 | `GET /api/v1/periodos` | `periodo` | — | `disponible` no es columna: se deriva de `activo` y de las fechas. Con `disponible=true` devuelve los que usa E3. |
-| E22 | `GET /api/v1/evaluaciones` | `evaluacion`, `evaluacion_subprueba`, `respuesta_evaluacion`, `resultado` | — | Filtra por `id_sujeto`, `id_test`, `id_periodo` y `estado`; cada elemento tiene la forma de E4. El modelo aún no relaciona `cuenta` con `sujeto`, así que el filtro «el Sujeto ve las propias» está pendiente de definir. |
+| E22 | `GET /api/v1/evaluaciones` | `evaluacion`, `evaluacion_subprueba`, `respuesta_evaluacion`, `resultado`, `cuenta_sujeto_asignado` | — | Filtra por `id_sujeto`, `id_test`, `id_periodo` y `estado`; cada elemento tiene la forma de E4. `cuenta_sujeto_asignado` (PK `id_cuenta`, `id_sujeto`) relaciona cuenta con sujeto: permiso más asignación explícita, sin alcance global por rol. |
 | E23 | `GET /api/v1/sujetos?identificadorInstitucional=` | `sujeto` | — | Busca por `codigo_institucional` (único): 0 o 1 resultado. |
 | E24 | `GET /api/v1/evaluaciones/{evaluacionId}/subpruebas/{codigo}/instrucciones` | `evaluacion`, `evaluacion_subprueba`, `configuracion_subprueba` | — | Lee `instrucciones_ref` y `practica_ref` de la configuración aplicada. No escribe `fecha_inicio`: no consume tiempo y la práctica no se guarda en `respuesta_evaluacion`. |
 | E25 | `POST /api/v1/tests/{testId}/versiones` | `test`, `version_formulario`, `configuracion_subprueba`, `pregunta`, `opcion_respuesta` | `version_formulario`, `configuracion_subprueba`, `pregunta`, `opcion_respuesta` | Crea la versión en BORRADOR copiando el contenido de la última PUBLICADA, que no se modifica. Si también se copia la clave (`version_clave_bfa`, `entrada_clave_bfa`) está por confirmar. |
@@ -112,7 +112,7 @@ Tarea DOC-42. Reúne las decisiones del modelo que tomaron los cuatro temas (DOC
 | `sujeto`, `periodo` | PR #91 (DOC-31) | E3, E8, E18–E23 |
 | `evaluacion`, `evaluacion_subprueba`, `respuesta_evaluacion`, `solicitud_calculo_subprueba` | PR #41 (DOC-31) | E3–E12, E22, E24 |
 | `resultado`, `evento_auditoria` | Nuevas del núcleo (DOC-31) | E3–E12, E22 |
-| `version_clave_bfa`, `entrada_clave_bfa` | PR #50 (DOC-32) | E8, E11, E29, E31 |
+| `version_clave_bfa`, `entrada_clave_bfa` | `V202611251600` (PR #155, continúa #50) | E8, E11, E29, E31 |
 | `baremo_bfa`, `rango_baremo_bfa` | PR #69 (DOC-34) | E8, E11, E30 |
 | `escala`, `regla_calificacion`, `revision_resultado`, `puntaje_subprueba`, `resultado_escala`, `conversion_resultado_escala` | Propuestas de DOC-34 | E8–E11 |
 
@@ -146,42 +146,44 @@ Tarea DOC-31. Congela las tablas comunes y los nombres canónicos que usan todos
 
 1. Lo que ya existe en `main` o en los PR #89, #41, #91, #50 y #69 **no se renombra**; el núcleo adopta esos nombres.
 2. Tablas y columnas en `snake_case`, en singular. PK `id_<tabla>` de tipo `BIGINT GENERATED BY DEFAULT AS IDENTITY`. FK con el nombre de la PK a la que apuntan (`id_<tabla>`).
-3. Excepción registrada: `cuenta_rol` tiene PK compuesta `(id_cuenta, rol)`.
+3. Excepciones físicas: `cuenta_rol` y `cuenta_sujeto_asignado` tienen PK compuestas, y `solicitud_calculo_subprueba` usa `id_evaluacion_subprueba` como PK y FK.
 4. Una migración nueva se llama `V<AAAAMMDDhhmm>__<modulo>_<descripcion>.sql`; el custodio (Kisnner) valida el nombre y nunca se edita una migración fusionada.
 5. Fluidez Verbal no tiene tabla propia: son columnas de `evaluacion_subprueba` y `respuesta_evaluacion`.
 
 ### Tablas del núcleo
 
-Origen: **main** = ya fusionada; **#89**, **#41**, **#91** = en el PR indicado (se fusionan en GEN-06-BE, GEN-37-BE y GEN-35-BE); **nueva** = falta crearla (este tema la define, no la crea).
+El origen indica `main` o la versión de la migración que crea la tabla.
 
 | Tabla | Origen | PK | FK | Atributos principales |
 | --- | --- | --- | --- | --- |
 | `test` | main | `id_test` | — | `codigo` (único), `nombre`, `descripcion`, `activo` |
 | `subprueba` | main | `id_subprueba` | `id_test` → test | `codigo` (único por test), `nombre`, `descripcion`, `factor` |
-| `version_formulario` | main | `id_version_formulario` | `id_test` → test | `codigo_version` (único por test), `estado` (BORRADOR, PUBLICADA, RETIRADA), `fuente_ref`, `publicada_en`, `evidencia_validacion` |
-| `configuracion_subprueba` | main | `id_configuracion_subprueba` | `id_version_formulario` → version_formulario; `id_subprueba` → subprueba | `orden_aplicacion`, `tiempo_limite_segundos`, `tipo_respuesta` (SELECCION, TEXTO_LIBRE), `instrucciones_ref`, `practica_ref`, `maximo_entradas` |
+| `version_formulario` | main | `id_version_formulario` | `id_test` → test | `codigo_version` (único por test), `descripcion`, `estado` (BORRADOR, PUBLICADA, RETIRADA), `fuente_ref`, `publicada_en`, `evidencia_validacion` |
+| `configuracion_subprueba` | main | `id_configuracion_subprueba` | `id_version_formulario` → version_formulario; `id_subprueba` → subprueba | `orden_aplicacion`, `tiempo_limite_segundos`, `tipo_respuesta` (SELECCION, TEXTO_LIBRE), `instrucciones_ref`, `practica_ref`, `maximo_entradas`, `opciones_esperadas` (opcional, mayor que cero cuando se informa) |
 | `pregunta` | main | `id_pregunta` | `id_configuracion_subprueba` → configuracion_subprueba | `numero_visible`, `orden_presentacion`, `enunciado`, `recurso_ref` |
 | `opcion_respuesta` | main | `id_opcion` | `id_pregunta` → pregunta | `codigo`, `orden_presentacion`, `texto`, `recurso_ref` |
-| `cuenta` | #89 | `id_cuenta` | — | `correo` (único sin distinguir mayúsculas), `resumen_contrasena`, `nombres`, `apellidos`, `estado` (ACTIVA, INHABILITADA) |
-| `cuenta_rol` | #89 | `(id_cuenta, rol)` | `id_cuenta` → cuenta | `rol` (SUJETO, ACADEMICO, COORDINADOR, PSICOLOGO, DECANO) |
-| `sesion` | #89 | `id_sesion` | `id_cuenta` → cuenta; `(id_cuenta, rol_activo)` → cuenta_rol | `resumen_token` (único), `rol_activo`, `abierta_en`, `expira_en`, `cerrada_en` |
-| `sujeto` | #91 | `id_sujeto` | — | `codigo_institucional` (único, opcional), `nombres`, `apellidos`, `fecha_nacimiento`, `sexo_referencia` |
-| `periodo` | #91 | `id_periodo` | — | `codigo` (único), `nombre`, `fecha_inicio`, `fecha_fin`, `activo` |
-| `evaluacion` | #41 (ids ajustados en GEN-37-BE) | `id_evaluacion` | `id_sujeto` → sujeto; `id_periodo` → periodo; `id_test` → test; `id_version_formulario` → version_formulario | `estado`, `fecha_inicio`, `fecha_fin`, `creado_en`, `actualizado_en` |
-| `evaluacion_subprueba` | #41 (ids ajustados en GEN-37-BE) | `id_evaluacion_subprueba` | `id_evaluacion` → evaluacion; `id_configuracion_subprueba` → configuracion_subprueba | `estado` (PENDIENTE, ACTIVA, CERRADA), `fecha_inicio`, `fecha_fin_limite`, `fecha_cierre`, `letra_inicial` y `maximo_entradas` (Fluidez Verbal) |
-| `respuesta_evaluacion` | #41 (ids ajustados en GEN-37-BE) | `id_respuesta_evaluacion` | `id_evaluacion` → evaluacion; `id_pregunta` → pregunta (nula en Fluidez Verbal); `id_opcion` → opcion_respuesta (nula en texto libre) | `valor_texto`, `orden_entrada`, `fecha_registro` |
-| `solicitud_calculo_subprueba` | #41 | `id_evaluacion_subprueba` (PK y FK) | `id_evaluacion_subprueba` → evaluacion_subprueba; `id_evaluacion` → evaluacion | `codigo_test`, `codigo_subprueba`, `fecha_cierre`, `procesada_en` |
-| `resultado` | **nueva** (ENT-COM-10) | `id_resultado` | `id_evaluacion` → evaluacion (única: 0..1 por evaluación) | `estado` (CALCULANDO, PENDIENTE_VALIDACION, DISPONIBLE), `creado_en`, `actualizado_en`, `referencia_revision_vigente` (obligatoria en DISPONIBLE; apunta a la revisión de cálculo del módulo, sin FK en el núcleo) |
-| `evento_auditoria` | **nueva** (ENT-COM-11) | `id_evento_auditoria` | `id_evaluacion` → evaluacion (nula en eventos administrativos); `id_evaluacion_subprueba` → evaluacion_subprueba (nula); `id_cuenta` → cuenta (actor, D-09) | `accion`, `entidad_tipo`, `entidad_id`, `ocurrido_en`; inmutable (solo inserciones) |
+| `cuenta` | V202611240156 | `id_cuenta` | — | `correo` (único sin distinguir mayúsculas), `resumen_contrasena`, `nombres`, `apellidos`, `estado` (ACTIVA, INHABILITADA) |
+| `cuenta_rol` | V202611240156 | `(id_cuenta, rol)` | `id_cuenta` → cuenta | `rol` (SUJETO, ACADEMICO, COORDINADOR, PSICOLOGO, DECANO) |
+| `sesion` | V202611240156 | `id_sesion` | `id_cuenta` → cuenta; `(id_cuenta, rol_activo)` → cuenta_rol | `resumen_token` (único), `rol_activo`, `abierta_en`, `expira_en`, `cerrada_en` |
+| `recuperacion_cuenta` | V202611251100 | `id_recuperacion` | `id_cuenta` → cuenta | `resumen_token` (único), `creada_en`, `expira_en`, `usada_en` |
+| `cuenta_sujeto_asignado` | V202611251130 | `(id_cuenta, id_sujeto)` | `id_cuenta` → cuenta; `id_sujeto` → sujeto | — |
+| `sujeto` | V202611240830 | `id_sujeto` | — | `codigo_institucional` (único, opcional), `nombres`, `apellidos`, `fecha_nacimiento`, `sexo_referencia` |
+| `periodo` | V202611240830 | `id_periodo` | — | `codigo` (único), `nombre`, `fecha_inicio`, `fecha_fin`, `activo` |
+| `evaluacion` | V202611240800 | `id_evaluacion` | `id_sujeto` → sujeto; `id_periodo` → periodo; `id_test` → test; `id_version_formulario` → version_formulario | `estado`, `fecha_inicio`, `fecha_fin` |
+| `evaluacion_subprueba` | V202611240800 | `id_evaluacion_subprueba` | `id_evaluacion` → evaluacion; `id_configuracion_subprueba` → configuracion_subprueba | `codigo`, `nombre`, `orden`, `duracion_segundos`, `instrucciones`, `permitir_retroceso`, `estado` (PENDIENTE, ACTIVA, CERRADA), `fecha_inicio`, `fecha_fin_limite`, `fecha_cierre`, `letra_inicial` y `maximo_entradas` (Fluidez Verbal) |
+| `respuesta_evaluacion` | V202611240800 | `id_respuesta_evaluacion` | `(id_evaluacion, subprueba_codigo)` → `evaluacion_subprueba(id_evaluacion, codigo)`; `id_pregunta` → pregunta (nula en Fluidez Verbal); `id_opcion` → opcion_respuesta (nula en texto libre) | `valor_texto`, `orden_entrada`, `fecha_registro` |
+| `solicitud_calculo_subprueba` | V202611240800 | `id_evaluacion_subprueba` (PK y FK) | `id_evaluacion_subprueba` → evaluacion_subprueba; `id_evaluacion` → evaluacion | `codigo_test`, `codigo_subprueba`, `fecha_cierre`, `procesada_en` |
+| `resultado` | V202611251400 | `id_resultado` | `id_evaluacion` → evaluacion (única: 0..1 por evaluación) | `estado` (CALCULANDO, PENDIENTE_VALIDACION, DISPONIBLE), `creado_en`, `referencia_revision_vigente` (obligatoria en DISPONIBLE; apunta a la revisión de cálculo del módulo, sin FK en el núcleo) |
+| `evento_auditoria` | V202611251204 | `id_evento_auditoria` | `id_cuenta` → cuenta (obligatoria); `id_evaluacion` → evaluacion (nula en eventos administrativos); `id_evaluacion_subprueba` → evaluacion_subprueba (nula) | `accion`, `entidad_tipo`, `entidad_id`, `ocurrido_en`, `detalle` |
 
-Tablas de los temas que cuelgan del núcleo (nombres ya fijados por sus PR; no se redefinen aquí):
+Extensiones de BFA: las claves ya existen en `main` (`V202611251600`); los baremos siguen descritos en su PR y pendientes de migración:
 
 | Tabla | Origen | Entidad del diseño | Cuelga de |
 | --- | --- | --- | --- |
-| `version_clave_bfa`, `entrada_clave_bfa` | #50 (PK `id_clave`, `id_entrada_clave`) | clave de corrección de BFA | `version_formulario`, `pregunta`, `opcion_respuesta` |
+| `version_clave_bfa`, `entrada_clave_bfa` | `V202611251600` (PK `id_clave`, `id_entrada_clave`) | clave de corrección de BFA | `version_formulario`, `pregunta`, `opcion_respuesta` |
 | `baremo_bfa`, `rango_baremo_bfa` | #69 (PK `id_baremo`, `id_rango`) | NormaBaremo, EquivalenciaBaremo | `rango_baremo_bfa.id_factor` es texto (código del factor); aún sin tabla de factores |
 
-Sin tabla definida todavía (no inventar nombres; los fija el tema que los crea): FactorPsicometrico, AplicacionBFA, ResultadoFactor.
+El diseño de aplicación BFA se describe en [Aplicación y respuestas](aplicacion-respuestas.md).
 
 ### Puntos de extensión
 
@@ -216,9 +218,3 @@ Un test agrega tablas propias con FK a estas tablas del núcleo, sin modificar s
 | Rol | Perfil de permisos de una cuenta: SUJETO, ACADEMICO, COORDINADOR, PSICOLOGO o DECANO (tabla `cuenta_rol`). |
 | Sujeto | Persona evaluada (tabla `sujeto`). |
 | Período | Intervalo institucional en el que se programan las evaluaciones (tabla `periodo`). |
-
-### Pendientes de confirmación en GEN-37-BE
-
-- Nombres definitivos de las PK de `evaluacion_subprueba`, `respuesta_evaluacion` y `solicitud_calculo_subprueba`: #41 hoy usa `id` y, en `solicitud_calculo_subprueba`, `id_subprueba` (que choca con la PK de `subprueba`). Este documento fija `id_evaluacion_subprueba`, `id_respuesta_evaluacion` y `id_evaluacion_subprueba`.
-- #41 repite en `evaluacion_subprueba` datos que ya están en la configuración (`codigo`, `nombre`, `orden`, `duracion_segundos`, `instrucciones`); no son atributos del núcleo.
-- `id_sujeto` e `id_periodo` entran en `evaluacion` sin FK hasta que GEN-35-BE cree `sujeto` y `periodo`.

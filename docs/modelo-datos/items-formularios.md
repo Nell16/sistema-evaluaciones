@@ -10,11 +10,13 @@ Recorrido común: `test` → `version_formulario` → `configuracion_subprueba` 
 | --- | --- | --- |
 | Test, versión de formulario | BFA y Weill son filas de `test`; cada edición es una fila de `version_formulario` | `test`, `version_formulario` |
 | Subprueba / parte | Bloques de BFA y partes de Weill; el factor de BFA es `subprueba.factor` | `subprueba` |
-| Configuración (tiempo, tipo de respuesta, orden, instrucciones) | `tiempo_limite_segundos`, `tipo_respuesta` (SELECCION, TEXTO_LIBRE), `orden_aplicacion`, `instrucciones_ref`, `practica_ref`, `maximo_entradas` | `configuracion_subprueba` |
+| Configuración (tiempo, tipo de respuesta, orden, instrucciones) | `tiempo_limite_segundos`, `tipo_respuesta` (SELECCION, TEXTO_LIBRE), `orden_aplicacion`, `instrucciones_ref`, `practica_ref`, `maximo_entradas`, `opciones_esperadas` (entero opcional mayor que cero si se informa, desde `V202611251500`) | `configuracion_subprueba` |
 | Pregunta / ítem y opción, con recursos (imágenes) | `enunciado`, `recurso_ref` en pregunta y opción | `pregunta`, `opcion_respuesta` |
 | Fluidez Verbal (BFA) | Columnas de aplicación y respuesta; no es catálogo de ítems | `evaluacion_subprueba`, `respuesta_evaluacion` (fuera de este tema) |
 
-### Tablas propias: clave de corrección (solo BFA)
+### Diseño de la clave de corrección de BFA
+
+La migración `V202611251600__bfa_claves_versionadas.sql` (PR #155, continuación de #50) ya está en `main`. Las dos tablas de esta sección describen su diseño físico.
 
 **Por qué hace falta tabla propia:** la opción correcta no puede ser una columna (`es_correcta`) en `opcion_respuesta`, porque el evaluado recibe esa tabla y la clave debe estar protegida y versionarse aparte de la edición del contenido (Documento BFA §4.3, ENT-BFA-02 y 03; D03). Una clave puede corregirse sin cambiar las preguntas. Nombres y columnas son los ya fijados en el PR #50 (migración `V202611121500__bfa_claves_versionadas.sql`); no se renombran.
 
@@ -25,7 +27,7 @@ Recorrido común: `test` → `version_formulario` → `configuracion_subprueba` 
 | PK | `id_clave` (BIGINT) |
 | FK | `id_version_formulario` → `version_formulario(id_version_formulario)`, obligatoria |
 | Atributos | `version` (única por formulario), `estado` (BORRADOR, APROBADA, RETIRADA), `referencia_fuente` (obligatoria, ubicación del material autorizado, nunca las respuestas), `evidencia_aprobacion` (obligatoria si el estado no es BORRADOR) |
-| Cardinalidad | `version_formulario` 1 : 0..N `version_clave_bfa`. Regla de diseño: a lo sumo 1 clave APROBADA por versión; para aprobar otra se retira la anterior. |
+| Cardinalidad | `version_formulario` 1 : 0..N `version_clave_bfa`. Regla de diseño: a lo sumo 1 clave APROBADA por versión; para aprobar otra se retira la anterior. La migración `V202611251600` no la garantiza (no hay índice único parcial para `APROBADA`): queda como regla pendiente de garantía (I-11). |
 
 #### `entrada_clave_bfa` (ENT-BFA-03)
 
@@ -35,7 +37,7 @@ Recorrido común: `test` → `version_formulario` → `configuracion_subprueba` 
 | FK | `id_clave` → `version_clave_bfa(id_clave)`; `id_pregunta` → `pregunta(id_pregunta)`; `id_opcion_correcta` → `opcion_respuesta(id_opcion)`; las tres obligatorias |
 | Atributos | Solo las tres referencias. Único `(id_clave, id_pregunta)`: una sola opción correcta por pregunta y clave. |
 | Cardinalidad | `version_clave_bfa` 1 : 0..N `entrada_clave_bfa`; `pregunta` 1 : 0..N `entrada_clave_bfa` (máximo 1 por clave); `opcion_respuesta` 1 : 0..N `entrada_clave_bfa`. |
-| Regla de integridad | La pregunta debe pertenecer a la versión de la clave, y la opción a esa pregunta (se valida en aplicación o con restricción compuesta; las dos migraciones posteriores de #50 refuerzan esto). No aplica a Fluidez Verbal ni a la entrevista. |
+| Regla de integridad | La pregunta debe pertenecer a la versión de la clave, y la opción a esa pregunta. `V202611251600__bfa_claves_versionadas.sql` solo define las tres FK y la unicidad `(id_clave, id_pregunta)`; la pertenencia de pregunta y opción es validación de aplicación, no restricción de la migración. No aplica a Fluidez Verbal ni a la entrevista. |
 
 Relaciones entre las dos tablas y el núcleo: `version_formulario` 1:N `version_clave_bfa` 1:N `entrada_clave_bfa` N:1 `pregunta` 1:N `opcion_respuesta`. Entre `pregunta` y `opcion_respuesta` por medio de la entrada es una relación N:M resuelta con `entrada_clave_bfa` (con la restricción de que la opción pertenezca a la pregunta).
 
@@ -45,7 +47,7 @@ No se propone tabla propia. Weill usa las seis tablas del núcleo para test, par
 
 ### Tablas que NO se crean en este tema
 
-`factor`, `baremo`, `rango_baremo`, `resultado`, puntajes por factor y aplicación BFA (ENT-BFA-01, 04 a 13) pertenecen a otros temas (baremos, resultados, ejecución). `baremo_bfa` y `rango_baremo_bfa` ya existen en #69.
+`factor`, `baremo`, `rango_baremo`, `resultado`, puntajes por factor y aplicación BFA (ENT-BFA-01, 04 a 13) pertenecen a otros temas (baremos, resultados, ejecución). `baremo_bfa` y `rango_baremo_bfa` se definen en el PR #69, pendiente de integrar.
 
 ### Incógnitas para el Registro
 

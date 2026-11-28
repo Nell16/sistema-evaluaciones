@@ -25,9 +25,9 @@ Primero se reutilizan las tablas del núcleo. Solo se crea una tabla propia cuan
 | Weill sin límite de tiempo | `configuracion_subprueba.tiempo_limite_segundos` nulo y `fecha_fin_limite` nula | Weill |
 | Horas de inicio y finalización de la hoja de aplicación de Weill | `evaluacion.fecha_inicio` y `evaluacion.fecha_fin` | Weill |
 
-### Tabla nueva: `aplicacion_bfa`
+### Tabla propuesta: `aplicacion_bfa`
 
-Extensión de `evaluacion` con el contexto propio de una aplicación BFA (ENT-BFA-01).
+Extensión de `evaluacion` con el contexto propio de una aplicación BFA (ENT-BFA-01), pendiente de migración en `main`.
 
 | Campo | Detalle |
 | --- | --- |
@@ -52,10 +52,10 @@ Extensión de `evaluacion` con el contexto propio de una aplicación BFA (ENT-BF
 | `evaluacion` — `aplicacion_bfa` | 1:0..1 | La FK es la propia PK de `aplicacion_bfa`. |
 | `evaluacion` — `evaluacion_subprueba` | 1:N | Núcleo. Una fila por subprueba incluida. |
 | `configuracion_subprueba` — `evaluacion_subprueba` | 1:N | Núcleo. La configuración puede aplicarse en muchas evaluaciones. |
-| `evaluacion` — `respuesta_evaluacion` | 1:N | Núcleo. |
-| `pregunta` — `respuesta_evaluacion` | 1:N | Núcleo. Nula en Fluidez Verbal. |
-| `opcion_respuesta` — `respuesta_evaluacion` | 1:N | Núcleo. Nula en texto libre. |
-| `evaluacion` — `evento_auditoria` | 1:N | Núcleo. Registra los cambios de respuesta. |
+| `evaluacion_subprueba` — `respuesta_evaluacion` | 1:0..N | FK compuesta `(id_evaluacion, subprueba_codigo)` → `evaluacion_subprueba(id_evaluacion, codigo)`. |
+| `pregunta` — `respuesta_evaluacion` | 0..1:0..N | FK nula en Fluidez Verbal. |
+| `opcion_respuesta` — `respuesta_evaluacion` | 0..1:0..N | FK nula en texto libre. |
+| `evaluacion` — `evento_auditoria` | 0..1:0..N | La FK es opcional. La cuenta que actuó es obligatoria. |
 
 ### Fluidez Verbal
 
@@ -85,7 +85,7 @@ Weill Forma A no necesita tablas propias en este tema, porque cabe por completo 
 | A-03 | La modalidad COLECTIVA exige la entidad común de sesión colectiva (D02 de ENT-BFA-01), que no existe. | Iván |
 | A-04 | Confirmar si `finalidad_examen` y `edad_al_aplicar` son obligatorias (D01 de ENT-BFA-01). | Iván |
 | A-05 | `maximo_entradas` aparece en `configuracion_subprueba` y en `evaluacion_subprueba`. ENT-BFA-11 (D12) pide consultarlo desde la configuración. Decidir si la columna de `evaluacion_subprueba` sobra. | GEN-37-BE |
-| A-06 | `respuesta_evaluacion` no tiene FK a `evaluacion_subprueba`. La aplicación de subprueba se deduce por la pregunta, pero en Fluidez Verbal la pregunta es nula. Confirmar cómo se enlaza. | GEN-37-BE |
+| A-06 | La respuesta se enlaza a su ejecución mediante `(id_evaluacion, subprueba_codigo)`, también en Fluidez Verbal. | Resuelta en `V202611240800` |
 | A-07 | Cambios de respuesta: E7 guarda una fila por pregunta. Decidir si basta `evento_auditoria` o se necesita un historial consultable. | Integración |
 | A-08 | Weill no tiene límite de tiempo. Definir quién cierra la aplicación de subprueba y con qué `fecha_cierre`, y si el cierre por tiempo se distingue por `fecha_cierre` igual a `fecha_fin_limite`. | Integración e Iván |
 | A-09 | El núcleo lista `recurso_ref` en `opcion_respuesta`, pero la incógnita I-12 de DOC-42 dice que no tiene recurso propio. Weill necesita una imagen por opción. | DOC-32 y Backend |

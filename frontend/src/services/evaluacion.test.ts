@@ -35,28 +35,49 @@ describe('servicioEvaluacion (llamadas reales)', () => {
     expect(fetchSimulado).toHaveBeenCalledWith(ruta, expect.anything());
   });
 
-  it('E3 omite subpruebas vacías (el backend responde 400 con lista vacía)', async () => {
+  it('E3 sin subpruebas es una aplicación completa: no envía la propiedad', async () => {
     const fetchSimulado = responder(201, { id: 15 });
     await servicioEvaluacion.iniciarEvaluacion({
       versionFormularioId: 10,
       sujetoId: 25,
       periodoId: 3,
-      subpruebas: [' ', ''],
     });
     const [, opciones] = fetchSimulado.mock.calls[0] as [string, RequestInit];
-    expect(JSON.parse(opciones.body as string)).toEqual({
-      versionFormularioId: 10,
-      sujetoId: 25,
-      periodoId: 3,
-    });
+    expect(JSON.parse(opciones.body as string)).not.toHaveProperty('subpruebas');
   });
 
-  it('E3 envía la letra de FV recortada y en mayúscula, y la omite si está vacía', () => {
+  it.each([[[]], [[' ', '']]])(
+    'E3 no convierte una selección parcial inválida (%j) en aplicación completa',
+    async (subpruebas) => {
+      const fetchSimulado = responder(400, {
+        timestamp: 't',
+        status: 400,
+        codigo: 'VALIDACION_FALLIDA',
+        mensaje: 'm',
+        ruta: '/api/v1/evaluaciones',
+      });
+      await expect(
+        servicioEvaluacion.iniciarEvaluacion({
+          versionFormularioId: 10,
+          sujetoId: 25,
+          periodoId: 3,
+          subpruebas,
+        }),
+      ).rejects.toMatchObject({ status: 400 });
+      const [, opciones] = fetchSimulado.mock.calls[0] as [string, RequestInit];
+      expect(JSON.parse(opciones.body as string).subpruebas).toEqual(subpruebas);
+    },
+  );
+
+  it('E3 envía la letra de FV recortada y en mayúscula, y no oculta una letra en blanco', () => {
     const base = { versionFormularioId: 10, sujetoId: 25, periodoId: 3 };
     expect(cuerpoInicio({ ...base, subpruebas: ['FV'], fluidez: { letraInicial: ' m ' } })).toEqual(
       { ...base, subpruebas: ['FV'], fluidez: { letraInicial: 'M' } },
     );
-    expect(cuerpoInicio({ ...base, fluidez: { letraInicial: '  ' } })).toEqual(base);
+    expect(cuerpoInicio({ ...base, fluidez: { letraInicial: '  ' } })).toEqual({
+      ...base,
+      fluidez: { letraInicial: '  ' },
+    });
   });
 
   it('E4 entrega la forma del contrato (cerradaEn y subpruebaActiva)', async () => {

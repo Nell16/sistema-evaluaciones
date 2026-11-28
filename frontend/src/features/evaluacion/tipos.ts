@@ -96,18 +96,13 @@ export interface SubpruebaActiva {
 export interface EstadoSubpruebaResponse {
   codigo: string;
   estado: EstadoSubprueba;
-  /**
-   * Instante de cierre; en cierre por vencimiento coincide con finLimite. El backend siempre
-   * lo envía (null si no está CERRADA); es opcional aquí para no romper los datos simulados.
-   */
-  cerradaEn?: string | null;
 }
 
 export interface EvaluacionResponse {
   id: number;
   testId: number;
-  /** Contrato y backend (EvaluacionResponse) lo envían siempre. */
-  versionFormularioId: number;
+  /** Propuesto en DOC-05 §5.4.1; puede no venir todavía. */
+  versionFormularioId?: number;
   sujetoId: number;
   periodoId: number;
   estado: EstadoEvaluacion;
@@ -115,10 +110,6 @@ export interface EvaluacionResponse {
   fechaFin: string | null;
   subpruebaActiva: SubpruebaActiva | null;
   subpruebas: EstadoSubpruebaResponse[];
-  /** Solo en la respuesta de E8 (finalizar); E3 y E4 no lo envían. */
-  resultadoId?: number | null;
-  /** Solo en la respuesta de E8, p. ej. PENDIENTE_VALIDACION. */
-  estadoResultado?: string | null;
 }
 
 // ---------- Errores (Documento general §5.2.2) ----------

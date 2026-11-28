@@ -9,19 +9,20 @@ import type {
 import { http } from './http';
 
 /**
- * Prepara el cuerpo de E3 tal como lo valida el backend (IniciarEvaluacionRequest):
- * - `subpruebas` vacía responde 400 (`@Size(min = 1)`): se omite y la aplicación es completa.
- * - `fluidez.letraInicial` debe ser una sola letra: se recorta y se pasa a mayúscula; si queda
- *   vacía se omite y el backend decide (LETRA_NO_ASIGNADA si no hay asignación previa).
+ * Prepara el cuerpo de E3 tal como lo valida el backend (IniciarEvaluacionRequest).
+ * - `subpruebas` se envía tal cual: sin la propiedad es una aplicación completa intencional;
+ *   una lista vacía o con códigos en blanco es una selección parcial inválida y el backend la
+ *   rechaza con 400, que la pantalla muestra con sus detalles.
+ * - `fluidez.letraInicial` se recorta y se pasa a mayúscula; una letra en blanco se envía igual
+ *   para que el backend la rechace en lugar de ocultar el error.
  */
 export function cuerpoInicio(solicitud: IniciarEvaluacionRequest): IniciarEvaluacionRequest {
-  const { subpruebas, fluidez, ...resto } = solicitud;
-  const codigos = subpruebas?.map((c) => c.trim()).filter(Boolean);
-  const letra = fluidez?.letraInicial.trim().toUpperCase();
+  const { fluidez, ...resto } = solicitud;
+  if (!fluidez) return resto;
+  const letra = fluidez.letraInicial.trim();
   return {
     ...resto,
-    ...(codigos?.length ? { subpruebas: codigos } : {}),
-    ...(letra ? { fluidez: { letraInicial: letra } } : {}),
+    fluidez: { letraInicial: letra ? letra.toUpperCase() : fluidez.letraInicial },
   };
 }
 

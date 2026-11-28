@@ -20,6 +20,31 @@ describe('servicioEvaluacion (llamadas reales)', () => {
     );
   });
 
+  it('E8 hace POST /api/v1/evaluaciones/{id}/finalizar sin cuerpo', async () => {
+    const cierre = { id: 15, estado: 'FINALIZADA', resultadoId: 501 };
+    const fetchSimulado = responder(200, cierre);
+    await expect(servicioEvaluacion.finalizarEvaluacion(15)).resolves.toEqual(cierre);
+    expect(fetchSimulado).toHaveBeenCalledWith(
+      '/api/v1/evaluaciones/15/finalizar',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(fetchSimulado.mock.calls[0][1]).not.toHaveProperty('body');
+  });
+
+  it('E8 propaga 409 SUBPRUEBAS_PENDIENTES', async () => {
+    responder(409, {
+      timestamp: 't',
+      status: 409,
+      codigo: 'SUBPRUEBAS_PENDIENTES',
+      mensaje: 'Faltan subpruebas.',
+      ruta: '/api/v1/evaluaciones/15/finalizar',
+    });
+    await expect(servicioEvaluacion.finalizarEvaluacion(15)).rejects.toMatchObject({
+      status: 409,
+      error: { codigo: 'SUBPRUEBAS_PENDIENTES' },
+    });
+  });
+
   it.each([
     ['E4', () => servicioEvaluacion.obtenerEvaluacion(15), '/api/v1/evaluaciones/15'],
     ['E2', () => servicioEvaluacion.obtenerTest(1), '/api/v1/tests/1'],

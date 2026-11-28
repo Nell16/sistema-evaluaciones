@@ -52,7 +52,7 @@ const subprueba = (
  * Documento BFA §5.3, tabla de las 13 subpruebas (y §2.6 para tiempos).
  * 0 preguntas u opciones null = no definido en la fuente.
  */
-const TEST_BFA: TestDetalleResponse = {
+export const TEST_BFA: TestDetalleResponse = {
   id: 1,
   codigo: 'BFA',
   nombre: 'Batería Factorial de Aptitudes',
@@ -85,13 +85,13 @@ const TEST_BFA: TestDetalleResponse = {
   ],
 };
 
-const SUJETOS: SujetoResponse[] = [
+export const SUJETOS: SujetoResponse[] = [
   { id: 25, identificadorInstitucional: '2026-0153', nombres: 'Ana', apellidos: 'Ruiz' },
   { id: 26, identificadorInstitucional: '2026-0154', nombres: 'Luis', apellidos: 'Pérez' },
   { id: 409, identificadorInstitucional: '2026-0409', nombres: 'Marta', apellidos: 'López' },
 ];
 
-const PERIODOS: PeriodoResponse[] = [
+export const PERIODOS: PeriodoResponse[] = [
   {
     id: 3,
     codigo: '2026-2',
@@ -118,7 +118,7 @@ const PERIODOS: PeriodoResponse[] = [
   },
 ];
 
-const evaluacionesIniciales = (): EvaluacionResponse[] => [
+export const evaluacionesIniciales = (): EvaluacionResponse[] => [
   {
     id: 15,
     testId: 1,
@@ -152,9 +152,28 @@ const evaluacionesIniciales = (): EvaluacionResponse[] => [
   },
 ];
 
+/** Solo para E8: falta CV, ACTIVA con el tiempo ya vencido. Fuera de la lista compartida (E22). */
+const evaluacionParaFinalizar = (): EvaluacionResponse[] => [
+  {
+    id: 17,
+    testId: 1,
+    versionFormularioId: VERSION_PUBLICADA,
+    sujetoId: 409,
+    periodoId: 3,
+    estado: 'EN_CURSO',
+    fechaInicio: '2026-10-31T09:00:00Z',
+    fechaFin: null,
+    subpruebaActiva: { codigo: 'CV', finLimite: '2026-10-31T09:20:00Z', segundosRestantes: 0 },
+    subpruebas: [
+      { codigo: 'VOC1', estado: 'CERRADA', cerradaEn: '2026-10-31T09:05:00Z' },
+      { codigo: 'CV', estado: 'ACTIVA' },
+    ],
+  },
+];
+
 // ---------- Ayudas ----------
 
-function fallar(
+export function fallar(
   status: number,
   codigo: string,
   mensaje: string,
@@ -172,12 +191,12 @@ function fallar(
 }
 
 /** Igual que fetch cuando no hay red: TypeError. */
-function fallarConexion(): never {
+export function fallarConexion(): never {
   throw new TypeError('Failed to fetch');
 }
 
 /** Escenarios comunes por ID de prueba (403, 500, 503). */
-function escenarioPorId(id: number, ruta: string): void {
+export function escenarioPorId(id: number, ruta: string): void {
   if (id === 503) fallarConexion();
   if (id === 403) fallar(403, 'SIN_PERMISO', 'No tiene permiso para este recurso.', ruta);
   if (id === 500) fallar(500, 'ERROR_INTERNO', 'Ocurrió un error inesperado.', ruta);
@@ -193,13 +212,19 @@ const copiar = <T>(valor: T): T => structuredClone(valor);
 export interface OpcionesMock {
   /** Retardo artificial en ms (0 en pruebas). */
   retardoMs?: number;
+  /** Reloj del "servidor" simulado; en pruebas se fija para decidir vencimientos (E8). */
+  ahora?: () => Date;
 }
 
-export function crearClienteMock({ retardoMs = 700 }: OpcionesMock = {}): ClienteEvaluacion {
+export function crearClienteMock({
+  retardoMs = 700,
+  ahora = () => new Date(),
+}: OpcionesMock = {}): ClienteEvaluacion {
   const evaluaciones = new Map<number, EvaluacionResponse>(
-    evaluacionesIniciales().map((e) => [e.id, e]),
+    [...evaluacionesIniciales(), ...evaluacionParaFinalizar()].map((e) => [e.id, e]),
   );
   let siguienteId = 100;
+  let siguienteResultadoId = 500;
 
   const esperar = () => new Promise<void>((resolver) => setTimeout(resolver, retardoMs));
 
@@ -314,6 +339,51 @@ export function crearClienteMock({ retardoMs = 700 }: OpcionesMock = {}): Client
       if (!evaluacion)
         fallar(404, 'EVALUACION_NO_ENCONTRADA', `La evaluación ${evaluacionId} no existe.`, ruta);
       return copiar(evaluacion);
+    },
+
+    async finalizarEvaluacion(evaluacionId) {
+      await esperar();
+      const ruta = `/api/v1/evaluaciones/${evaluacionId}/finalizar`;
+      escenarioPorId(evaluacionId, ruta);
+      const evaluacion = evaluaciones.get(evaluacionId);
+      if (!evaluacion)
+        fallar(404, 'EVALUACION_NO_ENCONTRADA', `La evaluación ${evaluacionId} no existe.`, ruta);
+
+      // Repetir E8 devuelve el cierre existente sin otro cálculo.
+      if (evaluacion.estado === 'FINALIZADA') return copiar(evaluacion);
+
+      // Una ACTIVA cuyo finLimite ya venció se cierra con cerradaEn = finLimite y no bloquea.
+      const activa = evaluacion.subpruebaActiva;
+      const activaVencida = activa !== null && new Date(activa.finLimite) <= ahora();
+      const pendientes = evaluacion.subpruebas.filter(
+        (s) =>
+          s.estado === 'PENDIENTE' ||
+          (s.estado === 'ACTIVA' && !(activaVencida && s.codigo === activa?.codigo)),
+      );
+      if (pendientes.length > 0)
+        fallar(
+          409,
+          'SUBPRUEBAS_PENDIENTES',
+          `Faltan subpruebas por cerrar: ${pendientes.map((s) => s.codigo).join(', ')}.`,
+          ruta,
+        );
+
+      const cierre = ahora().toISOString();
+      const finalizada: EvaluacionResponse = {
+        ...evaluacion,
+        estado: 'FINALIZADA',
+        fechaFin: cierre,
+        subpruebaActiva: null,
+        subpruebas: evaluacion.subpruebas.map((s) =>
+          s.estado === 'ACTIVA'
+            ? { ...s, estado: 'CERRADA', cerradaEn: activa?.finLimite ?? cierre }
+            : { ...s, cerradaEn: s.cerradaEn ?? null },
+        ),
+        resultadoId: siguienteResultadoId++,
+        estadoResultado: 'PENDIENTE_VALIDACION',
+      };
+      evaluaciones.set(evaluacionId, finalizada);
+      return copiar(finalizada);
     },
   };
 }

@@ -13,6 +13,7 @@ describe('aErrorMostrable', () => {
     [403, 'SIN_PERMISO', 'acceso'],
     [404, 'SUJETO_NO_ENCONTRADO', 'no_encontrado'],
     [409, 'EVALUACION_EN_CURSO', 'conflicto'],
+    [409, 'SUBPRUEBAS_PENDIENTES', 'conflicto'],
     [500, 'ERROR_INTERNO', 'servidor'],
     [502, 'X', 'conexion'],
   ])('%i %s → %s', (status, codigo, tipo) => {

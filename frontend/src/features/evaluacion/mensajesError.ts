@@ -16,6 +16,8 @@ const MENSAJES: Record<CodigoErrorEvaluacion, string> = {
   LETRA_NO_ASIGNADA: 'Fluidez Verbal necesita una letra inicial asignada.',
   VERSION_INCOMPATIBLE: 'El test no coincide con la versión del formulario.',
   SUBPRUEBA_NO_INCLUIDA: 'Alguna subprueba elegida no pertenece a esta versión del test.',
+  SUBPRUEBAS_PENDIENTES:
+    'Aún hay subpruebas sin terminar. Complételas antes de finalizar la evaluación.',
   ERROR_INTERNO: 'Ocurrió un error en el servidor. Intente de nuevo más tarde.',
 };
 

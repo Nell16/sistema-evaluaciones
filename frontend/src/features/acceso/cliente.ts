@@ -1,8 +1,9 @@
+import { crearClienteAccesoMock } from '../../services/acceso.mock';
 import { http } from '../../services/http';
 import type { ClienteAcceso, CuentaResponse, SesionResponse } from './tipos';
 
-/** E13–E17. El acceso usa la API real; los servicios simulados se integran en GEN-31-FE. */
-export const clienteAcceso: ClienteAcceso = {
+/** E13–E17 con sesiones Bearer del backend. */
+const clienteAccesoReal: ClienteAcceso = {
   registrar: (solicitud) =>
     http<CuentaResponse>('/auth/registro', {
       method: 'POST',
@@ -25,3 +26,6 @@ export const clienteAcceso: ClienteAcceso = {
       body: JSON.stringify(solicitud),
     }),
 };
+
+export const clienteAcceso: ClienteAcceso =
+  import.meta.env.VITE_USAR_MOCKS === 'true' ? crearClienteAccesoMock() : clienteAccesoReal;

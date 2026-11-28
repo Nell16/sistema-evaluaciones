@@ -22,7 +22,7 @@ mvn -f backend/pom.xml -Dspring.datasource.hikari.maximum-pool-size=2 -Dspring.t
 
 resultado: **586 pruebas, cero fallos, errores y omisiones**, tanto en la compilación limpia previa como en `verify` después de sincronizar main. las propiedades limitan únicamente los recursos del proceso local de pruebas. se usaron variables de conexión a una base ficticia; no se escribió en el vps.
 
-frontend idéntico al de la integración e8 verificada: lint, prettier, tipos, **148 pruebas** y build correctos. las dependencias reutilizadas tenían el mismo package.json y lockfile; ci debe repetir npm ci en el sha publicado.
+frontend sincronizado con el avance remoto de #175 y verificado de nuevo: lint, prettier, tipos, **150 pruebas** y build correctos. las dependencias reutilizadas tenían el mismo package.json y lockfile; ci debe repetir npm ci en el sha publicado.
 
 la prueba por http real usa un puerto aleatorio y un esquema exclusivo, con cuentas ficticias y bearer emitido por e14. comprueba dos recálculos simultáneos con una sola revisión, dos publicaciones que compiten con un ganador y un 409, y rollback completo de publicación ante un fallo deliberado de auditoría. e9 conserva la revisión anterior después del fallo.
 

@@ -1,6 +1,7 @@
 package com.universidad.tests.controller;
 
 import com.universidad.tests.application.service.ConsultaEvaluacionService;
+import com.universidad.tests.application.service.FinalizacionEvaluacionService;
 import com.universidad.tests.application.service.MotorSubpruebasService;
 import com.universidad.tests.application.service.MotorSubpruebasService.InstruccionesResponse;
 import com.universidad.tests.dto.request.RegistrarRespuestasRequest;
@@ -21,20 +22,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class EvaluacionController {
 
     private final ConsultaEvaluacionService consultaService;
-
     private final MotorSubpruebasService motor;
-    private final com.universidad.tests.application.service.FinalizacionEvaluacionService
-            finalizacion;
+    private final FinalizacionEvaluacionService finalizacion;
 
     public EvaluacionController(
             ConsultaEvaluacionService consultaService,
             MotorSubpruebasService motor,
-            com.universidad.tests.application.service.FinalizacionEvaluacionService finalizacion) {
+            FinalizacionEvaluacionService finalizacion) {
         this.motor = motor;
         this.finalizacion = finalizacion;
         this.consultaService = consultaService;
     }
 
+    // E8
     @PostMapping("/{evaluacionId}/finalizar")
     public EvaluacionResponse finalizar(@PathVariable Long evaluacionId) {
         return finalizacion.finalizar(evaluacionId);

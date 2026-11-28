@@ -1,6 +1,7 @@
 package com.universidad.tests.exception;
 
 import com.universidad.tests.domain.exception.EvaluacionNoEncontradaException;
+import com.universidad.tests.domain.exception.EvaluacionNoFinalizadaException;
 import com.universidad.tests.domain.exception.MotorSubpruebasException;
 import com.universidad.tests.domain.exception.SubpruebasPendientesException;
 import com.universidad.tests.domain.exception.TestNoEncontradoException;
@@ -26,6 +27,12 @@ public class ManejadorErroresApi {
     public ResponseEntity<ErrorResponse> subpruebasPendientes(
             SubpruebasPendientesException ex, HttpServletRequest request) {
         return error(HttpStatus.CONFLICT, "SUBPRUEBAS_PENDIENTES", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(EvaluacionNoFinalizadaException.class)
+    public ResponseEntity<ErrorResponse> evaluacionNoFinalizada(
+            EvaluacionNoFinalizadaException ex, HttpServletRequest request) {
+        return error(HttpStatus.CONFLICT, "EVALUACION_NO_FINALIZADA", ex.getMessage(), request);
     }
 
     @ExceptionHandler(TestNoEncontradoException.class)

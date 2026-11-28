@@ -11,7 +11,7 @@ export type CodigoBloqueoRevision =
 
 export const MENSAJES_BLOQUEO: Record<CodigoBloqueoRevision, string> = {
   REVISION_SIN_PALABRAS:
-    'No se pueden cargar las palabras de Fluidez Verbal: E6 solo responde mientras la subprueba está activa y la revisión se hace con la evaluación finalizada. Falta acordar el endpoint con BFA-BE-31.',
+    'No se pueden cargar las palabras de Fluidez Verbal: E6 solo responde al evaluado y mientras la subprueba está activa, y la revisión la hace el psicólogo con la evaluación finalizada. Falta acordar el endpoint con BFA-BE-31.',
   REVISION_SIN_IDENTIFICADORES:
     'Las palabras llegan sin el identificador guardado de cada respuesta que exige E10; no se registran decisiones para no afectar respuestas equivocadas.',
   REVISION_SIN_CALIFICACION:
@@ -39,20 +39,21 @@ const esIdValido = (id: number | null | undefined): id is number =>
 export const servicioRevision: ClienteRevision = {
   // No hay un endpoint de listado para revisar; se arma con E9 (revisión vigente) y E6 (palabras).
   // Contrato verificado (BFA-FE-31): E9 exige la evaluación finalizada (409 EVALUACION_NO_FINALIZADA),
-  // pero E6 responde 409 SUBPRUEBA_NO_ACTIVA si la evaluación no está EN_CURSO, y PalabraFV no trae
-  // el respuestaId que E10 necesita. Hasta que BFA-BE-31 lo resuelva, la carga se detiene con un
-  // mensaje claro en lugar de inventar identificadores a partir de ordenEntrada.
+  // pero E6 no sirve para revisar: responde 403 SIN_PERMISO al psicólogo (exige ITEMS_LEER, que
+  // solo tiene SUJETO) y 409 SUBPRUEBA_NO_ACTIVA si la evaluación no está EN_CURSO. Además PalabraFV
+  // no trae el respuestaId que E10 necesita. Hasta que BFA-BE-31 lo resuelva, la carga se detiene con
+  // un mensaje claro en lugar de inventar identificadores a partir de ordenEntrada.
+  // E9 va primero: si quien revisa no tiene acceso a la evaluación, ese error se muestra tal cual.
   async cargar(evaluacionId): Promise<BorradorRevision> {
     const rutaFv = `/evaluaciones/${evaluacionId}/subpruebas/FV/preguntas`;
-    const [resultado, fv] = await Promise.all([
-      http<ResultadoResponse>(`/evaluaciones/${evaluacionId}/resultados`),
-      http<PreguntasSubpruebaResponse>(rutaFv).catch((e: unknown) => {
-        if (e instanceof ApiError && e.error?.codigo === 'SUBPRUEBA_NO_ACTIVA') {
-          throw bloqueo('REVISION_SIN_PALABRAS', rutaFv);
-        }
-        throw e;
-      }),
-    ]);
+    const resultado = await http<ResultadoResponse>(`/evaluaciones/${evaluacionId}/resultados`);
+    const fv = await http<PreguntasSubpruebaResponse>(rutaFv).catch((e: unknown) => {
+      const codigo = e instanceof ApiError ? e.error?.codigo : undefined;
+      if (codigo === 'SUBPRUEBA_NO_ACTIVA' || codigo === 'SIN_PERMISO') {
+        throw bloqueo('REVISION_SIN_PALABRAS', rutaFv);
+      }
+      throw e;
+    });
     if (fv.palabras?.length) throw bloqueo('REVISION_SIN_IDENTIFICADORES', rutaFv);
     return {
       calificacionId: resultado.calificacionId,

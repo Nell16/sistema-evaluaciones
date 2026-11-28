@@ -111,6 +111,30 @@ describe('BFA-FE-31: carga y validaciones contra el contrato', () => {
     expect(f).toHaveBeenCalledTimes(2);
   });
 
+  it('E6 sin permiso para el psicólogo (403 SIN_PERMISO) también es REVISION_SIN_PALABRAS', async () => {
+    simularCarga({
+      status: 403,
+      cuerpo: { status: 403, codigo: 'SIN_PERMISO', mensaje: 'x', ruta: 'x', timestamp: 'x' },
+    });
+    const e = await servicioRevision.cargar(15).catch((err: unknown) => err);
+    expect(aErrorMostrable(e)).toMatchObject({
+      codigo: 'REVISION_SIN_PALABRAS',
+      mensaje: MENSAJES_BLOQUEO.REVISION_SIN_PALABRAS,
+    });
+  });
+
+  it('si E9 niega el acceso, se muestra ese error y no se consulta E6', async () => {
+    const f = vi.fn(async () =>
+      Response.json(
+        { status: 403, codigo: 'SIN_PERMISO', mensaje: 'x', ruta: 'x', timestamp: 'x' },
+        { status: 403 },
+      ),
+    );
+    vi.stubGlobal('fetch', f);
+    expect(await codigoDe(servicioRevision.cargar(15))).toBe('SIN_PERMISO');
+    expect(f).toHaveBeenCalledTimes(1);
+  });
+
   it('otros errores de E6 se propagan sin cambios', async () => {
     simularCarga({
       status: 404,

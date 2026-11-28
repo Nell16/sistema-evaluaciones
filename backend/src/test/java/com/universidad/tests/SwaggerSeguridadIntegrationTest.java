@@ -28,6 +28,14 @@ class SwaggerSeguridadIntegrationTest {
     }
 
     @Test
+    void elContratoGeneradoUsaUnServidorRelativo() throws Exception {
+        mvc.perform(get("/v3/api-docs").header("Host", "backend:8080"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.servers.length()").value(1))
+                .andExpect(jsonPath("$.servers[0].url").value("/"));
+    }
+
+    @Test
     void laInterfazDeSwaggerNoExigeToken() throws Exception {
         mvc.perform(get("/swagger-ui/index.html")).andExpect(status().isOk());
     }

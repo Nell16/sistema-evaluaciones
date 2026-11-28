@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { IniciarEvaluacionRequest } from '../features/evaluacion/tipos';
+import { tiempoTotal } from '../features/evaluacion/progreso';
 import { crearClienteMock } from './evaluacion.mock';
 
 const valida: IniciarEvaluacionRequest = {
@@ -17,7 +18,7 @@ describe('mock de evaluación (DOC-05)', () => {
     const test = await cliente().obtenerTest(1);
     expect(test.subpruebas).toHaveLength(13);
     expect(test.subpruebas.map((s) => s.orden)).toEqual([...Array(13).keys()].map((i) => i + 1));
-    expect(test.subpruebas.reduce((t, s) => t + s.tiempoLimiteSegundos, 0)).toBe(5070); // 84:30
+    expect(tiempoTotal(test.subpruebas.map((s) => s.tiempoLimiteSegundos))).toBe(5070); // 84:30
   });
 
   it('E21 solo lista períodos disponibles', async () => {

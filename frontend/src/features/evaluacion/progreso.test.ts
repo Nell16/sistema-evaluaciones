@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calcularProgreso, formatearFechaHora, formatearSegundos } from './progreso';
+import { calcularProgreso, formatearFechaHora, formatearSegundos, tiempoTotal } from './progreso';
 import type { EvaluacionResponse } from './tipos';
 
 const evaluacion = (subpruebas: EvaluacionResponse['subpruebas']): EvaluacionResponse => ({
@@ -43,5 +43,16 @@ describe('formatearSegundos', () => {
 describe('formatearFechaHora', () => {
   it('devuelve el texto original si la fecha no es válida', () => {
     expect(formatearFechaHora('no-es-fecha')).toBe('no-es-fecha');
+  });
+});
+
+describe('tiempoTotal', () => {
+  it('suma los tiempos cuando todos están definidos', () => {
+    expect(tiempoTotal([300, 120, 0])).toBe(420);
+  });
+
+  it('no presenta una suma parcial como tiempo total', () => {
+    expect(tiempoTotal([300, null])).toBeNull();
+    expect(tiempoTotal([null])).toBeNull();
   });
 });

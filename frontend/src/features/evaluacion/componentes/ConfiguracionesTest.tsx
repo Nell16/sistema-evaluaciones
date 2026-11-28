@@ -76,7 +76,9 @@ export function ConfiguracionesTest({ test, seleccion, error, errorId }: Configu
                     <span className="ev-codigo">{s.codigo}</span>
                   </td>
                   <td className="ev-col-tiempo ev-numero">
-                    {formatearSegundos(s.tiempoLimiteSegundos)}
+                    {s.tiempoLimiteSegundos === null
+                      ? 'No definido'
+                      : formatearSegundos(s.tiempoLimiteSegundos)}
                   </td>
                   <td className="ev-col-respuesta">{describirRespuesta(s)}</td>
                   <td

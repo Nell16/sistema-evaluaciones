@@ -41,8 +41,8 @@ export interface ConfiguracionSubprueba {
   codigo: string;
   nombre: string;
   orden: number;
-  factor: string;
-  tiempoLimiteSegundos: number;
+  factor: string | null;
+  tiempoLimiteSegundos: number | null;
   tipoRespuesta: TipoRespuesta;
   opciones: number | null;
   numeroPreguntas: number;

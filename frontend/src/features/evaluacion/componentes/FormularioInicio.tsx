@@ -1,7 +1,7 @@
 import { useId, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { useBuscarSujeto } from '../hooks/useBuscarSujeto';
 import { useIniciarEvaluacion } from '../hooks/useIniciarEvaluacion';
-import { formatearSegundos } from '../progreso';
+import { formatearSegundos, tiempoTotal } from '../progreso';
 import type { EvaluacionResponse, PeriodoResponse, TestDetalleResponse } from '../tipos';
 import {
   incluyeFluidez,
@@ -73,7 +73,7 @@ export function FormularioInicio({ test, periodos, onIniciada }: FormularioInici
     valores.aplicacion === 'completa'
       ? test.subpruebas
       : test.subpruebas.filter((s) => valores.subpruebas.includes(s.codigo));
-  const segundos = incluidas.reduce((suma, s) => suma + s.tiempoLimiteSegundos, 0);
+  const segundos = tiempoTotal(incluidas.map((s) => s.tiempoLimiteSegundos));
   const letra = valores.letraInicial.trim().toUpperCase();
 
   const idError = (campo: CampoInicio) => `${id}-${campo}-error`;
@@ -264,7 +264,13 @@ export function FormularioInicio({ test, periodos, onIniciada }: FormularioInici
             />
             <DatoResumen
               etiqueta="Tiempo oficial"
-              valor={incluidas.length > 0 ? `${formatearSegundos(segundos)} min` : null}
+              valor={
+                incluidas.length === 0
+                  ? null
+                  : segundos === null
+                    ? 'No definido'
+                    : `${formatearSegundos(segundos)} min`
+              }
             />
             {conFluidez && <DatoResumen etiqueta="Letra FV" valor={letra || null} />}
           </dl>

@@ -23,6 +23,12 @@ export function formatearSegundos(segundos: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
+/** El total solo se conoce si todas las subpruebas tienen tiempo definido. */
+export function tiempoTotal(segundos: (number | null)[]): number | null {
+  if (segundos.some((tiempo) => tiempo === null)) return null;
+  return segundos.reduce<number>((total, tiempo) => total + (tiempo ?? 0), 0);
+}
+
 /** ISO-8601 (UTC) → fecha y hora local legible. */
 export function formatearFechaHora(iso: string): string {
   const fecha = new Date(iso);

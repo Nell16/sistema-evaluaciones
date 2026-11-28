@@ -85,6 +85,62 @@ class ClonadoVersionFormularioIntegrationTest {
     }
 
     @Test
+    void coordinadorClonaCargaClaveYPublicaConAuditoria() throws Exception {
+        long cuenta =
+                jdbc.queryForObject(
+                        "insert into cuenta(correo,resumen_contrasena,nombres,apellidos,estado) values (?,'hash-ficticio','Demo','E31','ACTIVA') returning id_cuenta",
+                        Long.class,
+                        UUID.randomUUID() + "@example.test");
+        var identidad =
+                new IdentidadSesion(
+                        cuenta,
+                        1L,
+                        Rol.COORDINADOR.name(),
+                        MatrizPermisos.aprobada().permisosDe(Rol.COORDINADOR));
+        when(autenticacion.validar("token-ficticio")).thenReturn(Optional.of(identidad));
+        String bearer = "Bearer token-ficticio";
+        mvc.perform(
+                        post("/api/v1/tests/{id}/versiones", testId)
+                                .header("Authorization", bearer)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"codigoVersion\":\"v2\",\"fuenteRef\":\"fuente-ficticia\"}"))
+                .andExpect(status().isCreated());
+        long borrador =
+                jdbc.queryForObject(
+                        "select id_version_formulario from version_formulario where id_test=? and codigo_version='v2'",
+                        Long.class,
+                        testId);
+        long pregunta =
+                jdbc.queryForObject(
+                        "select p.id_pregunta from pregunta p join configuracion_subprueba c using(id_configuracion_subprueba) where c.id_version_formulario=?",
+                        Long.class,
+                        borrador);
+        mvc.perform(
+                        org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put(
+                                        "/api/v1/versiones/{id}/clave", borrador)
+                                .header("Authorization", bearer)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"entradas\":[{\"preguntaId\":"
+                                                + pregunta
+                                                + ",\"opcion\":\"A\"}]}"))
+                .andExpect(status().isOk());
+        mvc.perform(
+                        post("/api/v1/versiones/{id}/publicar", borrador)
+                                .header("Authorization", bearer))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("PUBLICADA"));
+        assertThat(
+                        jdbc.queryForObject(
+                                "select count(*) from evento_auditoria where id_cuenta=? and entidad_id=? and accion='PUBLICAR_VERSION' and entidad_tipo='VERSION_FORMULARIO'",
+                                Integer.class,
+                                cuenta,
+                                borrador))
+                .isEqualTo(1);
+    }
+
+    @Test
     void coordinadorClonaLaPublicadaSinModificarElOrigen() throws Exception {
         when(autenticacion.validar("token-ficticio"))
                 .thenReturn(Optional.of(identidad(Rol.COORDINADOR)));
@@ -137,5 +193,37 @@ class ClonadoVersionFormularioIntegrationTest {
         ContextoSesion.establecer(identidad(Rol.COORDINADOR));
         assertThatThrownBy(() -> versiones.buscarPorId(origenId))
                 .isInstanceOf(SinPermisoException.class);
+    }
+
+    // GEN-45-BE (aporte Carlos): E31 exige sesion y CONFIGURAR_BFA, y sin permiso no cambia nada.
+    @Test
+    void e31SinPermisoNoPublicaNiAudita() throws Exception {
+        long borrador =
+                jdbc.queryForObject(
+                        "insert into version_formulario(id_test,codigo_version,fuente_ref) values (?, 'v-e31', 'fuente-ficticia') returning id_version_formulario",
+                        Long.class,
+                        testId);
+        when(autenticacion.validar("token-ficticio"))
+                .thenReturn(Optional.of(identidad(Rol.PSICOLOGO)));
+
+        mvc.perform(post("/api/v1/versiones/{id}/publicar", borrador))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(
+                        post("/api/v1/versiones/{id}/publicar", borrador)
+                                .header("Authorization", "Bearer token-ficticio"))
+                .andExpect(status().isForbidden());
+
+        assertThat(
+                        jdbc.queryForObject(
+                                "select estado from version_formulario where id_version_formulario=?",
+                                String.class,
+                                borrador))
+                .isEqualTo("BORRADOR");
+        assertThat(
+                        jdbc.queryForObject(
+                                "select count(*) from evento_auditoria where entidad_tipo='VERSION_FORMULARIO' and entidad_id=?",
+                                Integer.class,
+                                borrador))
+                .isZero();
     }
 }

@@ -35,6 +35,36 @@ class VersionFormularioRestControllerTest {
     private static final String TOKEN = "token-prueba";
     private static final String CUERPO = "{\"codigoVersion\":\"v2\",\"fuenteRef\":\"DOC-BFA\"}";
 
+    @Test
+    void e31PublicaSinCuerpo() throws Exception {
+        when(servicio.publicar(11L)).thenReturn(new ResumenVersion(11L, 1L, "PUBLICADA"));
+        mvc.perform(
+                        post("/api/v1/versiones/11/publicar")
+                                .header("Authorization", "Bearer " + TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("PUBLICADA"));
+    }
+
+    @Test
+    void e31DistingueConflictoYContenidoIncompleto() throws Exception {
+        when(servicio.publicar(11L))
+                .thenThrow(new IllegalStateException("Ya publicada"))
+                .thenThrow(
+                        new com.universidad.tests.application.service
+                                .PublicacionVersionFormularioService.VersionIncompletaException(
+                                "Falta clave"));
+        mvc.perform(
+                        post("/api/v1/versiones/11/publicar")
+                                .header("Authorization", "Bearer " + TOKEN))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codigo").value("VERSION_NO_EDITABLE"));
+        mvc.perform(
+                        post("/api/v1/versiones/11/publicar")
+                                .header("Authorization", "Bearer " + TOKEN))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.codigo").value("VERSION_INCOMPLETA"));
+    }
+
     @BeforeEach
     void prepararAutenticacion() {
         when(autenticacion.validar(TOKEN))

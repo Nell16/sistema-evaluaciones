@@ -27,7 +27,9 @@ class PublicacionVersionFormularioServiceTest {
 
     @Mock private PreguntaRepository preguntaRepository;
 
-    @Mock private OpcionRespuestaRepository opcionRepository;
+    @Mock private OpcionRespuestaRepository.Edicion opcionRepository;
+    @Mock private VersionClaveBFARepository claves;
+    @Mock private EntradaClaveBFARepository entradas;
 
     @Mock private AutorizacionContenidoPort autorizacion;
 
@@ -115,6 +117,7 @@ class PublicacionVersionFormularioServiceTest {
         when(subpruebaRepository.buscarPorId(3L)).thenReturn(Optional.of(subprueba));
 
         when(subprueba.getIdTest()).thenReturn(2L);
+        when(configuracion.getInstruccionesRef()).thenReturn("demo/instrucciones");
 
         when(configuracion.getIdConfiguracionSubprueba()).thenReturn(4L);
 
@@ -131,8 +134,9 @@ class PublicacionVersionFormularioServiceTest {
         verify(versionRepository, never()).guardar(any());
     }
 
-    @Test
-    void debePublicarVersionConContenidoValido() {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(longs = {12L, 99L})
+    void verificaQueLaClaveCorrespondaALasOpcionesVigentes(long idCorrecta) {
 
         VersionFormulario version = crearVersionBorrador();
 
@@ -152,6 +156,7 @@ class PublicacionVersionFormularioServiceTest {
         when(subpruebaRepository.buscarPorId(3L)).thenReturn(Optional.of(subprueba));
 
         when(subprueba.getIdTest()).thenReturn(2L);
+        when(configuracion.getInstruccionesRef()).thenReturn("demo/instrucciones");
 
         when(configuracion.getIdConfiguracionSubprueba()).thenReturn(4L);
 
@@ -163,6 +168,22 @@ class PublicacionVersionFormularioServiceTest {
 
         when(opcionRepository.listarPorPregunta(6L)).thenReturn(List.of(opcion));
 
+        var clave = mock(VersionClaveBFA.class);
+        when(claves.buscarPorFormularioYVersion(5L, version.getCodigoVersion()))
+                .thenReturn(Optional.of(clave));
+        when(clave.getIdClave()).thenReturn(8L);
+        var entrada = mock(EntradaClaveBFA.class);
+        when(entradas.listarPorClave(8L)).thenReturn(List.of(entrada));
+        when(entrada.getIdPregunta()).thenReturn(6L);
+        when(entrada.getIdOpcionCorrecta()).thenReturn(idCorrecta);
+        when(opcion.getIdOpcion()).thenReturn(12L);
+        if (idCorrecta != 12L) {
+            assertThrows(
+                    PublicacionVersionFormularioService.VersionIncompletaException.class,
+                    () -> servicio.publicar(5L, "ACTA-001"));
+            verify(versionRepository, never()).guardar(any());
+            return;
+        }
         when(versionRepository.guardar(version)).thenReturn(version);
 
         VersionFormulario resultado = servicio.publicar(5L, "ACTA-001");
@@ -194,5 +215,81 @@ class PublicacionVersionFormularioServiceTest {
 
         verify(autorizacion).exigirPermisoRetirar(5L);
         verify(versionRepository).guardar(version);
+    }
+
+    // GEN-45-BE (aporte Carlos): casos de E31 que faltaban cubrir.
+
+    private ConfiguracionSubprueba prepararSubprueba(String codigo, String instrucciones) {
+        VersionFormulario version = crearVersionBorrador();
+        ConfiguracionSubprueba configuracion = mock(ConfiguracionSubprueba.class);
+        Subprueba subprueba = mock(Subprueba.class);
+        when(versionRepository.buscarPorId(5L)).thenReturn(Optional.of(version));
+        when(configuracionRepository.listarPorVersion(5L)).thenReturn(List.of(configuracion));
+        when(configuracion.getIdSubprueba()).thenReturn(3L);
+        when(subpruebaRepository.buscarPorId(3L)).thenReturn(Optional.of(subprueba));
+        when(subprueba.getIdTest()).thenReturn(2L);
+        lenient().when(subprueba.getCodigo()).thenReturn(codigo);
+        when(configuracion.getInstruccionesRef()).thenReturn(instrucciones);
+        return configuracion;
+    }
+
+    @Test
+    void e31RechazaSubpruebaSinInstruccionesComoIncompleta() {
+        prepararSubprueba("VOC1", " ");
+
+        assertThrows(
+                PublicacionVersionFormularioService.VersionIncompletaException.class,
+                () -> servicio.publicar(5L, "ACTA-001"));
+
+        verify(versionRepository, never()).guardar(any());
+    }
+
+    @Test
+    void e31RechazaFluidezVerbalSinLetraPorVersion() {
+        prepararSubprueba("FV", "demo/instrucciones/FV");
+
+        PublicacionVersionFormularioService.VersionIncompletaException error =
+                assertThrows(
+                        PublicacionVersionFormularioService.VersionIncompletaException.class,
+                        () -> servicio.publicar(5L, "ACTA-001"));
+
+        assertTrue(error.getMessage().contains("Fluidez Verbal"));
+        verify(versionRepository, never()).guardar(any());
+    }
+
+    @Test
+    void e31RechazaReactivoCerradoSinClaveCargada() {
+        ConfiguracionSubprueba configuracion = prepararSubprueba("VOC1", "demo/instrucciones");
+        Pregunta pregunta = mock(Pregunta.class);
+        OpcionRespuesta opcion = mock(OpcionRespuesta.class);
+        when(configuracion.getIdConfiguracionSubprueba()).thenReturn(4L);
+        when(configuracion.getTipoRespuesta()).thenReturn(TipoRespuesta.SELECCION);
+        when(preguntaRepository.listarPorConfiguracion(4L)).thenReturn(List.of(pregunta));
+        when(pregunta.getIdPregunta()).thenReturn(6L);
+        when(opcionRepository.listarPorPregunta(6L)).thenReturn(List.of(opcion));
+        when(claves.buscarPorFormularioYVersion(5L, "v1")).thenReturn(Optional.empty());
+
+        assertThrows(
+                PublicacionVersionFormularioService.VersionIncompletaException.class,
+                () -> servicio.publicar(5L, "ACTA-001"));
+
+        verify(versionRepository, never()).guardar(any());
+    }
+
+    @Test
+    void e31NoVuelveAPublicarUnaVersionYaPublicada() {
+        VersionFormulario version = crearVersionBorrador();
+        version.publicar("ACTA-001");
+        when(versionRepository.buscarPorId(5L)).thenReturn(Optional.of(version));
+
+        IllegalStateException error =
+                assertThrows(IllegalStateException.class, () -> servicio.publicar(5L, "ACTA-002"));
+
+        // 409 VERSION_NO_EDITABLE, no 422.
+        assertFalse(
+                error instanceof PublicacionVersionFormularioService.VersionIncompletaException);
+        assertEquals("ACTA-001", version.getEvidenciaValidacion());
+        verify(versionRepository, never()).guardar(any());
+        verifyNoInteractions(configuracionRepository);
     }
 }

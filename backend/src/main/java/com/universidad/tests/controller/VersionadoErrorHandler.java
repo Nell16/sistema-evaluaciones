@@ -38,6 +38,13 @@ public class VersionadoErrorHandler {
         return responder(HttpStatus.NOT_FOUND, "RECURSO_NO_ENCONTRADO", error, request);
     }
 
+    @ExceptionHandler(
+            com.universidad.tests.application.service.PublicacionVersionFormularioService
+                    .VersionIncompletaException.class)
+    public ResponseEntity<ErrorResponse> incompleta(Exception error, HttpServletRequest request) {
+        return responder(HttpStatus.UNPROCESSABLE_ENTITY, "VERSION_INCOMPLETA", error, request);
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> conflicto(Exception error, HttpServletRequest request) {
         return responder(HttpStatus.CONFLICT, "VERSION_NO_EDITABLE", error, request);

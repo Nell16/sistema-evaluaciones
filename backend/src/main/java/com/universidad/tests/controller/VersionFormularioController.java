@@ -34,6 +34,11 @@ public class VersionFormularioController {
                 .body(version);
     }
 
+    @PostMapping("/api/v1/versiones/{id}/publicar")
+    public ResumenVersion publicar(@PathVariable Long id) {
+        return servicio.publicar(id);
+    }
+
     public record CrearVersionRequest(
             @NotBlank String codigoVersion, String descripcion, @NotBlank String fuenteRef) {}
 }

@@ -45,7 +45,7 @@ export async function http<T>(ruta: string, opciones: RequestInit = {}): Promise
     headers,
   });
   const esLogin = ruta === '/auth/sesion' && opciones.method?.toUpperCase() === 'POST';
-  if (respuesta.status === 401 && !esLogin && tokenEnviado === token) {
+  if (respuesta.status === 401 && !esLogin && tokenEnviado !== null && tokenEnviado === token) {
     establecerToken(null);
     manejarNoAutorizado?.();
   }

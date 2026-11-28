@@ -53,6 +53,18 @@ describe('http', () => {
     }
   });
 
+  it('un 401 sin token conserva el error sin avisar de una sesión expirada', async () => {
+    const expirada = vi.fn();
+    const cancelar = alNoAutorizado(expirada);
+    try {
+      responder(401, { codigo: 'NO_AUTENTICADO' });
+      await expect(http('/tests')).rejects.toMatchObject({ status: 401 });
+      expect(expirada).not.toHaveBeenCalled();
+    } finally {
+      cancelar();
+    }
+  });
+
   it('un 401 de E14 conserva el error de credenciales sin redirigir', async () => {
     const expirada = vi.fn();
     const cancelar = alNoAutorizado(expirada);
